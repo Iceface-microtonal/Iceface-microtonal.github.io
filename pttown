@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PuppeTwin Town - "存在しない"けれど、"消えない"まち</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=Cinzel:wght@400;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Serif JP', serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #e8e8e8;
+            line-height: 1.8;
+            overflow-x: hidden;
+        }
+        
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 226, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        header {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .logo {
+            font-family: 'Cinzel', serif;
+            font-size: 3.5rem;
+            font-weight: 600;
+            color: #d4af37;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+            margin-bottom: 1rem;
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
+            to { text-shadow: 0 0 30px rgba(212, 175, 55, 0.8), 0 0 40px rgba(212, 175, 55, 0.3); }
+        }
+        
+        .slogan {
+            font-size: 1.3rem;
+            color: #b8b8d1;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        nav {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+        
+        nav a {
+            color: #e8e8e8;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            font-weight: 400;
+            border: 1px solid transparent;
+        }
+        
+        nav a:hover {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: #d4af37;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        section {
+            margin-bottom: 4rem;
+            padding: 3rem 0;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            color: #d4af37;
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            font-family: 'Cinzel', serif;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #d4af37, transparent);
+        }
+        
+        .visual-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        
+        .visual-card {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .visual-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: linear-gradient(135deg, 
+                rgba(212, 175, 55, 0.1) 0%, 
+                rgba(120, 119, 198, 0.1) 50%, 
+                rgba(255, 119, 198, 0.1) 100%);
+            opacity: 0.5;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .visual-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-color: #d4af37;
+        }
+        
+        .card-title {
+            font-size: 1.4rem;
+            color: #d4af37;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .card-content {
+            position: relative;
+            z-index: 1;
+            opacity: 0.9;
+        }
+        
+        .weekly-event {
+            background: rgba(212, 175, 55, 0.1);
+            border-left: 4px solid #d4af37;
+            padding: 2rem;
+            margin: 2rem 0;
+            border-radius: 0 15px 15px 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .weekly-event h3 {
+            color: #d4af37;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .mythology-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .myth-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .myth-card h3 {
+            color: #d4af37;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .festivals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .festival-card {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(212, 175, 55, 0.1));
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .festival-card:hover {
+            transform: scale(1.02);
+            border-color: #d4af37;
+        }
+        
+        .festival-card h3 {
+            color: #d4af37;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+        
+        .map-locations {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .location-card {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 1px solid rgba(120, 119, 198, 0.3);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .location-card:hover {
+            border-color: #7877c6;
+            transform: translateY(-3px);
+        }
+        
+        .location-card h4 {
+            color: #7877c6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .residents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .resident-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 119, 198, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .resident-card h4 {
+            color: #ff77c6;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .travel-records {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .record-entry {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 10px;
+            border-left: 3px solid #d4af37;
+        }
+        
+        .record-entry h4 {
+            color: #d4af37;
+            margin-bottom: 0.5rem;
+        }
+        
+        .notice {
+            background: rgba(255, 119, 198, 0.1);
+            border: 1px solid #ff77c6;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            font-style: italic;
+            color: #ff77c6;
+        }
+        
+        .visit-guide {
+            background: rgba(212, 175, 55, 0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+        
+        .visit-guide h4 {
+            color: #d4af37;
+            margin-bottom: 1rem;
+        }
+        
+        .souvenirs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .souvenir-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 1px solid rgba(120, 219, 226, 0.3);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .souvenir-card:hover {
+            transform: translateY(-5px);
+            border-color: #78dbe2;
+        }
+        
+        .souvenir-card h4 {
+            color: #78dbe2;
+            margin-bottom: 1rem;
+        }
+        
+        .terms-section {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin: 2rem 0;
+        }
+        
+        .terms-section h4 {
+            color: #d4af37;
+            margin-bottom: 1rem;
+        }
+        
+        .terms-section ul {
+            list-style: none;
+            padding-left: 1rem;
+        }
+        
+        .terms-section li {
+            margin: 0.5rem 0;
+            opacity: 0.9;
+        }
+        
+        .terms-section li::before {
+            content: '※ ';
+            color: #d4af37;
+        }
+        
+        footer {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 4rem;
+        }
+        
+        footer p {
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2.5rem;
+            }
+            
+            nav ul {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 0 1rem;
+            }
+        }
+        
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeIn 1s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* スクロール時のアニメーション */
+        .scroll-animate {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.6s ease-out;
+        }
+        
+        .scroll-animate.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="background-overlay"></div>
+    
+    <header>
+        <h1 class="logo fade-in">PuppeTwin Town</h1>
+        <p class="slogan fade-in">"存在しない"けれど、"消えない"まちへようこそ。</p>
+    </header>
+    
+    <nav>
+        <ul>
+            <li><a href="#top">トップ</a></li>
+            <li><a href="#history">歴史と伝承</a></li>
+            <li><a href="#festivals">年中行事</a></li>
+            <li><a href="#map">地図と名所</a></li>
+            <li><a href="#residents">住民インタビュー</a></li>
+            <li><a href="#records">旅人の記録</a></li>
+            <li><a href="#visit">来訪案内</a></li>
+            <li><a href="#souvenirs">お土産</a></li>
+            <li><a href="#terms">利用規約</a></li>
+        </ul>
+    </nav>
+    
+    <main class="container">
+        <section id="top" class="scroll-animate">
+            <div class="visual-gallery">
+                <div class="visual-card">
+                    <div class="card-title">古びた看板</div>
+                    <div class="card-content">
+                        霧に包まれた山道に佇む、文字の一部が消えかけた木製の看板。「PuppeTwin Town」の文字だけが、なぜか鮮明に見える。
+                    </div>
+                </div>
+                <div class="visual-card">
+                    <div class="card-title">霧に沈む山村</div>
+                    <div class="card-content">
+                        朝霧に包まれた小さな集落。家々の灯りが温かく見えるが、近づくと人影は見えない。
+                    </div>
+                </div>
+                <div class="visual-card">
+                    <div class="card-title">木製の人形祭り</div>
+                    <div class="card-content">
+                        手作りの木製人形が並ぶ祭壇。それぞれが微妙に異なる表情を持ち、見る者の心を映すかのよう。
+                    </div>
+                </div>
+            </div>
+            
+            <div class="weekly-event">
+                <h3>今週の風習</h3>
+                <p>今週は「夜の祝柱まわし」が行われます。子どもたちは赤い糸を持って石の回廊へ。月の光が差し込む時間帯に、古い祈りの言葉を唱えながら柱の周りを三度回ります。この儀式の後、参加者は一晩中美しい夢を見ると言われています。</p>
+            </div>
+        </section>
+        
+        <section id="history" class="scroll-animate">
+            <h2 class="section-title">歴史と伝承</h2>
+            <div class="mythology-section">
+                <div class="myth-card">
+                    <h3>起源と失われた双子神話</h3>
+                    <p>太古の昔、プペとトゥインという双子の神がこの土地を分け合ったという神話が残されています。プペは「見える世界」を、トゥインは「見えない世界」を治めることになりました。しかし、二つの世界の境界が曖昧になったとき、この町が現れたのだと言われています。</p>
+                </div>
+                <div class="myth-card">
+                    <h3>見えざる開拓者の記録</h3>
+                    <p>古文書には、名前の記されていない開拓者たちの記録があります。彼らは「時を超えた旅人」と呼ばれ、現実と夢の間を行き来していたとされます。町の中心部には、彼らが残したという碑文があり、月夜にだけ文字が浮かび上がると言われています。</p>
+                </div>
+                <div class="myth-card">
+                    <h3>一度訪れた者は道を語れない</h3>
+                    <p>古来の言い伝えによると、PuppeTwin Townを訪れた者は、その道筋を他人に正確に語ることができません。記憶が曖昧になるのではなく、言葉にする瞬間に道が変化してしまうのだと言われています。そのため、この町への道は常に一人一人異なるものとなるのです。</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="festivals" class="scroll-animate">
+            <h2 class="section-title">年中行事と祭</h2>
+            <div class="festivals-grid">
+                <div class="festival-card">
+                    <h3>朧面祭（おぼろめんさい）</h3>
+                    <p>春の満月の夜に行われる神秘的な祭り。参加者は手作りの木彫りの仮面を身に着け、夜通し声を発することなく町を練り歩きます。仮面の表情は月光によって変化し、着用者の内なる想いを映し出すと言われています。祭りの最後に、仮面は神聖な火で燃やされ、願いが天に届けられます。</p>
+                </div>
+                <div class="festival-card">
+                    <h3>雛柱祭</h3>
+                    <p>夏至の日に子どもたちが中心となって行う祭り。各家庭で手作りした「双子の雛」を町の中央にある古い柱に奉納します。この雛人形は、プペとトゥインの神を模したもので、一体は笑顔、もう一体は涙の表情をしています。奉納された雛は一年間柱を守り、翌年新しい雛と交代します。</p>
+                </div>
+                <div class="festival-card">
+                    <h3>夜見盆</h3>
+                    <p>秋分の日から三日間続く特別な盆。この期間中、町は「死んだ方のまち」と一時的に繋がると信じられています。住民たちは故人への想いを込めた灯籠を作り、町の各所に配置します。夜が更けると、灯籠の光が道を作り、亡くなった人々の魂が町を訪れるとされています。</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="map" class="scroll-animate">
+            <h2 class="section-title">まちの地図と名所紹介</h2>
+            <div class="map-locations">
+                <div class="location-card">
+                    <h4>みえない線路</h4>
+                    <p>町の東側を走る廃線跡。線路は朽ち果てているはずなのに、夜中に汽車の音が聞こえることがあります。音の正体を確かめようとする者もいますが、近づくと音は遠ざかってしまいます。</p>
+                </div>
+                <div class="location-card">
+                    <h4>七つ目の交差点</h4>
+                    <p>通常の地図には記載されていない謎の交差点。道に迷った時にだけ現れると言われています。七つの道が交わるこの場所で正しい道を選べば、望む場所にたどり着けるという言い伝えがあります。</p>
+                </div>
+                <div class="location-card">
+                    <h4>トゥイン山</h4>
+                    <p>町の名前の由来となった双子峰。二つの頂上は常に霧に包まれており、その向こう側を見た者はいません。山頂からは町全体を見渡せるとされていますが、登山道は季節ごとに変化し、同じ道を二度通ることはできません。</p>
+                </div>
+                <div class="location-card">
+                    <h4>影の図書館</h4>
+                    <p>町の中心部にある古い図書館。昼間は普通の建物に見えますが、夜になると窓から温かい光が漏れ、中で読書をする人影が見えます。しかし、扉を開けて入ろうとすると、いつも「準備中」の札がかかっています。</p>
+                </div>
+                <div class="location-card">
+                    <h4>時の止まった時計塔</h4>
+                    <p>町の広場にそびえる古い時計塔。時計の針は常に午後3時33分を指しており、決して動きません。しかし不思議なことに、この時計塔の前で待ち合わせをすると、必ず相手と同じ時間に到着できると言われています。</p>
+                </div>
+                <div class="location-card">
+                    <h4>鏡の池</h4>
+                    <p>町の南端にある小さな池。水面は完璧な鏡のように澄んでいて、空を映しています。しかし時折、水面に映るのは現在の空ではなく、過去や未来の風景だと言われています。満月の夜には、故人の顔が浮かび上がることもあるとか。</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="residents" class="scroll-animate">
+            <h2 class="section-title">住民インタビュー</h2>
+            <div class="residents-grid">
+                <div class="resident-card">
+                    <h4>手作り時計屋の老人</h4>
+                    <p>「時間なんてものはね、人それぞれ違って当然なんじゃよ。わしの作る時計は、持ち主の心の時間に合わせて動くんじゃ。急いでいる時は早く、のんびりしたい時はゆっくりとね。一番大切な時間を刻んでくれる、そんな時計を作っているんじゃ。」</p>
+                    <p><em>※インタビュー時、老人の懐中時計は逆回りしていましたが、本人は全く気にしていませんでした。</em></p>
+                </div>
+                <div class="resident-card">
+                    <h4>石を育てている女の子</h4>
+                    <p>「この石たちはね、みんな違う夢を見ているの。小さな石は小さな夢を、大きな石は大きな夢を。毎日お水をあげて、お話しを聞かせてあげるの。そうすると、石たちは少しずつ色が変わって、時々小さく光るのよ。いつか空を飛ぶ夢を見る石を育ててみたいな。」</p>
+                    <p><em>※庭には様々な色の石が整然と並べられ、確かに微かに光っているように見えました。</em></p>
+                </div>
+                <div class="resident-card">
+                    <h4>声を持たない案内人</h4>
+                    <p>町の入り口に立つ案内人は言葉を発することはありませんが、手振りや表情で訪問者を適切な場所へと導いてくれます。彼の持つ古い地図は、見る人によって異なる内容が描かれており、その人が最も必要としている情報が現れると言われています。</p>
+                    <p><em>※彼は筆談でこう答えました：「言葉よりも心で伝えることの方が、ずっと確かで温かいものです。」</em></p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="records" class="scroll-animate">
+            <h2 class="section-title">旅人の記録</h2>
+            <div class="travel-records">
+                <div class="record-entry">
+                    <h4>「夢と現実の境界で」- 投稿者：風の旅人</h4>
+                    <p>電車の中で居眠りをしていたら、気づくとPuppeTwin Townの駅にいました。駅員はいませんでしたが、古い木製の改札があり、なぜか乗車券が必要でした。ポケットを探すと、見覚えのない切符が。それは「夢」と書かれていました。町を歩いている間、ずっと懐かしい気持ちがしていました。まるで子どもの頃によく見た夢の中にいるような...</p>
+                </div>
+                <div class="record-entry">
+                    <h4>「霧の向こうの記憶」- 投稿者：記憶の収集家</h4>
+                    <p>深い霧の中を歩いていると、突然目の前に町が現れました。不思議なことに、町の住民たちは私を知っているようで、「おかえりなさい」と迎えてくれました。でも、私はこの町を訪れたことがありません。少なくとも、覚えていません。町を出る時、振り返ると何もありませんでした。ただ霧だけが残っていました。</p>
+                </div>
+                <div class="record-entry">
+                    <h4>「時間の迷子」- 投稿者：消えた一日</h4>
+                    <p>朝起きると、カレンダーが一日進んでいました。昨日の記憶がないのです。でも、ポケットには見知らぬ木彫りの小さな人形がありました。その人形を見ていると、霧に包まれた美しい町の記憶が蘇ってきます。そこで過ごした一日は、人生で最も平和で幸せな時間だったような気がします。</p>
+                </div>
+                
+                <div class="notice">
+                    <strong>注意書き：</strong> 掲載された情報の真偽は保証されません。記録は夢、または記憶違いである可能性があります。PuppeTwin Town公式は、これらの体験談に関する一切の責任を負いません。
+                </div>
+            </div>
+        </section>
+        
+        <section id="visit" class="scroll-animate">
+            <h2 class="section-title">来訪案内</h2>
+            <div class="visit-guide">
+                <h4>PuppeTwin Townへの道</h4>
+                <p>申し訳ございませんが、当町への正式な地図や交通手段は存在いたしません。しかし、以下の目印を頼りに旅をすれば、いつかたどり着けるかもしれません。</p>
+                
+                <h4>道しるべ</h4>
+                <ul>
+                    <li>「踏切のない踏切」- 線路はないのに踏切の音がする場所があります</li>
+                    <li>「木のドアがあるバス停」- 通常のバス停に古い木製のドアが立てかけてあります</li>
+                    <li>「逆さまの標識」- 上下が逆さまになった道路標識を見つけてください</li>
+                    <li>「七色の猫」- 光の加減で色が変わって見える猫に出会えたら、もうすぐです</li>
+                </ul>
+                
+                <h4>重要な心得</h4>
+                <p>夢を見た翌日の朝、いつもより早く目が覚めたら、それは町があなたを呼んでいるサインかもしれません。心を静めて、足の向くまま歩いてみてください。急いではいけません。時間を気にしてもいけません。</p>
+                
+                <p>道に迷うことを恐れてはいけません。PuppeTwin Townでは、「迷う」ことが「見つける」ことの始まりなのです。</p>
+            </div>
+        </section>
+        
+        <section id="souvenirs" class="scroll-animate">
+            <h2 class="section-title">お土産・資料室</h2>
+            <div class="souvenirs-grid">
+                <div class="souvenir-card">
+                    <h4>PuppeTwin Town布製地図</h4>
+                    <p>手織りの布に刺繍で描かれた町の地図。見る角度によって道筋が変わって見える不思議な一品。実用性よりも記念品としての価値があります。</p>
+                </div>
+                <div class="souvenir-card">
+                    <h4>古代のしるしを刺繍した護符</h4>
+                    <p>プペとトゥインの神々に由来する古代文字が刺繍された小さな護符。持ち主の心の平穏を守ると言われています。色は深い藍色と金色の二種類。</p>
+                </div>
+                <div class="souvenir-card">
+                    <h4>見えない絵はがきセット</h4>
+                    <p>一見すると何も描かれていない白いはがき5枚セット。しかし特定の条件下（月光、キャンドルライトなど）で町の風景が浮かび上がります。</p>
+                </div>
+                <div class="souvenir-card">
+                    <h4>「映らない写真」シリーズ</h4>
+                    <p>霧しか写っていない写真のシリーズ。しかし、よく見つめていると霧の中に町の風景や人影が見えてくる...という体験をする人が多く、密かに人気の商品です。</p>
+                </div>
+                <div class="souvenir-card">
+                    <h4>時を刻まない懐中時計</h4>
+                    <p>針が動かない古い懐中時計。しかし持ち主にとって大切な瞬間を記憶し、その時間を永遠に刻み続けると言われています。</p>
+                </div>
+                <div class="souvenir-card">
+                    <h4>双子の雛人形セット</h4>
+                    <p>雛柱祭で使われるものと同じデザインの小さな人形セット。一体は笑顔、もう一体は涙の表情。人生の喜びと悲しみを共に受け入れる象徴とされています。</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="terms" class="scroll-animate">
+            <h2 class="section-title">利用規約・注意事項</h2>
+            <div class="terms-section">
+                <h4>ご利用前に必ずお読みください</h4>
+                <ul>
+                    <li>当サイトは物理的な訪問を保証するものではありません</li>
+                    <li>記憶喪失・時間の遅延等の影響について責任を負いかねます</li>
+                    <li>心が静かな人にだけ入口が見えるとされています</li>
+                    <li>町への道筋は個人差があり、同じ道を二度通ることはできません</li>
+                    <li>滞在中の出来事が夢なのか現実なのかを判断することはできません</li>
+                    <li>お土産品の効果には個人差があり、科学的根拠はありません</li>
+                    <li>町を離れる際、記憶が曖昧になることがありますが、これは正常な現象です</li>
+                    <li>住民との約束は、現実世界でも有効な場合があります</li>
+                    <li>町で撮影した写真や動画が、後日確認すると存在しない場合があります</li>
+                    <li>当町での体験談の共有は自由ですが、詳細な道筋の公開はご遠慮ください</li>
+                </ul>
+                
+                <h4>免責事項</h4>
+                <p>PuppeTwin Town公式は、ご利用者様の体験に関する一切の責任を負いません。すべての体験は自己責任のもとでお楽しみください。また、現実世界での日常生活に支障をきたした場合も、当方では対応いたしかねます。</p>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 PuppeTwin Town - 存在と非存在の境界にて</p>
+        <p>「このサイト自体も、夢の中で見たものかもしれません」</p>
+    </footer>
+    
+    <script>
+        // スクロール時のアニメーション
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('show');
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('.scroll-animate').forEach(el => {
+            observer.observe(el);
+        });
+        
+        // スムーズスクロール
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // 神秘的な効果：ランダムに要素を微妙に光らせる
+        setInterval(() => {
+            const elements = document.querySelectorAll('.visual-card, .festival-card, .location-card');
+            const randomElement = elements[Math.floor(Math.random() * elements.length)];
+            if (randomElement && Math.random() < 0.1) {
+                randomElement.style.boxShadow = '0 0 20px rgba(212, 175, 55, 0.3)';
+                setTimeout(() => {
+                    randomElement.style.boxShadow = '';
+                }, 2000);
+            }
+        }, 3000);
+        
+        // 時計の効果：時々時間表示をランダムに変更
+        const clockElements = document.querySelectorAll('.location-card h4');
+        clockElements.forEach(el => {
+            if (el.textContent.includes('時計')) {
+                setInterval(() => {
+                    if (Math.random() < 0.05) {
+                        const hours = Math.floor(Math.random() * 12) + 1;
+                        const minutes = Math.floor(Math.random() * 60);
+                        const randomTime = `${hours}:${minutes.toString().padStart(2, '0')}`;
+                        el.setAttribute('data-time', randomTime);
+                    }
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html>
