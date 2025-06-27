@@ -4,122 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PuppeTwin Town - "消えない"まち</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600&family=Cinzel:wght@400;600&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Noto sans JP', sans;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            color: #e8e8e8;
-            line-height: 1.8;
-            overflow-x: hidden;
-        }
-        
-        .background-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(120, 219, 226, 0.05) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: -1;
-        }
-        
-        header {
-            text-align: center;
-            padding: 4rem 2rem;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .logo {
-            font-family: ''Noto sans JP', sans;
-            font-size: 3.5rem;
-            font-weight: 600;
-            color: #d4af37;
-            text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
-            margin-bottom: 1rem;
-            animation: glow 3s ease-in-out infinite alternate;
-        }
-        
-        @keyframes glow {
-            from { text-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
-            to { text-shadow: 0 0 30px rgba(212, 175, 55, 0.8), 0 0 40px rgba(212, 175, 55, 0.3); }
-        }
-        
-        .slogan {
-            font-size: 1.3rem;
-            color: #b8b8d1;
-            font-weight: 300;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
-        
-        nav {
-            background: rgba(0, 0, 0, 0.4);
-            padding: 1rem;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            backdrop-filter: blur(15px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        nav ul {
-            list-style: none;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 2rem;
-        }
-        
-        nav a {
-            color: #e8e8e8;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 25px;
-            transition: all 0.3s ease;
-            font-weight: 400;
-            border: 1px solid transparent;
-        }
-        
-        nav a:hover {
-            background: rgba(212, 175, 55, 0.2);
-            border-color: #d4af37;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-        
-        section {
-            margin-bottom: 4rem;
-            padding: 3rem 0;
-        }
-        
-        .section-title {
-            font-size: 2.5rem;
-            color: #d4af37;
-            text-align: center;
-            margin-bottom: 3rem;
-            position: relative;
-            font-family: 'Cinzel', serif;
-        }
+   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600&display=swap');
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Noto Sans JP', sans;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        color: #e8e8e8;
+        line-height: 1.8;
+        overflow-x: hidden;
+    }
+
+    .logo {
+        font-family: 'Noto Sans JP', sans;
+        font-size: 3.5rem;
+        font-weight: 600;
+        color: #d4af37;
+        text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+        margin-bottom: 1rem;
+        animation: glow 3s ease-in-out infinite alternate;
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+        color: #d4af37;
+        text-align: center;
+        margin-bottom: 3rem;
+        position: relative;
+        font-family: 'Noto Sans JP', sans;
+    }
+
+    /* その他のフォント指定は body に継承されているので個別対応は不要 */
+</style>
+
         
         .section-title::after {
             content: '';
