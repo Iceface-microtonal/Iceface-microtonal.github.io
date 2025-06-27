@@ -4,46 +4,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PuppeTwin Town - "消えない"まち</title>
-   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600&display=swap');
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600&display=swap');
 
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-        font-family: 'Noto Sans JP', sans;
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-        color: #e8e8e8;
-        line-height: 1.8;
-        overflow-x: hidden;
-    }
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #ffffff;
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
 
-    .logo {
-        font-family: 'Noto Sans JP', sans;
-        font-size: 3.5rem;
-        font-weight: 600;
-        color: #d4af37;
-        text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
-        margin-bottom: 1rem;
-        animation: glow 3s ease-in-out infinite alternate;
-    }
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" patternUnits="userSpaceOnUse" width="100" height="100"><circle cx="50" cy="50" r="1" fill="white" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            pointer-events: none;
+            z-index: -1;
+        }
 
-    .section-title {
-        font-size: 2.5rem;
-        color: #d4af37;
-        text-align: center;
-        margin-bottom: 3rem;
-        position: relative;
-        font-family: 'Noto Sans JP', sans;
-    }
+        header {
+            text-align: center;
+            padding: 4rem 2rem 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
 
-    /* その他のフォント指定は body に継承されているので個別対応は不要 */
-</style>
+        .logo {
+            font-size: 3.5rem;
+            color: #d4af37;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+            font-weight: 600;
+        }
 
-        
+        .slogan {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-style: italic;
+        }
+
+        nav {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: #ffffff;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        nav a:hover {
+            background: rgba(212, 175, 55, 0.2);
+            color: #d4af37;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            color: #d4af37;
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+
         .section-title::after {
             content: '';
             position: absolute;
@@ -54,14 +109,14 @@
             height: 2px;
             background: linear-gradient(90deg, transparent, #d4af37, transparent);
         }
-        
+
         .visual-gallery {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
             margin: 3rem 0;
         }
-        
+
         .visual-card {
             background: rgba(0, 0, 0, 0.4);
             border-radius: 15px;
@@ -72,7 +127,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .visual-card::before {
             content: '';
             position: absolute;
@@ -87,13 +142,13 @@
             opacity: 0.5;
             border-radius: 15px 15px 0 0;
         }
-        
+
         .visual-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             border-color: #d4af37;
         }
-        
+
         .card-title {
             font-size: 1.4rem;
             color: #d4af37;
@@ -101,13 +156,13 @@
             position: relative;
             z-index: 1;
         }
-        
+
         .card-content {
             position: relative;
             z-index: 1;
             opacity: 0.9;
         }
-        
+
         .weekly-event {
             background: rgba(212, 175, 55, 0.1);
             border-left: 4px solid #d4af37;
@@ -116,20 +171,20 @@
             border-radius: 0 15px 15px 0;
             backdrop-filter: blur(10px);
         }
-        
+
         .weekly-event h3 {
             color: #d4af37;
             margin-bottom: 1rem;
             font-size: 1.3rem;
         }
-        
+
         .mythology-section {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 2rem;
             margin: 2rem 0;
         }
-        
+
         .myth-card {
             background: rgba(0, 0, 0, 0.3);
             padding: 2rem;
@@ -137,20 +192,20 @@
             border: 1px solid rgba(212, 175, 55, 0.3);
             backdrop-filter: blur(10px);
         }
-        
+
         .myth-card h3 {
             color: #d4af37;
             margin-bottom: 1rem;
             font-size: 1.3rem;
         }
-        
+
         .festivals-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
             margin: 2rem 0;
         }
-        
+
         .festival-card {
             background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(212, 175, 55, 0.1));
             padding: 2rem;
@@ -159,25 +214,25 @@
             backdrop-filter: blur(10px);
             transition: all 0.3s ease;
         }
-        
+
         .festival-card:hover {
             transform: scale(1.02);
             border-color: #d4af37;
         }
-        
+
         .festival-card h3 {
             color: #d4af37;
             margin-bottom: 1rem;
             font-size: 1.4rem;
         }
-        
+
         .map-locations {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 2rem;
             margin: 2rem 0;
         }
-        
+
         .location-card {
             background: rgba(0, 0, 0, 0.4);
             padding: 1.5rem;
@@ -186,24 +241,24 @@
             backdrop-filter: blur(10px);
             transition: all 0.3s ease;
         }
-        
+
         .location-card:hover {
             border-color: #7877c6;
             transform: translateY(-3px);
         }
-        
+
         .location-card h4 {
             color: #7877c6;
             margin-bottom: 0.5rem;
         }
-        
+
         .residents-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
             margin: 2rem 0;
         }
-        
+
         .resident-card {
             background: rgba(0, 0, 0, 0.3);
             padding: 2rem;
@@ -211,13 +266,13 @@
             border: 1px solid rgba(255, 119, 198, 0.3);
             backdrop-filter: blur(10px);
         }
-        
+
         .resident-card h4 {
             color: #ff77c6;
             margin-bottom: 1rem;
             font-size: 1.2rem;
         }
-        
+
         .travel-records {
             background: rgba(0, 0, 0, 0.2);
             padding: 2rem;
@@ -225,7 +280,7 @@
             margin: 2rem 0;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
+
         .record-entry {
             background: rgba(0, 0, 0, 0.3);
             padding: 1.5rem;
@@ -233,12 +288,12 @@
             border-radius: 10px;
             border-left: 3px solid #d4af37;
         }
-        
+
         .record-entry h4 {
             color: #d4af37;
             margin-bottom: 0.5rem;
         }
-        
+
         .notice {
             background: rgba(255, 119, 198, 0.1);
             border: 1px solid #ff77c6;
@@ -248,7 +303,7 @@
             font-style: italic;
             color: #ff77c6;
         }
-        
+
         .visit-guide {
             background: rgba(212, 175, 55, 0.1);
             padding: 2rem;
@@ -256,19 +311,19 @@
             margin: 2rem 0;
             border: 1px solid rgba(212, 175, 55, 0.3);
         }
-        
+
         .visit-guide h4 {
             color: #d4af37;
             margin-bottom: 1rem;
         }
-        
+
         .souvenirs-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 2rem;
             margin: 2rem 0;
         }
-        
+
         .souvenir-card {
             background: rgba(0, 0, 0, 0.3);
             padding: 1.5rem;
@@ -278,17 +333,17 @@
             text-align: center;
             transition: all 0.3s ease;
         }
-        
+
         .souvenir-card:hover {
             transform: translateY(-5px);
             border-color: #78dbe2;
         }
-        
+
         .souvenir-card h4 {
             color: #78dbe2;
             margin-bottom: 1rem;
         }
-        
+
         .terms-section {
             background: rgba(0, 0, 0, 0.4);
             padding: 2rem;
@@ -296,27 +351,27 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             margin: 2rem 0;
         }
-        
+
         .terms-section h4 {
             color: #d4af37;
             margin-bottom: 1rem;
         }
-        
+
         .terms-section ul {
             list-style: none;
             padding-left: 1rem;
         }
-        
+
         .terms-section li {
             margin: 0.5rem 0;
             opacity: 0.9;
         }
-        
+
         .terms-section li::before {
             content: '※ ';
             color: #d4af37;
         }
-        
+
         footer {
             background: rgba(0, 0, 0, 0.6);
             padding: 3rem 2rem;
@@ -324,12 +379,12 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             margin-top: 4rem;
         }
-        
+
         footer p {
             opacity: 0.7;
             font-size: 0.9rem;
         }
-        
+
         @media (max-width: 768px) {
             .logo {
                 font-size: 2.5rem;
@@ -348,27 +403,26 @@
                 padding: 0 1rem;
             }
         }
-        
+
         .fade-in {
             opacity: 0;
             transform: translateY(30px);
             animation: fadeIn 1s ease-out forwards;
         }
-        
+
         @keyframes fadeIn {
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-        
-        /* スクロール時のアニメーション */
+
         .scroll-animate {
             opacity: 0;
             transform: translateY(50px);
             transition: all 0.6s ease-out;
         }
-        
+
         .scroll-animate.show {
             opacity: 1;
             transform: translateY(0);
@@ -453,7 +507,7 @@
                 </div>
                 <div class="festival-card">
                     <h3>雛柱祭</h3>
-                    <p>夏至の日に子どもたちが中心となって行う祭り。各家庭で手作りした「双子の雛」を町の中央にある古い柱に奉納します。この雛人形は、プペとトゥインの神を模したもので、一体は笑顔、もう一体は涙の表情をしています。奉納された雛は一年間柱を守り、翌年新しい雛と交代します。</p>
+                    <p>夏至の日に子どもたちが中心となって行う祭り。各家庭で手作りした「双子の雛」を町の中央にある古い柱に奉納します。この雛人形は、プペとトゥインの神々に由来する古代文字が刺繍された小さな護符。持ち主の心の平穏を守ると言われています。色は深い藍色と金色の二種類。プペとトゥインの神を模したもので、一体は笑顔、もう一体は涙の表情をしています。奉納された雛は一年間柱を守り、翌年新しい雛と交代します。</p>
                 </div>
                 <div class="festival-card">
                     <h3>夜見盆</h3>
