@@ -686,17 +686,21 @@
             });
         });
         
-        // 神秘的な効果：ランダムに要素を微妙に光らせる
-        setInterval(() => {
-            const elements = document.querySelectorAll('.visual-card, .festival-card, .location-card');
-            const randomElement = elements[Math.floor(Math.random() * elements.length)];
-            if (randomElement && Math.random() < 0.1) {
-                randomElement.style.boxShadow = '0 0 20px rgba(212, 175, 55, 0.3)';
-                setTimeout(() => {
-                    randomElement.style.boxShadow = '';
-                }, 2000);
-            }
-        }, 3000);
+  // 神秘的な効果：ランダムに要素を微妙に光らせる
+  setInterval(() => {
+      const elements = document.querySelectorAll('.festival-card, 
+  .location-card, .myth-card, .souvenir-card, .weekly-event');
+      const randomElement = elements[Math.floor(Math.random() *
+  elements.length)];
+      if (randomElement && Math.random() < 0.2) {  // 
+  確率を0.1から0.2に上げる
+          randomElement.style.boxShadow = '0 0 20px rgba(216, 191, 216, 
+  0.5)';  // 色も統一
+          setTimeout(() => {
+              randomElement.style.boxShadow = '';
+          }, 3000);  // 光る時間を3秒に延長
+      }
+  }, 2000);  // 間隔を2秒に短縮
         
         // 時計の効果：時々時間表示をランダムに変更
         const clockElements = document.querySelectorAll('.location-card h4');
