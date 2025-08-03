@@ -2,7 +2,8 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>PueppTwin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PuppeTwin</title>
   <style>
     body {
       font-family: 'Helvetica Neue', sans-serif;
@@ -26,6 +27,46 @@
     .section {
       margin-bottom: 3em;
     }
+    
+    /* リンクボタンのスタイル */
+    .link-container {
+      margin: 2rem 0;
+      text-align: center;
+    }
+    
+    .link-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 1.5rem;
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid #d4af37;
+      border-radius: 8px;
+      color: #d4af37;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      margin: 0.5rem;
+    }
+    
+    .link-button:hover {
+      background: rgba(212, 175, 55, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+      text-decoration: none;
+    }
+    
+    .link-icon {
+      font-size: 1.2rem;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    
     footer {
       margin-top: 5em;
       text-align: center;
@@ -37,135 +78,50 @@
 <body>
   <h1>PuppeTwin</h1>
  
-
   <div class="section">
-    <h2></h2>
     <p>
      PuppeTwin は、音楽・映像を手がける H. Wakabayashi と、音楽と言葉を担う Koh Shimanaka によるユニットです。
       声、言葉、音、沈黙を編み込んだ音響的な表現を通じて、日本の文化的根底と現代性の交差点を創出するその作品群は、海外のリスナーにとっては言葉や音に宿る「気配」や「余白」を通じて、耳で触れる日本を感じさせ、
 同時に日本語ネイティブに対しても、既存の文化的イメージに安住せず、文化の深層に触れつつも見たことのない視点を提示します。
 夢と現、身体性と抽象性のあわいの世界を、朗読、即興性を含む音響演出、映像などを通じて表現します。
     </p>
- 
-    </p>
   </div>
 
+  <!-- リンクセクション -->
+  <div class="link-container">
+    <a href="https://hwakabayashi.bandcamp.com/album/puppetwin-politics-aesthetics-no-iv-the-plays" target="_blank" rel="noopener noreferrer" class="link-button">
+      <span class="link-text">Bandcampで聴く</span>
+      <span class="link-icon">🎵</span>
+    </a>
+    
+    <a href="https://iceface-microtonal.github.io/pttown.html" target="_blank" rel="noopener noreferrer" class="link-button">
+      <span class="link-text">PuppeTwin Townを訪れる</span>
+      <span class="link-icon">🏘️</span>
+    </a>
+  </div>
  
-
   <div class="section">
     <h2>H. Wakabayashiについて</h2>
     <p>
- H. Wakabayashi は、作曲家・サウンドアーティストとして活動し、YouTubeやSoundCloudを通じて作品を多数発表している。 <br>夏と冬が混在した情景を表現する中で、
-      2014年頃よりIceface tuning(鍵盤の黒鍵だけを50セント上げ、氷が溶けるような感覚を音に加える調律法）を提唱し、微分音での曲作りやその技法の考案に専念する。これがきっかけで、自らをIceface（アイスフェイス）とも名乗るようになる。　Lumatone一台と、アフロウィッグ多数所有。
-          </p>
+     H. Wakabayashi は、作曲家・サウンドアーティストとして活動し、YouTubeやSoundCloudを通じて作品を多数発表している。<br>
+     夏と冬が混在した情景を表現する中で、2014年頃よりIceface tuning(鍵盤の黒鍵だけを50セント上げ、氷が溶けるような感覚を音に加える調律法）を提唱し、微分音での曲作りやその技法の考案に専念する。これがきっかけで、自らをIceface（アイスフェイス）とも名乗るようになる。Lumatone一台と、アフロウィッグ多数所有。
+    </p>
+  </div>
+
+  <div class="section">
+    <h2>Koh Shimanakaについて</h2>
     <p>
-       <h2>Koh Shimanakaについて</h2>
-    <p>
-Koh Shimanaka（しまなかこう）は、音と言葉を媒介に、人と世界の「あわい」を表現している。
+     Koh Shimanaka（しまなかこう）は、音と言葉を媒介に、人と世界の「あわい」を表現している。
 音楽ユニット PuppeTwin では、言葉と音の表現を担い、日本語を母語とする者として、
 言葉に宿る響きや気配、文化の深層を繊細に掘り下げている。
-
 彼女の言葉や語りは、単なる意味の伝達にとどまらず、
 声に宿る無意識、語られぬ感情、沈黙の奥行きに触れようとする。
 海外のリスナーにとっては、日本語の響きそのものが文化への入り口となり、
 日本語話者に対しては、見過ごされがちな言葉の感触を、
 あらたな角度から浮かび上がらせている。
-
 その実践は、哲学、神道、死生観、言霊観、
 そして森羅万象に霊性を見いだすアニミズム的感性とも深く結びついており、
 「意味を超えた共鳴」を重視した、音と言葉の地平を切り拓いている。
-    </p>
-    <p>      <br>
-
-    </p>
-  </div>
-
-<div class="bandcamp-link">
-   <a href="https://hwakabayashi.bandcamp.com/album/puppetwin-politics-aesthetics-no-iv-the-plays" target="_blank" rel="noopener noreferrer">
-       <span class="link-text">Bandcampで聴く</span>
-       <span class="link-icon"></span>
-   </a>
-
-</div><style>
-.bandcamp-link {
-   margin: 1rem 0;
-   text-align: center;
-}
-
-.bandcamp-link a {
-   display: inline-flex;
-   align-items: center;
-   gap: 0.5rem;
-   padding: 0.8rem 1.5rem;
-   background: rgba(212, 175, 55, 0.1);
-   border: 1px solid #d4af37;
-   border-radius: 8px;
-   color: #d4af37;
-   text-decoration: none;
-   font-weight: 500;
-   transition: all 0.3s ease;
-   backdrop-filter: blur(10px);
-}
-
-.bandcamp-link a:hover {
-   background: rgba(212, 175, 55, 0.2);
-   transform: translateY(-2px);
-   box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
-}
-
-.link-icon {
-   font-size: 1.2rem;
-   animation: pulse 2s infinite;
-}
-
-</div>
-<div class="pttown-link">
-   <a href="https://iceface-microtonal.github.io/pttown.html" target="_blank" rel="noopener noreferrer">
-       <span class="link-text">PuppeTwin Townを訪れる</span>
-       <span class="link-icon"></span>
-   </a>
-
-</div><style>
-.pttown-link {
-   margin: 1rem 0;
-   text-align: center;
-}
-
-.pttown-link a {
-   display: inline-flex;
-   align-items: center;
-   gap: 0.5rem;
-   padding: 0.8rem 1.5rem;
-   background: rgba(212, 175, 55, 0.1);
-   border: 1px solid #d4af37;
-   border-radius: 8px;
-   color: #d4af37;
-   text-decoration: none;
-   font-weight: 500;
-   transition: all 0.3s ease;
-   backdrop-filter: blur(10px);
-}
-
-.pttown-link a:hover {
-   background: rgba(212, 175, 55, 0.2);
-   transform: translateY(-2px);
-   box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
-}
-
-.link-icon {
-   font-size: 1.2rem;
-   animation: pulse 2s infinite;
-}
-  
-@keyframes pulse {
-   0%, 100% { opacity: 1; }
-   50% { opacity: 0.6; }
-}
-</style>
-  <div class="section">
-    <h2></h2>
-    <p>
-
     </p>
   </div>
 
