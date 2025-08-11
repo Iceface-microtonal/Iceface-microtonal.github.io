@@ -3,8 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Iceface Tuning</title>
+  <title>Iceface Tuning (black keys +50c) | 公式定義とデモ</title>
+
+  <!-- 基本SEO -->
+  <link rel="canonical" href="https://iceface-microtonal.github.io/">
+  <meta name="description" content="Iceface Tuning は12平均律を基に黒鍵のみを +50 セント上げる独自調律。白鍵は通常の12平均律、黒鍵で微分音的な彩りを得られます。セント値: 0,150,200,350,400,500,650,700,850,900,1050,1100,1200。デモ内蔵。">
+  <meta name="robots" content="index,follow">
+  <meta name="theme-color" content="#2c3e50">
+
+  <!-- OGP / Twitter -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="ja_JP">
+  <meta property="og:title" content="Iceface Tuning (black keys +50c)">
+  <meta property="og:description" content="黒鍵のみを +50 セント上げる独自調律。公式定義・セント値・デモを掲載。">
+  <meta property="og:url" content="https://iceface-microtonal.github.io/">
+  <meta property="og:image" content="https://iceface-microtonal.github.io/ogp.jpg"><!-- TODO: 画像を用意できたら差し替え -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Iceface Tuning (black keys +50c)">
+  <meta name="twitter:description" content="黒鍵のみ +50 セント。12平均律に自然に微分音を融合。">
+  <meta name="twitter:image" content="https://iceface-microtonal.github.io/ogp.jpg"><!-- TODO -->
+
   <style>
+    /* 既存のスタイルはそのまま（略） */
     body {
       font-family: 'Helvetica Neue', sans-serif;
       background: #f0f0f0;
@@ -14,186 +34,121 @@
       max-width: 960px;
       margin: auto;
     }
-    h1, h2 {
-      color: #2c3e50;
-    }
-    a {
-      color: #2980b9;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    .section {
-      margin-bottom: 3em;
-    }
-    footer {
-      margin-top: 5em;
-      text-align: center;
-      color: #888;
-      font-size: 0.9em;
-    }
-    
-    /* Piano Player Styles */
-    .piano-player {
-      background: #fff;
-      border-radius: 8px;
-      padding: 2em;
-      margin: 2em 0;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    
-    .piano-keyboard {
-      display: flex;
-      justify-content: center;
-      margin: 2em 0;
-      position: relative;
-      height: 120px;
-    }
-    
-    .key {
-      cursor: pointer;
-      border: 1px solid #ccc;
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: bold;
-      user-select: none;
-      transition: all 0.1s ease;
-    }
-    
-    .key.white {
-      background: #fff;
-      width: 40px;
-      height: 120px;
-      color: #666;
-      padding-bottom: 8px;
-    }
-    
-    .key.black {
-      background: #333;
-      width: 28px;
-      height: 80px;
-      color: #fff;
-      margin-left: -14px;
-      margin-right: -14px;
-      z-index: 2;
-      position: relative;
-      padding-bottom: 8px;
-    }
-    
-    .key.ice {
-      background: linear-gradient(to bottom, #e3f2fd, #90caf9);
-      color: #1565c0;
-      box-shadow: 0 0 8px rgba(33, 150, 243, 0.3);
-    }
-    
-    .key:hover {
-      transform: translateY(2px);
-    }
-    
-    .key.active {
-      transform: translateY(4px);
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-    }
-    
-    .controls {
-      text-align: center;
-      margin: 2em 0;
-    }
-    
-    .control-group {
-      margin: 1em 0;
-    }
-    
-    .control-group label {
-      display: inline-block;
-      width: 100px;
-      text-align: right;
-      margin-right: 10px;
-    }
-    
-    input[type="range"] {
-      width: 200px;
-    }
-    
-    button {
-      background: #2980b9;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 4px;
-      cursor: pointer;
-      margin: 5px;
-      transition: background 0.3s ease;
-    }
-    
-    button:hover {
-      background: #1976d2;
-    }
-    
-    button:disabled {
-      background: #bbb;
-      cursor: not-allowed;
-    }
-    
-    .demo-melody {
-      background: #4caf50;
-    }
-    
-    .demo-melody:hover {
-      background: #388e3c;
-    }
-    
-    .status {
-      text-align: center;
-      margin: 1em 0;
-      font-style: italic;
-      color: #666;
-    }
-
-    .audio-init {
-      background: #ff9800;
-      font-size: 16px;
-      padding: 15px 30px;
-    }
-
-    .audio-init:hover {
-      background: #f57c00;
-    }
+    h1, h2 { color: #2c3e50; }
+    a { color: #2980b9; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .section { margin-bottom: 3em; }
+    footer { margin-top: 5em; text-align: center; color: #888; font-size: 0.9em; }
+    /* Piano Player Styles（既存） */
+    .piano-player { background:#fff;border-radius:8px;padding:2em;margin:2em 0;box-shadow:0 2px 10px rgba(0,0,0,0.1); }
+    .piano-keyboard { display:flex;justify-content:center;margin:2em 0;position:relative;height:200px;overflow-x:auto;padding:0 10px; }
+    .key { cursor:pointer;border:1px solid #ccc;display:flex;align-items:flex-end;justify-content:center;font-size:16px;font-weight:bold;user-select:none;transition:all .1s ease;touch-action:manipulation; }
+    .key.white { background:#fff;width:70px;height:200px;color:#666;padding-bottom:15px; }
+    .key.black { background:#333;width:50px;height:130px;color:#fff;margin-left:-25px;margin-right:-25px;z-index:2;position:relative;padding-bottom:15px; }
+    @media (max-width:768px){ body{padding:1.5em;} .piano-keyboard{height:220px;margin:1em 0;} .key.white{width:65px;height:220px;font-size:16px;padding-bottom:15px;} .key.black{width:45px;height:145px;margin-left:-22.5px;margin-right:-22.5px;font-size:14px;padding-bottom:12px;} .piano-player{padding:1.5em;} }
+    @media (max-width:480px){ body{padding:1em;} .piano-keyboard{height:240px;overflow-x:scroll;-webkit-overflow-scrolling:touch;} .key.white{width:60px;height:240px;font-size:15px;padding-bottom:15px;min-width:60px;} .key.black{width:42px;height:160px;margin-left:-21px;margin-right:-21px;font-size:13px;padding-bottom:12px;min-width:42px;} .piano-player{padding:1em;} .control-group label{width:80px;font-size:14px;} input[type="range"]{width:150px;} button{padding:12px 18px;font-size:14px;margin:8px 4px;} }
+    @media (max-width:360px){ .piano-keyboard{height:260px;} .key.white{width:55px;height:260px;font-size:14px;} .key.black{width:38px;height:175px;margin-left:-19px;margin-right:-19px;font-size:12px;} }
+    .key.ice { background:linear-gradient(to bottom,#e3f2fd,#90caf9); color:#1565c0; box-shadow:0 0 8px rgba(33,150,243,.3); }
+    .key:hover{ transform:translateY(2px); }
+    .key.active{ transform:translateY(4px); box-shadow:inset 0 2px 4px rgba(0,0,0,.3); }
+    .controls{text-align:center;margin:2em 0;}
+    .control-group{margin:1em 0;}
+    .control-group label{display:inline-block;width:100px;text-align:right;margin-right:10px;}
+    input[type="range"]{width:200px;}
+    button{background:#2980b9;color:#fff;border:none;padding:10px 20px;border-radius:4px;cursor:pointer;margin:5px;transition:background .3s ease;}
+    button:hover{background:#1976d2;}
+    button:disabled{background:#bbb;cursor:not-allowed;}
+    .demo-melody{background:#4caf50;}
+    .demo-melody:hover{background:#388e3c;}
+    .status{text-align:center;margin:1em 0;font-style:italic;color:#666;}
+    .mobile-instruction{text-align:center;color:#666;font-size:.9em;margin-top:1em;}
+    @media (min-width:769px){ .mobile-instruction{display:none;} }
+    .dl { background:#fff;padding:1em 1.2em;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.06); }
+    .dl a{ font-weight:bold; }
+    .meta { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background:#fff; padding:1em; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.06); }
   </style>
+
+  <!-- JSON-LD: 定義（DefinedTerm） -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    "name": "Iceface Tuning",
+    "alternateName": ["アイスフェイス・チューニング", "Iceface Tuning (black keys +50c)"],
+    "description": "12平均律を基に黒鍵のみを+50セント上げる独自調律。白鍵で安定、黒鍵で微分音の彩りを得る。",
+    "inDefinedTermSet": "https://iceface-microtonal.github.io/",
+    "url": "https://iceface-microtonal.github.io/",
+    "additionalProperty": [
+      {"@type":"PropertyValue","name":"octave","value":"1200 cents"},
+      {"@type":"PropertyValue","name":"cents","value":"0,150,200,350,400,500,650,700,850,900,1050,1100,1200"}
+    ]
+    /* "sameAs": ["https://zenodo.org/record/XXXXX","https://github.com/…"]  ← DOI等ができたら追加 */
+  }
+  </script>
+
+  <!-- JSON-LD: FAQ（定義クエリを拾わせる） -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"FAQPage",
+    "mainEntity":[
+      {"@type":"Question","name":"Iceface Tuning とは？","acceptedAnswer":{"@type":"Answer","text":"12平均律を基に黒鍵のみを+50セント上げる調律です。白鍵は通常の12平均律、黒鍵で微分音的な彩りを与えます。"}},
+      {"@type":"Question","name":"セント値は？","acceptedAnswer":{"@type":"Answer","text":"0,150,200,350,400,500,650,700,850,900,1050,1100,1200（オクターブ=1200c）。"}},
+      {"@type":"Question","name":"どうやって使う？","acceptedAnswer":{"@type":"Answer","text":"Scalaの.scl/.tun、MTS-ESP対応シンセで読み込みます。Surge XTやVital等で利用可能。"}}
+    ]
+  }
+  </script>
 </head>
 <body>
-  <h1>Iceface Tuning</h1>
-  
+  <h1>Iceface Tuning (black keys +50c)</h1>
   <p>微分音・GDC・AIによる創作を探求する新しい音の世界へようこそ。</p>
 
   <div class="section">
     <h2>Iceface Tuningとは</h2>
     <p>
       Iceface Tuning は、日本の作曲家 H. Wakabayashi によって提案された独自の微分音チューニングです。
-      ハ長調を基準とした場合、すべての黒鍵（シャープ/フラット）を約<strong>50セント上げた音</strong>（四分音）として「アイス・ノート（Ice Note）」に割り当てます。
+      ハ長調を基準とした場合、すべての黒鍵（シャープ/フラット）を約 <strong>+50 セント</strong>（四分音）とします。
+      白鍵は通常の12平均律のままなので、直感的に演奏できます。
     </p>
     <p>
-      これにより、旋律や和音に対して局所的なデチューン効果（コーラス感）、またはダブリング的な効果が生まれ、
-      通常の12平均律の中に自然に微分音を融合させることが可能になります。
+      これにより、旋律や和音に対して局所的なデチューン効果（コーラス感）やダブリング的な効果が生まれ、
+      12平均律の中に自然に微分音を融合させることが可能になります。
     </p>
-    <p>
-      派生として、「Iced Lydian」「Iced Maqam Rast」などの<span>"アイス化されたモード"</span>もあり、
+
+    <!-- セント一覧（機械抽出されやすい形で明記） -->
+    <div class="meta" aria-label="Cents list">
+      <strong>Cents:</strong>
+      0,150,200,350,400,500,650,700,850,900,1050,1100,1200
+    </div>
+
+    <p style="margin-top:1em;">
+      派生として「Iced Lydian」「Iced Maqam Rast」などの<span>アイス化モード</span>もあり、
       非西洋音楽にも応用が広がっています。
     </p>
   </div>
 
-  <!-- Piano Player Section -->
+  <!-- ダウンロード導線（後でリンクを差し替え） -->
+  <div class="section dl">
+    <h2>定義ファイル（Download）</h2>
+    <p>Scala / MTS-ESP などで読み込めます。</p>
+    <ul>
+      <li><a href="#" download>Iceface_Tuning.scl</a>（Scala scale）</li> <!-- TODO: 実ファイルに差し替え -->
+      <li><a href="#" download>Iceface_Tuning.tun</a>（AnaMark .tun）</li> <!-- TODO -->
+      <li><a href="#" download>Iceface_Tuning.mts</a>（MTS-ESP）</li> <!-- TODO -->
+    </ul>
+    <!-- DOI が取れたら表示 -->
+    <!-- <p>DOI: <a href="https://doi.org/10.5281/zenodo.XXXXX">10.5281/zenodo.XXXXX</a></p> -->
+  </div>
+
+  <!-- 体験デモ（既存） -->
   <div class="section">
     <h2>Iceface Tuning を体験する</h2>
     <div class="piano-player">
-      <div class="status" id="status">音を再生するには、まず「音声を有効化」ボタンをクリックしてください</div>
-      
+      <div class="status" id="status">まず「音声を有効化」ボタンをタップしてください（iPhone必須）</div>
+
       <div class="controls">
         <div class="control-group">
-          <button onclick="initAudio()" class="audio-init" id="initButton">🔊 音声を有効化</button>
+          <button onclick="initAudio()" class="audio-init" id="initButton" style="background:#ff9800;font-size:18px;padding:15px 30px;">🔊 音声を有効化（タップ必須）</button>
         </div>
         <div class="control-group">
           <label>音量:</label>
@@ -211,45 +166,39 @@
         </div>
       </div>
 
-      <div class="piano-keyboard" id="keyboard">
-        <!-- Keys will be generated by JavaScript -->
-      </div>
-      
-      <p style="text-align: center; color: #666; font-size: 0.9em;">
-        <strong>青いキー</strong>がアイス・ノート（+50セント）です。通常の黒鍵と聴き比べてみてください。<br>
-        キーボードショートカット: A-S-D-F-G-H-J (白鍵), W-E-T-Y-U (アイス・ノート)
+      <div class="piano-keyboard" id="keyboard"></div>
+
+      <p style="text-align:center;color:#666;font-size:.9em;">
+        <strong>青いキー</strong>がアイス・ノート（+50 セント）です。通常の黒鍵と聴き比べてください。
       </p>
+      <div class="mobile-instruction">スマートフォンでは鍵盤を横スクロールできます。横向きにすると演奏しやすいです。</div>
     </div>
   </div>
 
   <div class="section">
     <h2>使用例（Iceface Maqam Rast）</h2>
-    <pre>
+<pre>
 C - C
 D♭ +50c (ice note)
 D - D
-E♭ +50c (ice note)
+E -　E (ice note)
 E -50c
 F - F
 G♭ +50c (ice note)
 G - G
 A♭ +50c (ice note)
 A - A
-B♭ +50c (ice note)
+B - B (ice note)
 B -50c
-    </pre>
+</pre>
   </div>
 
   <div class="section">
     <h2>H. Wakabayashiについて</h2>
+    <p>H. Wakabayashi は作曲家・サウンドアーティスト。YouTubeやSoundCloudで Iceface Tuning を用いた作品を公開しています。</p>
     <p>
-      H. Wakabayashi は、作曲家・サウンドアーティストとして活動し、YouTubeやSoundCloudを通じて
-      Iceface Tuning を活用した作品を多数発表しています。
-    </p>
-    <p>
-      <br>
-      <a href="http://bit.ly/1TxRGAd" target="_blank">▶ SoundCloudで聴く</a><br>
-      <a href="http://mewomihi.tumblr.com/" target="_blank">▶ Tumblrの記事を読む</a>
+      <a href="http://bit.ly/1TxRGAd" target="_blank" rel="noopener">▶ SoundCloudで聴く</a><br>
+      <a href="http://mewomihi.tumblr.com/" target="_blank" rel="noopener">▶ Tumblrの記事を読む</a>
     </p>
   </div>
 
@@ -257,7 +206,7 @@ B -50c
     <h2>特徴と影響</h2>
     <ul>
       <li>Native Instruments Kontakt や DAW の microtuning 機能を活用</li>
-      <li>Sevish やXenharmonicコミュニティからも注目</li>
+      <li>Sevish やXenharmonicコミュニティから注目</li>
       <li>Lumatone を用いたライブ演奏</li>
       <li>哲学・ユーモア・教育的視点のある音律設計</li>
     </ul>
@@ -265,258 +214,103 @@ B -50c
 
   <div class="section">
     <h2>今後の展望</h2>
-    <p>
-      Iceface Tuning の思想を拡張した「Ice Tonality」や、マカームと融合する「Iceface Maqam」など、
-      今後の創作活動でもAIやGDCと連携しながら、新しい音楽世界の開拓を進めています。
-    </p>
+    <p>「Ice Tonality」や「Iceface Maqam」など、AIやGDCと連携しながら新しい音楽世界の開拓を進めています。</p>
   </div>
 
   <footer>
     &copy; 2025 H. Wakabayashi — Iceface Tuning Project. All rights reserved.
   </footer>
 
+  <!-- Web Audio / Piano JS（既存） -->
   <script>
-    // Web Audio API setup
-    let audioContext;
-    let currentNotes = new Map();
-    let gainNode;
-    let isAudioInitialized = false;
+    let audioContext; let currentNotes = new Map(); let gainNode; let isAudioInitialized = false;
+    const baseFrequencies = {'C':261.63,'C#':277.18,'D':293.66,'D#':311.13,'E':329.63,'F':349.23,'F#':369.99,'G':392.00,'G#':415.30,'A':440.00,'A#':466.16,'B':493.88};
+    const centToRatio = (cents)=>Math.pow(2, cents/1200); const iceNoteRatio = centToRatio(50);
 
-    // Note frequencies (C4 = 261.63 Hz)
-    const baseFrequencies = {
-      'C': 261.63,
-      'C#': 277.18,
-      'D': 293.66,
-      'D#': 311.13,
-      'E': 329.63,
-      'F': 349.23,
-      'F#': 369.99,
-      'G': 392.00,
-      'G#': 415.30,
-      'A': 440.00,
-      'A#': 466.16,
-      'B': 493.88
-    };
-
-    // Iceface Tuning: Ice notes are +50 cents
-    const centToRatio = (cents) => Math.pow(2, cents / 1200);
-    const iceNoteRatio = centToRatio(50);
-
-    // Initialize audio context
-    function initAudio() {
-      try {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        gainNode = audioContext.createGain();
-        gainNode.connect(audioContext.destination);
-        updateVolume();
-        isAudioInitialized = true;
-        
-        // Enable buttons
-        document.getElementById('demoButton').disabled = false;
-        document.getElementById('stopButton').disabled = false;
-        document.getElementById('initButton').style.display = 'none';
-        
-        // Update status
-        document.getElementById('status').textContent = 'クリックまたはキーボードで音を再生できます';
-        
-        console.log('Audio initialized successfully');
-      } catch (error) {
-        console.error('Audio initialization failed:', error);
-        document.getElementById('status').textContent = 'オーディオの初期化に失敗しました';
+    function initAudio(){
+      try{
+        audioContext = new (window.AudioContext||window.webkitAudioContext)();
+        gainNode = audioContext.createGain(); gainNode.connect(audioContext.destination);
+        updateVolume(); isAudioInitialized = true;
+        const osc = audioContext.createOscillator(); const tmp = audioContext.createGain();
+        tmp.gain.setValueAtTime(0, audioContext.currentTime); osc.connect(tmp); tmp.connect(audioContext.destination);
+        osc.start(); osc.stop(audioContext.currentTime+0.1);
+        document.getElementById('demoButton').disabled=false;
+        document.getElementById('stopButton').disabled=false;
+        document.getElementById('initButton').style.display='none';
+        document.getElementById('status').textContent='鍵盤をタップして音を再生できます';
+      }catch(e){
+        console.error('Audio init failed', e);
+        document.getElementById('status').textContent='オーディオの初期化に失敗。Safariをお試しください。';
       }
     }
 
-    // Generate keyboard
-    function generateKeyboard() {
-      const keyboard = document.getElementById('keyboard');
-      const keys = [
-        { note: 'C', type: 'white', ice: false },
-        { note: 'C#', type: 'black', ice: true },
-        { note: 'D', type: 'white', ice: false },
-        { note: 'D#', type: 'black', ice: true },
-        { note: 'E', type: 'white', ice: false },
-        { note: 'F', type: 'white', ice: false },
-        { note: 'F#', type: 'black', ice: true },
-        { note: 'G', type: 'white', ice: false },
-        { note: 'G#', type: 'black', ice: true },
-        { note: 'A', type: 'white', ice: false },
-        { note: 'A#', type: 'black', ice: true },
-        { note: 'B', type: 'white', ice: false }
-      ];
-
-      keyboard.innerHTML = '';
-      
-      keys.forEach(keyInfo => {
-        const key = document.createElement('div');
-        key.className = `key ${keyInfo.type}${keyInfo.ice ? ' ice' : ''}`;
-        key.textContent = keyInfo.note + (keyInfo.ice ? ' ❄' : '');
-        key.dataset.note = keyInfo.note;
-        key.dataset.ice = keyInfo.ice;
-        
-        key.addEventListener('mousedown', (e) => {
-          e.preventDefault();
-          playNote(keyInfo.note, keyInfo.ice);
-        });
-        key.addEventListener('mouseup', () => stopNote(keyInfo.note));
-        key.addEventListener('mouseleave', () => stopNote(keyInfo.note));
-        
+    function generateKeyboard(){
+      const keyboard=document.getElementById('keyboard');
+      const keys=[{note:'C',type:'white',ice:false},{note:'C#',type:'black',ice:true},{note:'D',type:'white',ice:false},{note:'D#',type:'black',ice:true},{note:'E',type:'white',ice:false},{note:'F',type:'white',ice:false},{note:'F#',type:'black',ice:true},{note:'G',type:'white',ice:false},{note:'G#',type:'black',ice:true},{note:'A',type:'white',ice:false},{note:'A#',type:'black',ice:true},{note:'B',type:'white',ice:false}];
+      keyboard.innerHTML='';
+      keys.forEach(k=>{
+        const key=document.createElement('div');
+        key.className=`key ${k.type}${k.ice?' ice':''}`;
+        key.textContent=k.note+(k.ice?' ❄':''); key.dataset.note=k.note; key.dataset.ice=k.ice;
+        key.addEventListener('mousedown',()=>playNote(k.note,k.ice));
+        key.addEventListener('mouseup',()=>stopNote(k.note));
+        key.addEventListener('mouseleave',()=>stopNote(k.note));
+        key.addEventListener('touchstart',e=>{e.preventDefault(); playNote(k.note,k.ice); key.style.opacity='0.7';});
+        key.addEventListener('touchend',e=>{e.preventDefault(); stopNote(k.note); key.style.opacity='1';});
+        key.addEventListener('touchcancel',e=>{e.preventDefault(); stopNote(k.note); key.style.opacity='1';});
         keyboard.appendChild(key);
       });
     }
 
-    // Play a note
-    function playNote(note, isIce = false) {
-      if (!isAudioInitialized) {
-        document.getElementById('status').textContent = 'まず「音声を有効化」ボタンをクリックしてください';
-        return;
-      }
-      
-      try {
-        const octave = parseInt(document.getElementById('octave').value);
-        const baseFreq = baseFrequencies[note];
-        const octaveMultiplier = Math.pow(2, octave - 4);
-        let frequency = baseFreq * octaveMultiplier;
-        
-        if (isIce) {
-          frequency *= iceNoteRatio;
-        }
-        
-        const oscillator = audioContext.createOscillator();
-        const noteGain = audioContext.createGain();
-        
-        oscillator.type = 'triangle';
-        oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-        
-        noteGain.gain.setValueAtTime(0, audioContext.currentTime);
-        noteGain.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.05);
-        
-        oscillator.connect(noteGain);
-        noteGain.connect(gainNode);
-        
-        oscillator.start();
-        
-        currentNotes.set(note, { oscillator, gainNode: noteGain });
-        
-        // Visual feedback
-        const keyElement = document.querySelector(`[data-note="${note}"]`);
-        if (keyElement) {
-          keyElement.classList.add('active');
-        }
-      } catch (error) {
-        console.error('Error playing note:', error);
-      }
+    function playNote(note,isIce=false){
+      if(!isAudioInitialized){ document.getElementById('status').textContent='まず「音声を有効化」をタップしてください'; return; }
+      try{
+        const octave=parseInt(document.getElementById('octave').value);
+        const base=baseFrequencies[note]; const mult=Math.pow(2,octave-4);
+        let freq=base*mult; if(isIce){ freq *= iceNoteRatio; }
+        const osc=audioContext.createOscillator(); const ng=audioContext.createGain();
+        osc.type='triangle'; osc.frequency.setValueAtTime(freq,audioContext.currentTime);
+        ng.gain.setValueAtTime(0,audioContext.currentTime); ng.gain.linearRampToValueAtTime(0.1,audioContext.currentTime+0.05);
+        osc.connect(ng); ng.connect(gainNode); osc.start();
+        currentNotes.set(note,{oscillator:osc,gainNode:ng});
+        const el=document.querySelector(`[data-note="${note}"]`); if(el){ el.classList.add('active'); }
+      }catch(e){ console.error('playNote error',e); }
     }
 
-    // Stop a note
-    function stopNote(note) {
-      if (currentNotes.has(note)) {
-        const { oscillator, gainNode: noteGain } = currentNotes.get(note);
-        
-        try {
-          noteGain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.1);
-          setTimeout(() => {
-            try {
-              oscillator.stop();
-            } catch (e) {
-              // Note already stopped
-            }
-          }, 100);
-        } catch (error) {
-          console.error('Error stopping note:', error);
-        }
-        
+    function stopNote(note){
+      if(currentNotes.has(note)){
+        const {oscillator, gainNode:ng}=currentNotes.get(note);
+        ng.gain.linearRampToValueAtTime(0,audioContext.currentTime+0.1);
+        setTimeout(()=>{ try{oscillator.stop();}catch(_){} },100);
         currentNotes.delete(note);
       }
-      
-      // Remove visual feedback
-      const keyElement = document.querySelector(`[data-note="${note}"]`);
-      if (keyElement) {
-        keyElement.classList.remove('active');
-      }
+      const el=document.querySelector(`[data-note="${note}"]`); if(el){ el.classList.remove('active'); }
     }
 
-    // Stop all notes
-    function stopAll() {
-      currentNotes.forEach((_, note) => stopNote(note));
+    function stopAll(){ currentNotes.forEach((_,n)=>stopNote(n)); }
+    function updateVolume(){ const v=document.getElementById('volume').value/100; document.getElementById('volumeValue').textContent=document.getElementById('volume').value+'%'; if(gainNode){ gainNode.gain.setValueAtTime(v*0.3,audioContext.currentTime);} }
+    function updateOctave(){ document.getElementById('octaveValue').textContent=document.getElementById('octave').value; }
+    function playDemoMelody(){
+      if(!isAudioInitialized){ document.getElementById('status').textContent='まず音声を有効化してください'; return; }
+      const melody=[{note:'C',ice:false,duration:500},{note:'D#',ice:true,duration:500},{note:'E',ice:false,duration:500},{note:'F#',ice:true,duration:500},{note:'G',ice:false,duration:500},{note:'A#',ice:true,duration:500},{note:'B',ice:false,duration:500},{note:'C',ice:false,duration:1000}];
+      let t=0; melody.forEach(m=>{ setTimeout(()=>{ playNote(m.note,m.ice); setTimeout(()=>stopNote(m.note),m.duration-50); }, t); t+=m.duration; });
     }
 
-    // Update volume
-    function updateVolume() {
-      const volume = document.getElementById('volume').value / 100;
-      document.getElementById('volumeValue').textContent = document.getElementById('volume').value + '%';
-      if (gainNode) {
-        gainNode.gain.setValueAtTime(volume * 0.3, audioContext.currentTime);
-      }
-    }
-
-    // Update octave display
-    function updateOctave() {
-      document.getElementById('octaveValue').textContent = document.getElementById('octave').value;
-    }
-
-    // Play demo melody
-    function playDemoMelody() {
-      if (!isAudioInitialized) {
-        document.getElementById('status').textContent = 'まず「音声を有効化」ボタンをクリックしてください';
-        return;
-      }
-      
-      const melody = [
-        { note: 'C', ice: false, duration: 500 },
-        { note: 'D#', ice: true, duration: 500 },
-        { note: 'E', ice: false, duration: 500 },
-        { note: 'F#', ice: true, duration: 500 },
-        { note: 'G', ice: false, duration: 500 },
-        { note: 'A#', ice: true, duration: 500 },
-        { note: 'B', ice: false, duration: 500 },
-        { note: 'C', ice: false, duration: 1000 }
-      ];
-      
-      let delay = 0;
-      melody.forEach(({ note, ice, duration }) => {
-        setTimeout(() => {
-          playNote(note, ice);
-          setTimeout(() => stopNote(note), duration - 50);
-        }, delay);
-        delay += duration;
-      });
-    }
-
-    // Event listeners
-    document.getElementById('volume').addEventListener('input', updateVolume);
-    document.getElementById('octave').addEventListener('input', updateOctave);
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-      const keyMap = {
-        'a': 'C', 'w': 'C#', 's': 'D', 'e': 'D#', 'd': 'E', 'f': 'F',
-        't': 'F#', 'g': 'G', 'y': 'G#', 'h': 'A', 'u': 'A#', 'j': 'B'
-      };
-      
-      const note = keyMap[e.key.toLowerCase()];
-      if (note && !currentNotes.has(note)) {
-        const isIce = ['C#', 'D#', 'F#', 'G#', 'A#'].includes(note);
-        playNote(note, isIce);
-      }
+    document.getElementById('volume').addEventListener('input',updateVolume);
+    document.getElementById('octave').addEventListener('input',updateOctave);
+    document.addEventListener('keydown',e=>{
+      const map={'a':'C','w':'C#','s':'D','e':'D#','d':'E','f':'F','t':'F#','g':'G','y':'G#','h':'A','u':'A#','j':'B'};
+      const n=map[e.key.toLowerCase()]; if(n && !currentNotes.has(n)){ const ice=['C#','D#','F#','G#','A#'].includes(n); playNote(n,ice); }
     });
-
-    document.addEventListener('keyup', (e) => {
-      const keyMap = {
-        'a': 'C', 'w': 'C#', 's': 'D', 'e': 'D#', 'd': 'E', 'f': 'F',
-        't': 'F#', 'g': 'G', 'y': 'G#', 'h': 'A', 'u': 'A#', 'j': 'B'
-      };
-      
-      const note = keyMap[e.key.toLowerCase()];
-      if (note) {
-        stopNote(note);
-      }
+    document.addEventListener('keyup',e=>{
+      const map={'a':'C','w':'C#','s':'D','e':'D#','d':'E','f':'F','t':'F#','g':'G','y':'G#','h':'A','u':'A#','j':'B'};
+      const n=map[e.key.toLowerCase()]; if(n){ stopNote(n); }
     });
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-      generateKeyboard();
-      updateVolume();
-      updateOctave();
+    document.addEventListener('DOMContentLoaded',()=>{
+      generateKeyboard(); updateVolume(); updateOctave();
+      if(window.innerWidth<=768){ document.getElementById('status').textContent='鍵盤をタップして音を再生できます'; }
+      else{ document.getElementById('status').textContent='キーボード: A-S-D-F-G-H-J（白鍵）、W-E-T-Y-U（アイス）'; }
     });
   </script>
 </body>
