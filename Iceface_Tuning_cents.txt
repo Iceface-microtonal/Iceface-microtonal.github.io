@@ -1,0 +1,2 @@
+Cents list for Iceface Tuning (black keys +50c):
+0,150,200,350,400,500,650,700,850,900,1050,1100,1200
