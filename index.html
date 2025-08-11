@@ -68,23 +68,23 @@
     .meta { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background:#fff; padding:1em; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.06); }
   </style>
 
-  <!-- JSON-LD: 定義（DefinedTerm） -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "DefinedTerm",
-    "name": "Iceface Tuning",
-    "alternateName": ["アイスフェイス・チューニング", "Iceface Tuning (black keys +50c)"],
-    "description": "12平均律を基に黒鍵のみを+50セント上げる独自調律。白鍵で安定、黒鍵で微分音の彩りを得る。",
-    "inDefinedTermSet": "https://iceface-microtonal.github.io/",
-    "url": "https://iceface-microtonal.github.io/",
-    "additionalProperty": [
-      {"@type":"PropertyValue","name":"octave","value":"1200 cents"},
-      {"@type":"PropertyValue","name":"cents","value":"0,150,200,350,400,500,650,700,850,900,1050,1100,1200"}
-    ]
-    /* "sameAs": ["https://zenodo.org/record/XXXXX","https://github.com/…"]  ← DOI等ができたら追加 */
-  }
-  </script>
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"DefinedTerm",
+  "@id":"https://iceface-microtonal.github.io/#iceface-tuning",
+  "name":"Iceface Tuning",
+  "description":"12平均律を基に黒鍵のみを+50セント上げる独自調律。",
+  "keywords":["microtuning","microtonal","Scala",".scl",".tun","MTS-ESP","Kontakt","Lumatone","Xenharmonic","Sevish"],
+  "mentions":[
+    {"@type":"Product","name":"Native Instruments Kontakt","brand":{"@type":"Brand","name":"Native Instruments"},"sameAs":"https://www.native-instruments.com/"},
+    {"@type":"Product","name":"Lumatone keyboard","brand":{"@type":"Brand","name":"Lumatone"},"sameAs":"https://www.lumatone.io/"},
+    {"@type":"Organization","name":"Xenharmonic community","sameAs":"https://en.xen.wiki/"},
+    {"@type":"Person","name":"Sevish","sameAs":"https://sevish.com/"}
+  ],
+  "url":"https://iceface-microtonal.github.io/"
+}
+</script>
 
   <!-- JSON-LD: FAQ（定義クエリを拾わせる） -->
   <script type="application/ld+json">
@@ -203,16 +203,7 @@ B -50c
     </p>
   </div>
 
-  <div class="section">
-    <h2>特徴と影響</h2>
-    <ul>
-      <li>Native Instruments Kontakt や DAW の microtuning 機能を活用</li>
-      <li>Sevish やXenharmonicコミュニティから注目</li>
-      <li>Lumatone を用いたライブ演奏</li>
-      <li>哲学・ユーモア・教育的視点のある音律設計</li>
-    </ul>
-  </div>
-
+ 
   <div class="section">
     <h2>今後の展望</h2>
     <p>「Ice Tonality」や「Iceface Maqam」など、AIやGDCと連携しながら新しい音楽世界の開拓を進めています。</p>
