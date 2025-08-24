@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>XG Scale Tuning)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root { --gap: 10px; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin: 24px; }
+    h1 { font-size: 1.2rem; margin: 0 0 12px; }
+    .row { display: flex; flex-wrap: wrap; gap: var(--gap); align-items: center; margin: 8px 0; }
+    button, select, input[type="number"] { font-size: 1rem; padding: 8px 12px; }
+    label { font-size: 0.95rem; }
+    .pill { border: 1px solid #ddd; border-radius: 999px; padding: 8px 12px; }
+    #log { width: 100%; height: 220px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    table { border-collapse: collapse; width: 100%; max-width: 480px; }
+    th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: center; }
+    th { background: #f6f6f6; }
+    small { color: #666; }
+    .spacer { flex: 1 1 auto; }
+  </style>
+</head>
+<body>
+  <h1>VL70‑m WebMIDI: Microtuning（XG Scale Tuning）</h1>
+
+  <div class="row">
+    <button id="connect">MIDIに接続（SysEx許可）</button>
+    <select id="outputs"></select>
+    <label class="pill">Device ID:
+      <input id="deviceId" type="number" min="0" max="15" value="0" style="width:4.5em">
+    </label>
+    <label class="pill">Part:
+      <input id="partIndex" type="number" min="0" max="15" value="0" style="width:4.5em">
+    </label>
+    <button id="sendAll" disabled>12音すべて送信</button>
+    <button id="clearLog">ログ消去</button>
+  </div>
+
+  <div class="row">
+    <label class="pill">音（C..B）:
+      <select id="noteSel">
+        <option>C</option><option>C#</option><option>D</option><option>D#</option>
+        <option>E</option><option>F</option><option>F#</option><option>G</option>
+        <option>G#</option><option>A</option><option>A#</option><option>B</option>
+      </select>
+    </label>
+    <label class="pill">セント（-64..+63）:
+      <input id="cents" type="number" min="-64" max="63" value="0" style="width:5.5em">
+    </label>
+    <button id="add">Add/Update</button>
+    <button id="remove">Remove（0に戻す）</button>
+    <div class="spacer"></div>
+    <button id="presetEqual">Equal（全0）</button>
+    <button id="presetIceface">Iceface（黒鍵+50c）</button>
+  </div>
+
+  <div class="row">
+    <div>
+      <table id="tuningTable" aria-label="現在のチューニング">
+        <thead><tr><th>Note</th><th>Cents</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <small>ヒント：VL70‑mは各音（C..B）に−64〜+63cを設定できます（オクターブ反復）。送信形式はXG Parameter Changeです。</small>
+    </div>
+  </div>
+
+  <textarea id="log" readonly></textarea>
+
+<script>
+(function(){
+  // --- Constants & Helpers ---
+  const ORDER = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+  const NOTE_ADDR = { "C":0x41, "C#":0x42, "D":0x43, "D#":0x44, "E":0x45, "F":0x46,
+                      "F#":0x47, "G":0x48, "G#":0x49, "A":0x4A, "A#":0x4B, "B":0x4C };
+
+  function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+  async function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+  function hex(bytes){ return Array.from(bytes).map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' '); }
+
+  // --- DOM ---
+  const connectBtn = document.getElementById('connect');
+  const outputsEl = document.getElementById('outputs');
+  const deviceIdEl = document.getElementById('deviceId');
+  const partIndexEl = document.getElementById('partIndex');
+  const sendAllBtn = document.getElementById('sendAll');
+  const clearLogBtn = document.getElementById('clearLog');
+  const noteSel = document.getElementById('noteSel');
+  const centsEl = document.getElementById('cents');
+  const addBtn = document.getElementById('add');
+  const removeBtn = document.getElementById('remove');
+  const presetEqualBtn = document.getElementById('presetEqual');
+  const presetIcefaceBtn = document.getElementById('presetIceface');
+  const tableBody = document.querySelector('#tuningTable tbody');
+  const logEl = document.getElementById('log');
+
+  // --- State ---
+  let midiAccess = null;
+  let output = null;
+  let tuning = Object.fromEntries(ORDER.map(n => [n, 0])); // current cents map
+
+  function log(msg){
+    const t = new Date().toLocaleTimeString();
+    logEl.value += `[${t}] ${msg}\n`;
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function refreshTable(){
+    tableBody.innerHTML = "";
+    for(const n of ORDER){
+      const tr = document.createElement('tr');
+      const tdN = document.createElement('td'); tdN.textContent = n;
+      const tdC = document.createElement('td'); tdC.textContent = tuning[n];
+      tr.appendChild(tdN); tr.appendChild(tdC);
+      tableBody.appendChild(tr);
+    }
+  }
+
+  function populateOutputs(){
+    outputsEl.innerHTML = "";
+    const it = midiAccess.outputs.values();
+    for (const o of it) {
+      const opt = document.createElement('option');
+      opt.value = o.id;
+      opt.textContent = o.name + " (" + o.manufacturer + ")";
+      outputsEl.appendChild(opt);
+    }
+    if (outputsEl.options.length) {
+      outputsEl.selectedIndex = 0;
+      output = midiAccess.outputs.get(outputsEl.value);
+      sendAllBtn.disabled = false;
+      log("出力選択: " + output.name);
+    } else {
+      output = null;
+      sendAllBtn.disabled = true;
+      log("MIDI出力が見つかりません。");
+    }
+  }
+
+  outputsEl.addEventListener('change', () => {
+    output = midiAccess.outputs.get(outputsEl.value);
+    log("出力切替: " + (output ? output.name : "(none)"));
+  });
+
+  // --- SysEx builder for XG Scale Tuning ---
+  function buildXgScaleMsg(deviceId, partIndex, noteName, cents){
+    cents = clamp(cents|0, -64, +63);
+    const data = (0x40 + cents) & 0x7F;
+    const al = NOTE_ADDR[noteName];
+    if (al === undefined) throw new Error("Invalid note: " + noteName);
+    return new Uint8Array([
+      0xF0, 0x43, 0x10 + (deviceId & 0x0F), 0x4C, // F0 43 1n 4C
+      0x08, (partIndex & 0x0F), al, data, 0xF7   // 08 part AL DATA F7
+    ]);
+  }
+
+  function buildAllMsgs(){
+    const dev = clamp(parseInt(deviceIdEl.value||"0",10), 0, 15);
+    const part = clamp(parseInt(partIndexEl.value||"0",10), 0, 15);
+    const msgs = [];
+    for (const n of ORDER){
+      msgs.push(buildXgScaleMsg(dev, part, n, tuning[n]|0));
+    }
+    return msgs;
+  }
+
+  async function sendMsgs(msgs){
+    if (!output) throw new Error("MIDI出力が未選択です");
+    for (const m of msgs){
+      output.send(m);
+      log("SEND: " + hex(m));
+      await sleep(8); // 軽く間隔
+    }
+    log("完了: 送信しました。");
+  }
+
+  // --- UI actions ---
+  connectBtn.addEventListener('click', async () => {
+    try {
+      if (!('requestMIDIAccess' in navigator)) {
+        log("このブラウザは WebMIDI に未対応です。Chrome/Edge でHTTPS上からお試しを。");
+        return;
+      }
+      midiAccess = await navigator.requestMIDIAccess({ sysex: true });
+      log("Web MIDI: 許可されました。");
+      populateOutputs();
+    } catch (e) {
+      log("MIDIアクセス失敗: " + e.message);
+    }
+  });
+
+  addBtn.addEventListener('click', () => {
+    const n = noteSel.value;
+    const c = clamp(parseInt(centsEl.value||"0",10), -64, 63);
+    tuning[n] = c;
+    refreshTable();
+    log(`設定: ${n} = ${c}c`);
+  });
+
+  removeBtn.addEventListener('click', () => {
+    const n = noteSel.value;
+    tuning[n] = 0;
+    refreshTable();
+    log(`設定解除: ${n} を 0c に戻しました`);
+  });
+
+  presetEqualBtn.addEventListener('click', () => {
+    for (const n of ORDER) tuning[n] = 0;
+    refreshTable();
+    log("プリセット: Equal（全0）を適用");
+  });
+
+  presetIcefaceBtn.addEventListener('click', () => {
+    for (const n of ORDER) tuning[n] = 0;
+    for (const n of ["C#","D#","F#","G#","A#"]) tuning[n] = 50;
+    refreshTable();
+    log("プリセット: Iceface（黒鍵+50c）を適用");
+  });
+
+  sendAllBtn.addEventListener('click', async () => {
+    try {
+      await sendMsgs(buildAllMsgs());
+    } catch (e) {
+      log("送信エラー: " + e.message);
+    }
+  });
+
+  clearLogBtn.addEventListener('click', () => { logEl.value = ""; });
+
+  // init
+  refreshTable();
+})();
+</script>
+</body>
+</html>
