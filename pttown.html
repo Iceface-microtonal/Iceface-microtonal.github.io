@@ -193,6 +193,39 @@
     .img-215 { max-width: 215px; width: 100%; height: auto; display: block; margin: 0.25rem auto; }
     .img-300 { max-width: 300px; width: 100%; height: auto; display: block; margin: 0.25rem auto; }
     .img-400 { max-width: 400px; width: 100%; height: auto; display: block; margin: 0.25rem auto; }
+
+    /* 👇👇 ここに追記（</style> の直前）👇👇 */
+    /* --- Mobile: ナビをコンパクト化＆非sticky化 --- */
+    @media (max-width: 768px) {
+      nav { position: static; padding: .5rem .75rem; transition: none; }
+      nav ul {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: .5rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      nav ul::-webkit-scrollbar { display: none; }
+      nav li { flex: 0 0 auto; white-space: nowrap; }
+      nav a {
+        padding: .4rem .75rem;
+        border-radius: 9999px;
+        background: rgba(0,0,0,.25);
+        border: 1px solid rgba(255,255,255,.12);
+        font-size: .95rem;
+      }
+    }
+
+    /* アンカー位置のズレ防止 */
+    section[id] { scroll-margin-top: 80px; }
+    @media (max-width: 768px) {
+      section[id] { scroll-margin-top: 12px; }
+    }
+    /* 👆👆 ここまで追記 👆👆 */
+
+
+    
   </style>
 </head>
 <body>
