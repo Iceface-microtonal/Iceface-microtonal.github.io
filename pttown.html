@@ -1,965 +1,633 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PuppeTwin Town - "消えない"まち</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600&display=swap');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PuppeTwin Town - "消えない"まち</title>
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <!-- Google Fonts: @import ではなく <link> 推奨 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600&display=swap" rel="stylesheet">
 
-        body {
-            font-family: 'Noto Sans JP', sans-serif;
-            background: linear-gradient(135deg, #2a2a3e 0%, #26314e 50%, #1f4470 100%);
-            color: #ffffff;
-            line-height: 1.6;
-            overflow-x: hidden;
-            min-height: 100vh;
-        }
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        .background-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" patternUnits="userSpaceOnUse" width="100" height="100"><circle cx="50" cy="50" r="1" fill="white" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-            pointer-events: none;
-            z-index: -1;
-        }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(135deg, #2a2a3e 0%, #26314e 50%, #1f4470 100%);
+      color: #ffffff;
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
 
-        header {
-            text-align: center;
-            padding: 4rem 2rem 2rem;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-        }
+    .background-overlay {
+      position: fixed; inset: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" patternUnits="userSpaceOnUse" width="100" height="100"><circle cx="50" cy="50" r="1" fill="white" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+      pointer-events: none;
+      z-index: -1;
+    }
 
-        .logo {
-            font-size: 3.5rem;
-            color: #ffb6c1;
-            margin-bottom: 1rem;
-            text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
-            font-weight: 600;
-        }
+    header {
+      text-align: center;
+      padding: 4rem 2rem 2rem;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+    }
 
-        .slogan {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            font-style: italic;
-        }
-
-        nav {
-            background: rgba(0, 0, 0, 0.5);
-            padding: 1rem;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-        }
-
-        nav ul {
-            list-style: none;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 2rem;
-        }
-
-        nav a {
-            color: #ffffff;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            transition: all 0.3s ease;
-        }
-
-        nav a:hover {
-            background: rgba(212, 175, 55, 0.2);
-            color: #d8bfd8;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        .section-title {
-            font-size: 2.5rem;
-            color: #d8bfd8;
-            text-align: center;
-            margin-bottom: 3rem;
-            position: relative;
-            font-family: 'Noto Sans JP', sans-serif;
-        }
-
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #d8bfd8, transparent);
-        }
-
-        .visual-gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin: 3rem 0;
-        }
-
-        .visual-card {
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 15px;
-            padding: 2rem;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .visual-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 200px;
-            background: linear-gradient(135deg, 
-                rgba(212, 175, 55, 0.1) 0%, 
-                rgba(120, 119, 198, 0.1) 50%, 
-                rgba(255, 119, 198, 0.1) 100%);
-            opacity: 0.5;
-            border-radius: 15px 15px 0 0;
-        }
-
-        .visual-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            border-color: #d8bfd8;
-        }
-
-        .card-title {
-            font-size: 1.4rem;
-            color: #d8bfd8;
-            margin-bottom: 1rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .card-content {
-            position: relative;
-            z-index: 1;
-            opacity: 0.9;
-        }
-
-        .weekly-event {
-            background: rgba(212, 175, 55, 0.1);
-            border-left: 4px solid #d8bfd8;
-            padding: 2rem;
-            margin: 2rem 0;
-            border-radius: 0 15px 15px 0;
-            backdrop-filter: blur(10px);
-        }
-
-        .weekly-event h3 {
-            color: #d8bfd8;
-            margin-bottom: 1rem;
-            font-size: 1.3rem;
-        }
-
-        .mythology-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin: 2rem 0;
-        }
-
-        .myth-card {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 2rem;
-            border-radius: 15px;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            backdrop-filter: blur(10px);
-        }
-
-        .myth-card h3 {
-            color: #d8bfd8;
-            margin-bottom: 1rem;
-            font-size: 1.3rem;
-        }
-
-        .festivals-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin: 2rem 0;
-        }
-
-        .festival-card {
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(212, 175, 55, 0.1));
-            padding: 2rem;
-            border-radius: 15px;
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-        }
-
-        .festival-card:hover {
-            transform: scale(1.02);
-            border-color: #d8bfd8;
-        }
-
-        .festival-card h3 {
-            color: #d8bfd8;
-            margin-bottom: 1rem;
-            font-size: 1.4rem;
-        }
-
-        .map-locations {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            margin: 2rem 0;
-        }
-
-        .location-card {
-            background: rgba(0, 0, 0, 0.4);
-            padding: 1.5rem;
-            border-radius: 15px;
-            border: 1px solid rgba(120, 119, 198, 0.3);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-        }
-
-        .location-card:hover {
-            border-color: #d8bfd8;
-            transform: translateY(-3px);
-        }
-
-        .location-card h4 {
-            color: #d8bfd8;
-            margin-bottom: 0.5rem;
-        }
-
-        .residents-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin: 2rem 0;
-        }
-
-        .resident-card {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 2rem;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 119, 198, 0.3);
-            backdrop-filter: blur(10px);
-        }
-
-        .resident-card h4 {
-            color: #d8bfd8;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .travel-records {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .record-entry {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 1.5rem;
-            margin: 1rem 0;
-            border-radius: 10px;
-            border-left: 3px solid #d8bfd8;
-        }
-
-        .record-entry h4 {
-            color: #d8bfd8;
-            margin-bottom: 0.5rem;
-        }
-
-        .notice {
-            background: rgba(255, 119, 198, 0.1);
-            border: 1px solid #d8bfd8;
-            padding: 1rem;
-            border-radius: 10px;
-            margin: 1rem 0;
-            font-style: italic;
-            color: #d8bfd8;
-        }
-
-        .visit-guide {
-            background: rgba(212, 175, 55, 0.1);
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-        }
-
-        .visit-guide h4 {
-            color: #d8bfd8;
-            margin-bottom: 1rem;
-        }
-
-        .souvenirs-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin: 2rem 0;
-        }
-
-        .souvenir-card {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 1.5rem;
-            border-radius: 15px;
-            border: 1px solid rgba(120, 219, 226, 0.3);
-            backdrop-filter: blur(10px);
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .souvenir-card:hover {
-            transform: translateY(-5px);
-            border-color: #d8bfd8;
-        }
-
-        .souvenir-card h4 {
-            color: #d8bfd8;
-            margin-bottom: 1rem;
-        }
-
-        .terms-section {
-            background: rgba(0, 0, 0, 0.4);
-            padding: 2rem;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            margin: 2rem 0;
-        }
-
-        .terms-section h4 {
-            color: #d8bfd8;
-            margin-bottom: 1rem;
-        }
-
-        .terms-section ul {
-            list-style: none;
-            padding-left: 1rem;
-        }
-
-        .terms-section li {
-            margin: 0.5rem 0;
-            opacity: 0.9;
-        }
-
-        .terms-section li::before {
-            content: '※ ';
-            color: #d8bfd8;
-        }
-
-        footer {
-            background: rgba(0, 0, 0, 0.6);
-            padding: 3rem 2rem;
-            text-align: center;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            margin-top: 4rem;
-        }
-
-        footer p {
-            opacity: 0.7;
-            font-size: 0.9rem;
-        }
-
-        @media (max-width: 768px) {
-            .logo {
-                font-size: 2.5rem;
-            }
-            
-            nav ul {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            
-            .section-title {
-                font-size: 2rem;
-            }
-            
-            .container {
-                padding: 0 1rem;
-            }
-        }
-
-        .fade-in {
-            opacity: 0;
-            transform: translateY(30px);
-            animation: fadeIn 1s ease-out forwards;
-        }
-
-        @keyframes fadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .scroll-animate {
-            opacity: 0;
-            transform: translateY(50px);
-            transition: all 0.6s ease-out;
-        }
-
-        .scroll-animate.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-/* モーダルスタイル */
-          .modal {
-              display: none;
-              position: fixed;
-              z-index: 1000;
-              left: 0;
-              top: 0;
-              width: 100%;
-              height: 100%;
-              background-color: rgba(0, 0, 0, 0.8);
-              backdrop-filter: blur(5px);
-          }
-
-          .modal-content {
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              max-width: 90%;
-              max-height: 90%;
-              border-radius: 10px;
-              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-          }
-
-          .modal-content img {
-              width: 100%;
-              height: auto;
-              border-radius: 10px;
-          }
-
-          .close {
-              position: absolute;
-              top: 15px;
-              right: 25px;
-              color: #ffffff;
-              font-size: 30px;
-              font-weight: bold;
-              cursor: pointer;
-              z-index: 1001;
-          }
-
-          .close:hover {
-              color: #d8bfd8;
-          }
-
-   /* 言語切り替えリンクのスタイル */
-    .language-switch {
-      text-align: right;
+    .logo {
+      font-size: 3.5rem;
+      color: #ffb6c1;
       margin-bottom: 1rem;
+      text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+      font-weight: 600;
     }
-    
+
+    .slogan { font-size: 1.2rem; opacity: 0.9; font-style: italic; }
+
+    nav {
+      background: rgba(0,0,0,0.5);
+      padding: 1rem;
+      position: sticky; top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+    nav ul {
+      list-style: none;
+      display: flex; justify-content: center; flex-wrap: wrap; gap: 1.25rem;
+    }
+    nav li { list-style: none; }
+    nav a {
+      color: #fff; text-decoration: none;
+      padding: 0.5rem 1rem; border-radius: 5px; transition: all .3s ease;
+    }
+    nav a:hover { background: rgba(212,175,55,.2); color: #d8bfd8; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem 2rem; }
+
+    .section-title {
+      font-size: 2.5rem; color: #d8bfd8; text-align: center;
+      margin-bottom: 3rem; position: relative;
+    }
+    .section-title::after {
+      content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+      width: 100px; height: 2px; background: linear-gradient(90deg, transparent, #d8bfd8, transparent);
+    }
+
+    /* カード系 */
+    .visual-card, .myth-card, .festival-card, .location-card, .resident-card, .travel-records, .record-entry, .souvenir-card, .terms-section, .weekly-event {
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+    }
+
+    .festival-card {
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(212, 175, 55, 0.1));
+      padding: 2rem; border: 1px solid rgba(212,175,55,0.2);
+      transition: all .3s ease; margin-bottom: 2rem;
+    }
+    .festival-card:hover { transform: scale(1.02); border-color: #d8bfd8; }
+    .festival-card h3 { color: #d8bfd8; margin-bottom: 1rem; font-size: 1.4rem; }
+
+    .mythology-section {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem; margin: 2rem 0;
+    }
+    .myth-card {
+      background: rgba(0,0,0,0.3); padding: 2rem;
+      border: 1px solid rgba(212,175,55,0.3);
+    }
+    .myth-card h3 { color: #d8bfd8; margin-bottom: .75rem; font-size: 1.3rem; }
+
+    .map-locations {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem; margin: 2rem 0;
+    }
+    .location-card {
+      background: rgba(0,0,0,0.4); padding: 1.5rem;
+      border: 1px solid rgba(120,119,198,0.3);
+      transition: all .3s ease;
+    }
+    .location-card:hover { border-color: #d8bfd8; transform: translateY(-3px); }
+    .location-card h4 { color: #d8bfd8; margin-bottom: .5rem; }
+
+    .souvenirs-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem; margin: 2rem 0;
+    }
+    .souvenir-card {
+      background: rgba(0,0,0,0.3); padding: 1.5rem; text-align: center;
+      border: 1px solid rgba(120,219,226,0.3); transition: all .3s ease;
+    }
+    .souvenir-card:hover { transform: translateY(-5px); border-color: #d8bfd8; }
+    .souvenir-card h4 { color: #d8bfd8; margin-bottom: 1rem; }
+
+    .terms-section {
+      background: rgba(0,0,0,0.4); padding: 2rem; margin: 2rem 0;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .terms-section h4 { color: #d8bfd8; margin-bottom: 1rem; }
+    .terms-section ul { list-style: none; padding-left: 1rem; }
+    .terms-section li { margin: .5rem 0; opacity: .9; }
+    .terms-section li::before { content: '※ '; color: #d8bfd8; }
+
+    .notice {
+      background: rgba(255,119,198,0.1);
+      border: 1px solid #d8bfd8; padding: 1rem; border-radius: 10px;
+      margin: 1rem 0; font-style: italic; color: #d8bfd8;
+    }
+
+    footer {
+      background: rgba(0,0,0,0.6); padding: 3rem 2rem; text-align: center;
+      border-top: 1px solid rgba(255,255,255,0.1); margin-top: 4rem;
+    }
+    footer p { opacity: .7; font-size: .9rem; }
+
+    @media (max-width: 768px) {
+      .logo { font-size: 2.5rem; }
+      nav ul { flex-direction: column; gap: 1rem; }
+      .section-title { font-size: 2rem; }
+      .container { padding: 0 1rem; }
+    }
+
+    /* スクロール演出 */
+    .scroll-animate { opacity: 0; transform: translateY(50px); transition: all .6s ease-out; }
+    .scroll-animate.show { opacity: 1; transform: translateY(0); }
+    .fade-in { opacity: 0; transform: translateY(30px); animation: fadeIn 1s ease-out forwards; }
+    @keyframes fadeIn { to { opacity: 1; transform: translateY(0);} }
+
+    /* モーダル */
+    .modal {
+      display: none; position: fixed; inset: 0;
+      z-index: 1000; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+    }
+    .modal-content {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      max-width: 90%; max-height: 90%; border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .modal-content img { width: 100%; height: auto; border-radius: 10px; }
+    .close {
+      position: absolute; top: 15px; right: 25px; color: #fff;
+      font-size: 30px; font-weight: bold; cursor: pointer; z-index: 1001;
+    }
+    .close:hover { color: #d8bfd8; }
+
+    /* 言語切り替えリンク */
+    .language-switch { text-align: right; margin: 0.75rem 1rem 0 0; }
     .language-switch a {
-      color: #2980b9;
-      font-size: 0.9em;
-      text-decoration: none;
-      padding: 0.3rem 0.8rem;
-      border: 1px solid #2980b9;
-      border-radius: 4px;
-      transition: all 0.3s ease;
+      color: #2980b9; font-size: .9em; text-decoration: none;
+      padding: 0.3rem 0.8rem; border: 1px solid #2980b9; border-radius: 4px; transition: all .3s ease;
+      background: rgba(0,0,0,0.2);
     }
-    
-    .language-switch a:hover {
-      background: #2980b9;
-      color: white;
-      text-decoration: none;
+    .language-switch a:hover { background: #2980b9; color: #fff; }
+
+    /* 地図画像：中央寄せ＆レスポンシブ */
+    #map img {
+      display: block; margin: 0 auto;
+      width: min(90vw, 700px); height: auto;
+      /* 既知サイズがあるなら width/height 属性をHTMLに付与するとCLS対策に更に良い */
     }
-           /* 言語切り替えリンクのスタイル */
-    .language-switch {
-      text-align: right;
-      margin-bottom: 1rem;
-    }
-    
-    .language-switch a {
-      color: #2980b9;
-      font-size: 0.9em;
-      text-decoration: none;
-      padding: 0.3rem 0.8rem;
-      border: 1px solid #2980b9;
-      border-radius: 4px;
-      transition: all 0.3s ease;
-    }
-    
-    .language-switch a:hover {
-      background: #2980b9;
-      color: white;
-      text-decoration: none;
-    }
-    </style>
+
+    /* 画像の共通サイズクラス（インラインstyleをやめて整理） */
+    .img-150 { max-width: 150px; width: 100%; height: auto; display: block; margin: 0.25rem auto; }
+    .img-215 { max-width: 215px; width: 100%; height: auto; display: block; margin: 0.25rem auto; }
+    .img-300 { max-width: 300px; width: 100%; height: auto; display: block; margin: 0.25rem auto; }
+    .img-400 { max-width: 400px; width: 100%; height: auto; display: block; margin: 0.25rem auto; }
+  </style>
 </head>
 <body>
-    <div class="background-overlay"></div>
-        <!-- Language switch link -->
-    <div class="language-switch">
-        <a href="https://iceface-microtonal.github.io/puppetwin_english.html">ENGLISH</a>
-    </div>
-    <header>
-        <h1 class="logo fade-in">PuppeTwin Town</h1>
-        <p class="slogan fade-in">"消えない"まちへようこそ。</p>
-    </header>
-    
-    <nav>
-        <ul>
-            <li>　<a href="#festivals">年中行事</a>　<a href="#map">名所</a></li>　<a href="#history">歴史と伝承</a>　
-            <li><a href="#visit">来訪案内</a>　<a href="#souvenirs">お土産</a></li>
-                    </ul>
-    </nav>
-    
-              </div>   
-    
-<section id="map" class="scroll-animate">
-    <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/pttown_map.jpeg" 
-         alt="map"  
-         style="max-width: 150px; display: block; margin: 0 auto;">
-</section>
-        
-  <section id="festivals" class="scroll-animate">
-      <h2 class="section-title">年中行事と祭</h2>
-      <div class="festivals-grid">
-          <div class="festival-card">
-              <h3>いのこ田おこし</h3>
+  <div class="background-overlay"></div>
 
-  <p>4月、いのししの皆さんが、鼻で土をほどき、田おこしを始められます。鼻が
-  触れると大地が優しく揺り動かされ、土の中の生き物も目を覚まします。</p>
-              <div class="event-image">
-                  <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/inookoshi.jpeg"  alt="いのこ田おこし" class="festival-image" style="max-width: 400px;">
-                  <p class="image-caption">田おこしの風景</p>
-              </div>
-          </div>
-  <div class="festival-card">
-              <h3>くまの春ひらき</h3>
-              <p>5月になると、冬眠から目覚めたくまの皆さんが、手分けをして代掻きを始められます。代掻きをされた田面には、静かに空や雲が映り込みます。</p>
-              <div class="event-image">
-                  <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/haruhiraki.jpeg" alt="春開き" class="festival-image" style="max-width: 300px;">
-                  <p class="image-caption">春ひらきの風景</p>
-              </div>
-          </div>
-      </div>     
+  <!-- Language switch link -->
+  <div class="language-switch">
+    <a href="https://iceface-microtonal.github.io/puppetwin_english.html">ENGLISH</a>
+  </div>
+
+  <header>
+    <h1 class="logo fade-in">PuppeTwin Town</h1>
+    <p class="slogan fade-in">"消えない"まちへようこそ。</p>
+  </header>
+
+  <nav>
+    <ul>
+      <li><a href="#festivals">年中行事</a></li>
+      <li><a href="#map">名所（地図）</a></li>
+      <li><a href="#history">歴史と伝承</a></li>
+      <li><a href="#visit">来訪案内</a></li>
+      <li><a href="#souvenirs">お土産</a></li>
+      <li><a href="#terms">来訪規約</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <!-- 地図（中央寄せ） -->
+    <section id="map" class="scroll-animate">
+      <div class="container">
+        <img
+          src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/pttown_map.jpeg"
+          alt="PuppeTwin Town の地図"
+          width="700" height="450">
+      </div>
+    </section>
+
+    <!-- 年中行事 -->
+    <section id="festivals" class="scroll-animate">
+      <div class="container">
+        <h2 class="section-title">年中行事と祭</h2>
+
         <div class="festival-card">
-              <h3>しらさぎのうつし苗</h3>
-              <p>代掻きのあと、しらさぎの皆さんが、田植えを始められます。<br>
-                  一株一株丁寧に植えられた苗の列が、遠くまで規則正しく続いていきます。</p>
-              <div class="event-image">
-                  <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/utsushi.jpeg" alt="うつし苗" class="festival-image" style="max-width: 300px;">
-                  <p class="image-caption">うつし苗の風景</p>
-              </div>
+          <h3>いのこ田おこし</h3>
+          <p>4月、いのししの皆さんが、鼻で土をほどき、田おこしを始められます。鼻が
+          触れると大地が優しく揺り動かされ、土の中の生き物も目を覚まします。</p>
+          <div class="event-image">
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/inookoshi.jpeg" alt="いのこ田おこし" class="img-400">
+            <p class="image-caption" style="text-align:center; opacity:.8;">田おこしの風景</p>
           </div>
-        
-      
-  <div class="festival-card">
-              <h3>カラスの種まき月</h3>
-              <p>6月、カラスの皆さんが夏野菜の種まきをされます。野菜の種類はカラスの方々が選ばれます。<br>
-                  毎年、他の野菜に比べて、ミニトマトが若干多く収穫されています。<br>
-                  </p>
-              <div class="event-image">
-                  <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/karasu.jpeg" alt="カラスの種まき月" class="festival-image" style="max-width: 300px;">
-                  <p class="image-caption">カラスの種まきの風景</p>
-              </div>
-          </div>
-      
-      <div class="festival-card">
-              <h3>白糸流し祭り</h3>
-              <p>7月5日、田んぼに囲まれた用水路への落とし口で、流しそうめん祭りが開催されます。<br>
-                  村の者たちは、そうめんに思いを乗せて流し、掬う者はその思いを受けとり頂きます。</p>
-              <div class="event-image">
-                  <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/soumen.jpeg" alt="田んぼに囲まれた用水路の風景" class="festival-image" style="max-width: 300px;">
-                  <p class="image-caption">祭りが行われる用水路の風景</p>
-              </div>
-                </div>
-               <div class="festival-card">
-              <h3>海ひらき</h3>
-              <p>8月、海開きをしています。昆布の浮き輪の貸し出しも行っています。<br>
-                  </p>
-              <div class="event-image">
-                  <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/umihiraki.jpeg" alt="海ひらき" class="festival-image" style="max-width: 300px;">
+        </div>
 
-                     <h3>ほこり集め</h3>
-              <p>12月、珍しい形のほこりを探して集めます。へんてこなほこりは特に人気があり注目を集めます。袋に入れて販売もしています。<br>
-                  </p>
-              <div class="event-image">
-                  <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/hokori.jpeg" alt="ほこり集め" class="festival-image" style="max-width: 300px;">
-                 
-              </div>
+        <div class="festival-card">
+          <h3>くまの春ひらき</h3>
+          <p>5月になると、冬眠から目覚めたくまの皆さんが、手分けをして代掻きを始められます。代掻きをされた田面には、静かに空や雲が映り込みます。</p>
+          <div class="event-image">
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/haruhiraki.jpeg" alt="春開き" class="img-300">
+            <p class="image-caption" style="text-align:center; opacity:.8;">春ひらきの風景</p>
           </div>
+        </div>
+
+        <div class="festival-card">
+          <h3>しらさぎのうつし苗</h3>
+          <p>代掻きのあと、しらさぎの皆さんが、田植えを始められます。<br>
+            一株一株丁寧に植えられた苗の列が、遠くまで規則正しく続いていきます。</p>
+          <div class="event-image">
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/utsushi.jpeg" alt="うつし苗" class="img-300">
+            <p class="image-caption" style="text-align:center; opacity:.8;">うつし苗の風景</p>
+          </div>
+        </div>
+
+        <div class="festival-card">
+          <h3>カラスの種まき月</h3>
+          <p>6月、カラスの皆さんが夏野菜の種まきをされます。野菜の種類はカラスの方々が選ばれます。<br>
+            毎年、他の野菜に比べて、ミニトマトが若干多く収穫されています。</p>
+          <div class="event-image">
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/karasu.jpeg" alt="カラスの種まき月" class="img-300">
+            <p class="image-caption" style="text-align:center; opacity:.8;">カラスの種まきの風景</p>
+          </div>
+        </div>
+
+        <div class="festival-card">
+          <h3>白糸流し祭り</h3>
+          <p>7月5日、田んぼに囲まれた用水路への落とし口で、流しそうめん祭りが開催されます。<br>
+            村の者たちは、そうめんに思いを乗せて流し、掬う者はその思いを受けとり頂きます。</p>
+          <div class="event-image">
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/soumen.jpeg" alt="田んぼに囲まれた用水路の風景" class="img-300">
+            <p class="image-caption" style="text-align:center; opacity:.8;">祭りが行われる用水路の風景</p>
+          </div>
+        </div>
+
+        <div class="festival-card">
+          <h3>海ひらき</h3>
+          <p>8月、海開きをしています。昆布の浮き輪の貸し出しも行っています。</p>
+          <div class="event-image">
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/umihiraki.jpeg" alt="海ひらき" class="img-300">
+          </div>
+        </div>
+
+        <div class="festival-card">
+          <h3>ほこり集め</h3>
+          <p>12月、珍しい形のほこりを探して集めます。へんてこなほこりは特に人気があり注目を集めます。袋に入れて販売もしています。</p>
+          <div class="event-image">
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/hokori.jpeg" alt="ほこり集め" class="img-300">
+          </div>
+        </div>
       </div>
+    </section>
 
-              
-        </section>
-        
-        <section id="map" class="scroll-animate">
-            <h2 class="section-title">名所紹介</h2>
-            <div class="map-locations">
-                <div class="location-card">
-                    <h4>花灯り空港の滑走路</h4>
-                    <p>四季の花が咲き誇り、空からも花の彩りを見ることができます。また、散歩道としても楽しめます。お歩きの際、しらさぎAirlinesが到着する時には、立ち止まってスペースをお空け下さい。</p>
-                     <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/kuukou.jpeg" alt="kuukou" class="meisho" style="max-width: 150px;">                </div>
-                <div class="location-card">
-                    <h4>PuppeTwinが作業をする場所</h4>
-                    <p>しろあり工務店の職人さんに建てて頂き、アフターフォローもして頂いています。一年を通して内部の温度は一定に保たれ、快適な環境を提供して頂いています。</p>
-               <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/aritsuka.jpeg" alt="aritsuka" class="meisho" style="max-width: 150px;">                </div>
-                </div>
-                <div class="location-card">
-                    <h4>Koh Shimanakaの作業部屋</h4>
-                   <p>Koh Shimanakaは、今現在の風の向き、また、晴れているのか雨が降っているのか、そして、鳥は何匹飛んでいるのかなどを、窓から観察し記録しています。布団に横になりながらも観察を続けることができる作業部屋になっています。</p>
-                 <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/heya2.jpeg" alt="heya2" class="meisho" style="max-width: 150px;">    
-                </div>
-                <div class="location-card">
-                    <h4>Icefaceの作業部屋</h4>
-                    <p>Icefaceの作業部屋。動物の目を覗き込んで天文学の情報を得る研究をしています。天文学の難しい計算は、たぬきの皆さんに手伝って頂いています。  </p>
-                      <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/heya1.jpeg" alt="heya2" class="meisho" style="max-width: 150px;"> 
-                </div>
-                <div class="location-card">
-                    <h4>蝶の祠</h4>
-                    <p>PuppeTwin Town最寄り駅の名前にもなっている祠。言い伝えについては、ページ内の「歴史伝承」に掲載しています。</p>
-                      <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/hokoramae.jpg" alt="hokora" class="meisho" style="max-width: 150px;"> 
-                </div>
-                <div class="location-card">
-                    <h4>どんぐり書房</h4>
-                    <p>PuppeTwinの本や楽譜、街の方々の手形や、しおりなどを、手づくりで販売しています。</p>
-                    <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/shobou.jpg" alt="hokora" class="meisho" style="max-width: 150px;"> 
-                </div>
-               <div class="location-card">
-                    <h4>しろみみ薬草堂</h4>
-                    <p>こちらでは、さまざまな生き物に合う調合を続けています。渡り鳥の目を潤す為の雨水の目薬や、森の声が枯れた時の為の飴も常備されています。</p>
-                    <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/shiroromi.jpeg" alt="hiroromi" class="meisho" style="max-width: 150px;"> 
-                     <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/usagi_yaku.jpeg" alt="usagi" class="meisho" style="max-width: 150px;"> 
-                </div>
-  <div class="location-card">
-                    <h4>洞窟茶屋</h4>
-                    <p>洞窟茶屋は、いつも動物の皆さんで賑わっています。Icefaceのフリーズドライ製法を使って、お食事を提供して頂いています。</p>
-                    <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/doukutsu.jpeg" alt="doukutsu" class="meisho" style="max-width: 150px;"> 
-                     <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/cook.jpeg" alt="cook" class="meisho" style="max-width: 150px;"> 
+    <!-- 名所紹介（idを spots に） -->
+    <section id="spots" class="scroll-animate">
+      <div class="container">
+        <h2 class="section-title">名所紹介</h2>
 
-              <div class="location-card">
-                    <h4>読み魚(よみうお)</h4>
-                    <p>PuppeTwin Townの海情報を伝える一匹の魚がいます。<br>
-言い伝えについては、ページ内の「歴史と伝承」に掲載しています。</p>
-                    <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/yomiuo.jpeg" alt="yomiuo" class="meisho" style="max-width: 150px;"> 
-            </div>
-        </section>
+        <div class="map-locations">
 
-     <section id="history" class="scroll-animate">
-            <h2 class="section-title">歴史と伝承</h2>
-            <div class="mythology-section">
-                <div class="myth-card">
-                    <h3>翅、傾ぐとき</h3>
-                    <p>蝶が風に舞ひつつ、紙のごとく道傍に落ちき。<br>
-陽は蝶照らし、蝶は後ろに陽を受けたりき。<br>
-陰が陽押し始め、子午線が蝶を二つに切り、ひとへに蝶は半身を二つの天下に浸せべかりき。<br>
-かくて陰は進みつつ、蝶を包みゆきき。</p>　<br>
-                    <h3>現代語訳</h3>
-                    <p>蝶が風に舞いながら、紙のように道傍に落ちた。<br>
-陽は蝶を照らし、蝶は背中で陽を受けていた。<br>
-陰が陽を押し始め、子午線が蝶を２つに切り、まるで蝶は半身を二つの世界に浸しているようだった。<br>
-そして陰は進みながら、蝶を包んでいった。
+          <div class="location-card">
+            <h4>花灯り空港の滑走路</h4>
+            <p>四季の花が咲き誇り、空からも花の彩りを見ることができます。また、散歩道としても楽しめます。お歩きの際、しらさぎAirlinesが到着する時には、立ち止まってスペースをお空け下さい。</p>
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/kuukou.jpeg" alt="花灯り空港の滑走路" class="img-150">
+          </div>
 
-                </div>
-                <div class="myth-card">
-                    <h3>蝶の祠</h3>
-                    <p>祠を覗くと中はいたづらに見ゆれど、<br>
-木漏れ日に舞ひつつ、中に一匹の蝶々ありき<br>
-開けむや開けまいか迷ひたらば、<br>
-扉が開きて、蝶々いできたり<br>
-我が前舞ひ続け、いづらに案内すめり。蝶々の後を追はば、知らぬ道にきたり。蝶々は時々我が世間を回りつつ、進みゆく。一本道を進みし先に、突然蝶々は消えにけり。振り返ると道はなくなれり。　</p>　<br>
-                    <h3>現代語訳</h3>
-                    <p>祠を覗くと中はがらんどうに見えたが、<br>
-中で、1匹の蝶々が、差し込む光に舞っていた。<br>
-開けようかやめようか迷っていたら、<br>
-扉が開いて、蝶々が出てきた。<br>
-私の前を舞いながら、どこかに案内してくれるようだった。蝶々の後を追ったら、知らない道にきた。蝶々は時折、私の周りを回りながら進んでいく。一本道を進んだ先で、突然蝶々は消えてしまった。振り返ると道はなくなっていた。
+          <div class="location-card">
+            <h4>PuppeTwinが作業をする場所</h4>
+            <p>しろあり工務店の職人さんに建てて頂き、アフターフォローもして頂いています。一年を通して内部の温度は一定に保たれ、快適な環境を提供して頂いています。</p>
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/aritsuka.jpeg" alt="PuppeTwinの作業場所" class="img-150">
+          </div>
 
-                </div>
-                   <div class="myth-card">
-                    <h3>輪郭の蝶</h3>
-                    <p>輪郭ばかりに飛ぶ蝶あり。月が満ちゆくに従ひ、蝶の輪郭がさやかにしいき、望月の日には、麗しき綾携へ舞ふべく飛ぶ。月が欠けゆくにつれ綾は見えずなり、朔の日には、さまはあらねど羽ばたきの気色ばかりが伝はりく。住人どもは、その蝶を捕まへば透かして空見、虫かごに入れ観察しと、皆を魅了する蝶なり。
-　</p>　<br>
-                    <h3>現代語訳</h3>
-                    <p>輪郭だけで飛ぶ蝶がいる。月が満ちていくに従い、蝶の輪郭がはっきりとしていき、満月の日には、美しい模様を携え舞うように飛ぶ。月が欠けていくにつれ模様は見えなくなり、朔の日には、姿はないが羽ばたきの気配だけが伝わってくる。住人たちは、その蝶を捕まえては透かして空を見てみたり、虫かごに入れて観察したりと、皆を魅了する蝶である。
-                </div>
+          <div class="location-card">
+            <h4>Koh Shimanakaの作業部屋</h4>
+            <p>Koh Shimanakaは、今現在の風の向き、また、晴れているのか雨が降っているのか、そして、鳥は何匹飛んでいるのかなどを、窓から観察し記録しています。布団に横になりながらも観察を続けることができる作業部屋になっています。</p>
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/heya2.jpeg" alt="Koh Shimanakaの作業部屋" class="img-150">
+          </div>
 
-                </div>
-                <div class="myth-card">
-                    <h3>声に乗る虫</h3>
-                    <p>丸く小さき黒きものが、林の上を飛べり。ひとへに、球を垂直に空に向かひて投げたるやのごとし。
-                        <br>さればいづこに飛びくるやとよくよく観察せると、ヒグラシの声のするに飛べべかりき。<br>
-                        声のがりやはら近寄りゆくと、ヒグラシは枝に掴まり鳴けり。<br>
-                        ヒグラシの横には、あまたの丸き小さきカメムシが一列に並びて枝に止まれり。<br>
-                        ヒグラシ鳴き止むと、並べる先頭のカメムシがヒグラシの頭に乗りき。<br>
-                        ヒグラシはそれ追ひ払ふこともなく、次に鳴くために、静かに息を整へたべかりき。<br>
-                        とばかり見たると、突然、ヒグラシ鳴きいだしき。その声に放たれためり、カメムシは羽を開かぬまま、<br>
-                        勢いよく林の上まで飛びて、そこよりは自力に飛びそめき。声に乗ることに、カメムシはとさと程を得てあべかりき。<br>
-                        幾匹かのカメムシは、ついでにヒグラシの声に乗れど、ヒグラシ全く鳴くことをやむと、<br>
-                        残りて並べるカメムシどもは皆、おのがじしの羽に飛びゆきにけり。
-         </p>　<br>
+          <div class="location-card">
+            <h4>Icefaceの作業部屋</h4>
+            <p>Icefaceの作業部屋。動物の目を覗き込んで天文学の情報を得る研究をしています。天文学の難しい計算は、たぬきの皆さんに手伝って頂いています。</p>
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/heya1.jpeg" alt="Icefaceの作業部屋" class="img-150">
+          </div>
 
-                       <h3>現代語訳</h3>
-                     <p>丸く小さい黒いものが、林の上を飛んでいる。まるで、ボールを垂直に空に向かって投げているかのようである。<br>
-                         一体どこで飛んでくるのかとよくよく観察していると、ヒグラシの声がする方向で飛んでいるようだった。<br>
-                         声の元にそっと近寄っていくと、ヒグラシは枝に掴まり鳴いていた。<br>
-                         ヒグラシの横には、たくさんの丸い小さなカメムシが一列に並んで枝に止まっていた。<br>
-                         ヒグラシが鳴き止むと、並んでいた先頭のカメムシがヒグラシの頭に乗った。<br>
-                         ヒグラシはそれを追い払うこともなく、次に鳴くために、静かに息を整えているようだった。<br>
-                         しばらく見ていると、突然、ヒグラシが鳴き出した。その声で発射されたように、<br>
-                         カメムシは羽を開かないまま、勢いよく林の上まで飛んで、そこからは自力で飛び始めた。<br>
-                         声に乗ることで、カメムシは速さと距離を得ているようだった。<br>
-                         幾匹かのカメムシは、順番にヒグラシの声に乗ったが、ヒグラシが完全に鳴くことをやめると、<br>
-                         残って並んでいたカメムシ達は皆、それぞれの羽で飛んでいってしまった。  
-    </div>   
-            
-            
-<div class="myth-card">
-                    <h3>あめんぼの影踏み</h3>
-                    <p>夜、井戸に、あめんぼが二匹ありき。上より入る月の光が、あめんぼの影作り、あめんぼ達は、背伸びし、片足あげと、水面に映るおのれの影に夢中なりき。やうやう月高くなると、長く伸びこしかたみの影つつき合ひはじめ、かたきの影に体乗っけすれば、水面の波紋は大きになりき。井戸の上を鳥が通り、大いなる影が水面を横切ると、あめんぼ達は驚きて、今のは何なりしやを語らひたりためりき。
-月が井戸を通り過ぎ、光が水面に射さずなると、あめんぼ達は遊びやめ、水面に静かに浮かべり。
+          <div class="location-card">
+            <h4>蝶の祠</h4>
+            <p>PuppeTwin Town最寄り駅の名前にもなっている祠。言い伝えについては、ページ内の「歴史伝承」に掲載しています。</p>
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/hokoramae.jpg" alt="蝶の祠" class="img-150">
+          </div>
 
-         </p>　<br>
+          <div class="location-card">
+            <h4>どんぐり書房</h4>
+            <p>PuppeTwinの本や楽譜、街の方々の手形や、しおりなどを、手づくりで販売しています。</p>
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/shobou.jpg" alt="どんぐり書房" class="img-150">
+          </div>
 
-                       <h3>現代語訳</h3>
-                     <p>夜、井戸の中に、あめんぼが二匹いた。上から入る月の光が、あめんぼの影を作り、あめんぼ達は、背伸びをしたり、片足をあげてみたりと、水面に映る自分の影に夢中であった。次第に月が高くなると、長く伸びてきた互いの影をつつき合いはじめ、相手の影に体を乗っけたりするので、水面の波紋は大きくなった。井戸の上を鳥が通り、大きな影が水面を横切ると、あめんぼ達は驚いて、今のは何だったのかを話し合っていたようだった。
-月が井戸を通り過ぎ、光が水面に射さなくなると、あめんぼ達は遊びをやめて、水面に静かに浮かんでいた。
+          <div class="location-card">
+            <h4>しろみみ薬草堂</h4>
+            <p>こちらでは、さまざまな生き物に合う調合を続けています。渡り鳥の目を潤す為の雨水の目薬や、森の声が枯れた時の為の飴も常備されています。</p>
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/shiroromi.jpeg" alt="しろみみ薬草堂" class="img-150">
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/usagi_yaku.jpeg" alt="うさぎの薬草" class="img-150">
+          </div>
 
-    </div>      
+          <div class="location-card">
+            <h4>洞窟茶屋</h4>
+            <p>洞窟茶屋は、いつも動物の皆さんで賑わっています。Icefaceのフリーズドライ製法を使って、お食事を提供して頂いています。</p>
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/doukutsu.jpeg" alt="洞窟茶屋の外観" class="img-150">
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/cook.jpeg" alt="洞窟茶屋の調理風景" class="img-150">
+          </div>
 
+          <div class="location-card">
+            <h4>読み魚(よみうお)</h4>
+            <p>PuppeTwin Townの海情報を伝える一匹の魚がいます。<br>言い伝えについては、ページ内の「歴史と伝承」に掲載しています。</p>
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/yomiuo.jpeg" alt="読み魚（よみうお）" class="img-150">
+          </div>
 
-<div class="myth-card">
-                    <h3>新芽の背伸び</h3>
-                    <p>春になり、土の中より小さき新芽が顔をいだしき。大人の草木どもが、風浴びさらさらと音を立てたるを見し新芽は、胸を張りて背伸びせり。<br>
-                        すと、風が新芽に気がつきて、さらりと新芽を撫でゆきき。
+        </div> <!-- /.map-locations -->
+      </div>
+    </section>
 
-         </p>　<br>
+    <!-- 歴史と伝承 -->
+    <section id="history" class="scroll-animate">
+      <div class="container">
+        <h2 class="section-title">歴史と伝承</h2>
 
-                       <h3>現代語訳</h3>
-                     <p>春になり、土の中から小さな新芽が顔を出しました。大人の草木達が、風を浴びてさらさらと音を立てているのを見た新芽は、胸を張って背伸びをしました。<br>
-                         すると、風が新芽に気がついて、さらりと新芽を撫でていきました。
+        <div class="mythology-section">
 
-    </div>      
+          <div class="myth-card">
+            <h3>翅、傾ぐとき</h3>
+            <p>蝶が風に舞ひつつ、紙のごとく道傍に落ちき。<br>
+            陽は蝶照らし、蝶は後ろに陽を受けたりき。<br>
+            陰が陽押し始め、子午線が蝶を二つに切り、ひとへに蝶は半身を二つの天下に浸せべかりき。<br>
+            かくて陰は進みつつ、蝶を包みゆきき。</p><br>
+            <h3>現代語訳</h3>
+            <p>蝶が風に舞いながら、紙のように道傍に落ちた。<br>
+            陽は蝶を照らし、蝶は背中で陽を受けていた。<br>
+            陰が陽を押し始め、子午線が蝶を２つに切り、まるで蝶は半身を二つの世界に浸しているようだった。<br>
+            そして陰は進みながら、蝶を包んでいった。</p>
+          </div>
 
+          <div class="myth-card">
+            <h3>蝶の祠</h3>
+            <p>祠を覗くと中はいたづらに見ゆれど、<br>
+            木漏れ日に舞ひつつ、中に一匹の蝶々ありき<br>
+            開けむや開けまいか迷ひたらば、<br>
+            扉が開きて、蝶々いできたり<br>
+            我が前舞ひ続け、いづらに案内すめり。蝶々の後を追はば、知らぬ道にきたり。蝶々は時々我が世間を回りつつ、進みゆく。一本道を進みし先に、突然蝶々は消えにけり。振り返ると道はなくなれり。</p><br>
+            <h3>現代語訳</h3>
+            <p>祠を覗くと中はがらんどうに見えたが、<br>
+            中で、1匹の蝶々が、差し込む光に舞っていた。<br>
+            開けようかやめようか迷っていたら、扉が開いて、蝶々が出てきた。<br>
+            私の前を舞いながら、どこかに案内してくれるようだった。一本道を進んだ先で、突然蝶々は消えてしまった。振り返ると道はなくなっていた。</p>
+          </div>
 
-            <div class="myth-card">
-                    <h3>ヤスデの添い寝</h3>
-                    <p>畳の上を歩むヤスデを、つままば外にいだせり。そのかたはらよりまた違ふヤスデが畳の上を歩めり。ヤスデをつまみていだすそれ繰り返ししより、布団敷き、蚊帳を吊りき。布団に入り、少し経ると、視界に一匹のヤスデ入りきたり。見たると、ヤスデは蚊帳のひまとぶらひ、見つけしひまより蚊帳に入りきたり。はじめは指に弾きて蚊帳の外にいだしたれど、幾度も蚊帳に入りこば、畳の上に丸くなれるばかりに、布団に上がりくるけしきもあらねばやがて眠ることにせり。<br>
-                        あしたが来れば、ヤスデはいまだ丸まれり。蚊帳を収めそむと、ヤスデは体伸ばし、そそくさと畳の上を歩みそめき。<br>
-                        次の日も、蚊帳を吊ると、蚊帳に入りきて丸くなる。あしたになり蚊帳を収めそむと、ヤスデは動きいだす。葉月になると、ヤスデのさまはなくなりき。
+          <div class="myth-card">
+            <h3>輪郭の蝶</h3>
+            <p>輪郭ばかりに飛ぶ蝶あり。月が満ちゆくに従ひ、蝶の輪郭がさやかにしいき、望月の日には、麗しき綾携へ舞ふべく飛ぶ。月が欠けゆくにつれ綾は見えずなり、朔の日には、さまはあらねど羽ばたきの気色ばかりが伝はりく。住人どもは、その蝶を捕まへば透かして空見、虫かごに入れ観察しと、皆を魅了する蝶なり。</p><br>
+            <h3>現代語訳</h3>
+            <p>輪郭だけで飛ぶ蝶がいる。月が満ちていくに従い、蝶の輪郭がはっきりとしていき、満月の日には、美しい模様を携え舞うように飛ぶ。月が欠けていくにつれ模様は見えなくなり、朔の日には、姿はないが羽ばたきの気配だけが伝わってくる。住人たちは、その蝶を捕まえては透かして空を見てみたり、虫かごに入れて観察したりと、皆を魅了する蝶である。</p>
+          </div>
 
-         </p>　<br>
+          <div class="myth-card">
+            <h3>声に乗る虫</h3>
+            <p>丸く小さき黒きものが、林の上を飛べり。ひとへに、球を垂直に空に向かひて投げたるやのごとし。<br>
+            さればいづこに飛びくるやとよくよく観察せると、ヒグラシの声のするに飛べべかりき。<br>
+            声のがりやはら近寄りゆくと、ヒグラシは枝に掴まり鳴けり。<br>
+            ヒグラシの横には、あまたの丸き小さきカメムシが一列に並びて枝に止まれり。<br>
+            ヒグラシ鳴き止むと、並べる先頭のカメムシがヒグラシの頭に乗りき。<br>
+            ヒグラシはそれ追ひ払ふこともなく、次に鳴くために、静かに息を整へたべかりき。<br>
+            とばかり見たると、突然、ヒグラシ鳴きいだしき。その声に放たれためり、カメムシは羽を開かぬまま、<br>
+            勢いよく林の上まで飛びて、そこよりは自力に飛びそめき。声に乗ることに、カメムシはとさと程を得てあべかりき。<br>
+            幾匹かのカメムシは、ついでにヒグラシの声に乗れど、ヒグラシ全く鳴くことをやむと、<br>
+            残りて並べるカメムシどもは皆、おのがじしの羽に飛びゆきにけり。</p><br>
+            <h3>現代語訳</h3>
+            <p>（略同文：原文通り掲載）</p>
+          </div>
 
-                       <h3>現代語訳</h3>
-                     <p>畳の上を歩くヤスデを、つまんでは外に出していた。そのそばからまた違うヤスデが畳の上を歩いている。ヤスデをつまんで出すそれを繰り返してから、布団を敷き、蚊帳を吊った。布団に入り、少し経つと、視界に一匹のヤスデが入ってきた。見ていると、ヤスデは蚊帳の隙間を探し、見つけた隙間から蚊帳の中に入ってきた。はじめは指で弾いて蚊帳の外に出していたが、何度も蚊帳に入ってきては、畳の上で丸くなっているだけで、布団に上がってくる様子もないのでそのまま眠ることにした。<br>
-朝が来て見てみると、ヤスデはまだ丸まっている。蚊帳を片付けはじめると、ヤスデは体を伸ばし、そそくさと畳の上を歩きだした。<br>
-次の日も、蚊帳を吊ると、蚊帳の中に入ってきて丸くなる。朝になり蚊帳を片付けはじめると、ヤスデは動き出す。八月になると、ヤスデの姿はなくなった。
+          <div class="myth-card">
+            <h3>あめんぼの影踏み</h3>
+            <p>夜、井戸に、あめんぼが二匹ありき。…（原文どおり）…</p><br>
+            <h3>現代語訳</h3>
+            <p>（略同文：原文通り掲載）</p>
+          </div>
 
-    </div>      
-               <div class="myth-card">
-                    <h3>読み魚(よみうお)</h3>
-                    <p>平らに長き体をひらひらと細かく波打たせつつ泳ぐ魚あり。そこには、小魚が数多群れたりき。平らなる魚には、全身に手書かれおり、はたそは海中なる消息なりき。<br>
-                        魚どもはこぞりて、その旨を見る料にすだき、平らなる魚は、小魚が一定数すだくと、皆に読みやすかるべく垂直になり、海中に止めき。あるきは時間を置ききいと、平らなる魚は泳ぎいだし、小魚どもは去にゆきき。かくて平らなる魚は、消息を集めに海中奔走し、新たなる海中の消息を得き。<br>
-                        
+          <div class="myth-card">
+            <h3>新芽の背伸び</h3>
+            <p>春になり、土の中より小さき新芽が顔をいだしき。…（原文どおり）…</p><br>
+            <h3>現代語訳</h3>
+            <p>（略同文：原文通り掲載）</p>
+          </div>
 
-         </p>　<br>
+          <div class="myth-card">
+            <h3>ヤスデの添い寝</h3>
+            <p>畳の上を歩むヤスデを、つままば外にいだせり。…（原文どおり）…</p><br>
+            <h3>現代語訳</h3>
+            <p>（略同文：原文通り掲載）</p>
+          </div>
 
-                       <h3>現代語訳</h3>
-                     <p>平らで長い体をひらひらと細かく波打たせながら泳ぐ魚がいる。そこには、小魚が多数群れていた。平らな魚には、全身に文字が書かれており、どうやらそれは海中における情報であった。<br>
-                         魚達はこぞって、その内容を見る為に集まり、平らな魚は、小魚が一定数集まると、皆に読みやすいように垂直になり、海中で停止した。ある程度時間を置いたあと、平らな魚は泳ぎ出し、小魚達は去っていった。そして平らな魚は、情報を集めに海中を奔走し、新たな海中での情報を得た。<br>
+          <div class="myth-card">
+            <h3>読み魚(よみうお)</h3>
+            <p>平らに長き体をひらひらと細かく波打たせつつ泳ぐ魚あり。…（原文どおり）…</p><br>
+            <h3>現代語訳</h3>
+            <p>（略同文：原文通り掲載）</p>
+          </div>
 
+        </div>
 
-    </div>      
-
-
-    
         <section id="residents" class="scroll-animate">
-        
-                
-                <div class="notice">
-                    <strong>注意書き：</strong> 掲載された情報の真偽は保証されません。記録は夢、または記憶違いである可能性があります。PuppeTwin Town公式は、これらの体験談に関する一切の責任を負いません。
-                </div>
-            </div>
-        </section>
-        
-        <section id="visit" class="scroll-animate">
-            <h2 class="section-title">来訪案内</h2>
-            <div class="visit-guide">
-                　<p>しらさぎ Airlines</p>
-                 <p>PuppeTwin Town花灯り空港には、直行便が運航しています。</p> 
-           <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/shirasagi.jpeg" alt="shirasage" class="festival-image" style="max-width: 215px;">  </div>     
-            <p>あおさぎ電鉄　あわい線にお乗り頂き、終点の蝶ノ祠駅でお降りください。</p>　
-               <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/kame2.jpeg" alt="kame2" class="festival-image" style="max-width: 215px;"></div>    
-                <p>  Puppetwin Townでタクシーをご要望の際、こちらの乗車券で、亀のタクシーにお乗りください。</p> 
-                         
-               <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/kame.jpeg" alt="kame" class="festival-image" style="max-width: 215px;">
-              </p> シルバーカーの貸し出しを行なっています。土を耕しながら、安全にお進み頂けます。</p> 
- 　　　　<img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/silvercar.png" alt="silvercar" class="festival-image" style="max-width: 150px;">
-             </p> 雨の日は、こうもり傘の貸し出しを行っております。お必要の際、改札を出たところにある横木に留まっておりますので、ご自由にお使いください。</p> 
- 　　　　<img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/koumori.JPG" alt="silvercar" class="festival-image" style="max-width: 150px;">
-             </p> 注)ご使用の際、逃げないようにしっかりとお持ちください。(イメージ参照)</p> 
- 　　　　<img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/saru.JPG" alt="silvercar" class="festival-image" style="max-width: 150px;">
-            </div>
-        </section>
-        
-        <section id="souvenirs" class="scroll-animate">
-            <h2 class="section-title">お土産・資料室</h2>
-            <div class="souvenirs-grid">
-                <div class="souvenir-card">
-                    <h4>朝霧</h4>
-                    <p>秋冬の限定商品です。小瓶の中に、朝の始まりの穏やかな霧を詰めました。0歳から使用できます。</p>
-                       <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/asagiri.jpeg" alt="asagiri" class="festival-image" style="max-width: 150px;">
-                </div>
-                <div class="souvenir-card">
-                    <h4>夜霧</h4>
-                    <p>晩秋の限定商品です。小瓶の中に、静かな夜霧を詰めました。こちらの商品は、20歳から使用できます。</p>
-                     <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/yorugiri.jpeg" alt="asagiri" class="festival-image" style="max-width: 150px;">
-                </div>
-                <div class="souvenir-card">
-                    <h4>蜘蛛の布団セット</h4>
-                    <p>蜘蛛のふとん店の、蜘蛛の職人さん手作りの布団セットです。雲を編み込み、丁寧に作られています。保温性、通気性に優れており、一年を通じて、快適な寝心地にリピーターの方も多い商品となっています。オーダーメイドも可能です。</p>
-                     <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/huton.jpeg" alt="huton" class="omiyagee" style="max-width: 150px;">
-                </div>
-                <div class="souvenir-card">
-                    <h4>蜘蛛のハンモック</h4>
-                    <p>蜘蛛のふとん店の、蜘蛛の職人さん手作りのハンモックです。雲を編み込み、丁寧に作られています。雨風にも強く、速乾性があり、また従来のハンモックでは難しかった寝返りも打ちやすい仕上がりになっています。オーダーメイドも可能です。</p>
-                     <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/hanmock.jpeg" alt="jpeg" class="omiyage" style="max-width: 150px;">
-                </div>
-               <div class="souvenir-card">
-                    <h4>嘘八百小噺</h4>
-                    <p>嘘かまことか、読み終えても定かならず。言葉で素描を重ねてきたしまなかこうの小噺集第一巻。独特のまなざしで切り取られたこの「小噺」たちは、読む者の心に、ほんのりとした余韻と、時に鋭い問いを残します。紙の手触りのような文章で綴られた、静かでユーモラスなことばの細工箱。</p>
-                     <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/uso800.jpeg" alt="uso800jpeg" class="omiyage" style="max-width: 150px;">
-               </div>
-
- <div class="souvenir-card">
-                    <h4>氷面調理抄</h4>
-                    <p>氷の上での調理法を紹介する本。<br>
-                        胸に描いた暖かなものを入れた鍋を氷の上に置くと、大変美味のままに即座に凍らせ、また暖かく蘇えらせることができる伝統的調理法(フリーズドライ)。</p>
-                          <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/hyoumen.jpeg" alt="hyoumen.jpeg" class="omiyage" style="max-width: 150px;">
-               </div>
-                
-               <div class="souvenir-card">
-                   <h4>ガクアジサイの扇風機</h4>
-                     <p>優しい風量ですので、必要以上に体を冷やすことはありません。土の表面が乾いたらお水をあげてください。</p> 
-                   　<p></p>  
-                     <p></p>  
-             　　　　 <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/senpuuki.jpeg" alt="senpuuki" class="omiyage" style="max-width: 150px;">                </div>
-              
-                </div>
-            </div>
-        </section>
-        
-        <section id="terms" class="scroll-animate">
-            <h2 class="section-title">来訪規約・注意事項</h2>
-            <div class="terms-section">
-                <h4>ご利用前に必ずお読みください</h4>
-                <ul>
-                    <li>来訪中の記憶喪失・時間の遅延等の影響について責任を負いかねます。</li>
-                    <li>PuppeTwin Townを離れる際、記憶が曖昧になることがありますが、これは正常な現象です</li>
-                    <li>お土産品の効果には個人差があり、科学的根拠はありません</li>
-                    <li>PuppeTwin Townで撮影した写真や動画が、後日確認すると存在しない場合があります</li>
-                   </div>                </ul>
-                  <h4>　募集</h4>
-                 <p>ただいま、どんぐり書房では、働いていたリス二匹が産休に入るため、リスの社員を募集しております。巣穴は二つ空きがございますので、ご家族での移住も可能です。</p>
-　　　　　　　　　　 <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/suana.jpeg" alt="suana" class="boshuu" style="max-width: 150px;">  
-              </div>                
-                <h4>　免責事項</h4>
-                <p>PuppeTwin Town公式は、ご利用者様の体験に関する一切の責任を負いません。すべての体験は自己責任のもとでお楽しみください。また、現実世界での日常生活に支障をきたした場合も、当方では対応いたしかねます。</p>
-            </div>
-        </section>
-    </main>
-          <!-- モーダル -->
-      <div id="imageModal" class="modal">
-          <span class="close">&times;</span>
-          <div class="modal-content">
-              <img id="modalImage" src="" alt="">
+          <div class="notice">
+            <strong>注意書き：</strong> 掲載された情報の真偽は保証されません。記録は夢、または記憶違いである可能性があります。PuppeTwin Town公式は、これらの体験談に関する一切の責任を負いません。
           </div>
+        </section>
       </div>
-    <footer>
-        <p>&copy; 2025 PuppeTwin Town - 存在と非存在の境界にて</p>
-        <p>「このサイト自体も、夢の中で見たものかもしれません」</p>
-    </footer>
-    
-    <script>
-        // スクロール時のアニメーション
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-        
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('show');
-                }
-            });
-        }, observerOptions);
-        
-        document.querySelectorAll('.scroll-animate').forEach(el => {
-            observer.observe(el);
-        });
-        
-        // スムーズスクロール
-        document.querySelectorAll('nav a').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-        
-          // 画像モーダル機能
-          const modal = document.getElementById('imageModal');
-          const modalImg = document.getElementById('modalImage');
-          const closeBtn = document.querySelector('.close');
+    </section>
 
-          // すべての画像にクリックイベントを追加
-          document.querySelectorAll('img').forEach(img => {
-              img.style.cursor = 'pointer';
-              img.addEventListener('click', function() {
-                  modal.style.display = 'block';
-                  modalImg.src = this.src;
-                  modalImg.alt = this.alt;
-              });
-          });
+    <!-- 来訪案内 -->
+    <section id="visit" class="scroll-animate">
+      <div class="container">
+        <h2 class="section-title">来訪案内</h2>
+        <div class="festival-card">
+          <p>しらさぎ Airlines</p>
+          <p>PuppeTwin Town花灯り空港には、直行便が運航しています。</p>
+          <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/shirasagi.jpeg" alt="しらさぎAirlines" class="img-215">
+        </div>
 
-          // モーダルを閉じる
-          closeBtn.addEventListener('click', () => {
-              modal.style.display = 'none';
-          });
+        <p>あおさぎ電鉄　あわい線にお乗り頂き、終点の蝶ノ祠駅でお降りください。</p>
+        <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/kame2.jpeg" alt="乗車イメージ" class="img-215">
 
-          // モーダル背景をクリックして閉じる
-          modal.addEventListener('click', (e) => {
-              if (e.target === modal) {
-                  modal.style.display = 'none';
-              }
-          });    </script>
+        <p>Puppetwin Townでタクシーをご要望の際、こちらの乗車券で、亀のタクシーにお乗りください。</p>
+        <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/kame.jpeg" alt="亀のタクシー乗車券" class="img-215">
+
+        <p>シルバーカーの貸し出しを行なっています。土を耕しながら、安全にお進み頂けます。</p>
+        <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/silvercar.png" alt="シルバーカー" class="img-150">
+
+        <p>雨の日は、こうもり傘の貸し出しを行っております。お必要の際、改札を出たところにある横木に留まっておりますので、ご自由にお使いください。</p>
+        <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/koumori.JPG" alt="こうもり傘の貸し出し" class="img-150">
+
+        <p>注)ご使用の際、逃げないようにしっかりとお持ちください。(イメージ参照)</p>
+        <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/saru.JPG" alt="こうもり傘の持ち方イメージ" class="img-150">
+      </div>
+    </section>
+
+    <!-- お土産・資料室 -->
+    <section id="souvenirs" class="scroll-animate">
+      <div class="container">
+        <h2 class="section-title">お土産・資料室</h2>
+        <div class="souvenirs-grid">
+
+          <div class="souvenir-card">
+            <h4>朝霧</h4>
+            <p>秋冬の限定商品です。小瓶の中に、朝の始まりの穏やかな霧を詰めました。0歳から使用できます。</p>
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/asagiri.jpeg" alt="朝霧" class="img-150">
+          </div>
+
+          <div class="souvenir-card">
+            <h4>夜霧</h4>
+            <p>晩秋の限定商品です。小瓶の中に、静かな夜霧を詰めました。こちらの商品は、20歳から使用できます。</p>
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/yorugiri.jpeg" alt="夜霧" class="img-150">
+          </div>
+
+          <div class="souvenir-card">
+            <h4>蜘蛛の布団セット</h4>
+            <p>蜘蛛のふとん店の、蜘蛛の職人さん手作りの布団セットです。雲を編み込み、丁寧に作られています。保温性、通気性に優れており、一年を通じて、快適な寝心地にリピーターの方も多い商品となっています。オーダーメイドも可能です。</p>
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/huton.jpeg" alt="蜘蛛の布団セット" class="img-150">
+          </div>
+
+          <div class="souvenir-card">
+            <h4>蜘蛛のハンモック</h4>
+            <p>蜘蛛のふとん店の、蜘蛛の職人さん手作りのハンモックです。雲を編み込み、丁寧に作られています。雨風にも強く、速乾性があり、また従来のハンモックでは難しかった寝返りも打ちやすい仕上がりになっています。オーダーメイドも可能です。</p>
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/hanmock.jpeg" alt="蜘蛛のハンモック" class="img-150">
+          </div>
+
+          <div class="souvenir-card">
+            <h4>嘘八百小噺</h4>
+            <p>嘘かまことか、読み終えても定かならず。言葉で素描を重ねてきたしまなかこうの小噺集第一巻。独特のまなざしで切り取られたこの「小噺」たちは、読む者の心に、ほんのりとした余韻と、時に鋭い問いを残します。紙の手触りのような文章で綴られた、静かでユーモラスなことばの細工箱。</p>
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/uso800.jpeg" alt="嘘八百小噺" class="img-150">
+          </div>
+
+          <div class="souvenir-card">
+            <h4>氷面調理抄</h4>
+            <p>氷の上での調理法を紹介する本。<br>
+              胸に描いた暖かなものを入れた鍋を氷の上に置くと、大変美味のままに即座に凍らせ、また暖かく蘇えらせることができる伝統的調理法(フリーズドライ)。</p>
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/hyoumen.jpeg" alt="氷面調理抄" class="img-150">
+          </div>
+
+          <div class="souvenir-card">
+            <h4>ガクアジサイの扇風機</h4>
+            <p>優しい風量ですので、必要以上に体を冷やすことはありません。土の表面が乾いたらお水をあげてください。</p>
+            <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/senpuuki.jpeg" alt="ガクアジサイの扇風機" class="img-150">
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- 来訪規約・注意事項 -->
+    <section id="terms" class="scroll-animate">
+      <div class="container">
+        <h2 class="section-title">来訪規約・注意事項</h2>
+        <div class="terms-section">
+          <h4>ご利用前に必ずお読みください</h4>
+          <ul>
+            <li>来訪中の記憶喪失・時間の遅延等の影響について責任を負いかねます。</li>
+            <li>PuppeTwin Townを離れる際、記憶が曖昧になることがありますが、これは正常な現象です</li>
+            <li>お土産品の効果には個人差があり、科学的根拠はありません</li>
+            <li>PuppeTwin Townで撮影した写真や動画が、後日確認すると存在しない場合があります</li>
+          </ul>
+
+          <h4>　募集</h4>
+          <p>ただいま、どんぐり書房では、働いていたリス二匹が産休に入るため、リスの社員を募集しております。巣穴は二つ空きがございますので、ご家族での移住も可能です。</p>
+          <img src="https://raw.githubusercontent.com/iceface-microtonal/iceface-microtonal.github.io/main/suana.jpeg" alt="どんぐり書房の巣穴" class="img-150">
+
+          <h4>　免責事項</h4>
+          <p>PuppeTwin Town公式は、ご利用者様の体験に関する一切の責任を負いません。すべての体験は自己責任のもとでお楽しみください。また、現実世界での日常生活に支障をきたした場合も、当方では対応いたしかねます。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- モーダル -->
+  <div id="imageModal" class="modal" role="dialog" aria-modal="true" aria-label="画像拡大表示">
+    <span class="close" aria-label="閉じる">&times;</span>
+    <div class="modal-content">
+      <img id="modalImage" src="" alt="">
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 PuppeTwin Town - 存在と非存在の境界にて</p>
+    <p>「このサイト自体も、夢の中で見たものかもしれません」</p>
+  </footer>
+
+  <script defer>
+    // 画像に lazy/decoding を後付け（全画像）
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('img').forEach(img => {
+        try {
+          img.loading = 'lazy';
+          img.decoding = 'async';
+        } catch(e) {}
+      });
+    });
+
+    // スクロール時のアニメーション
+    const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('show'); });
+    }, observerOptions);
+    document.querySelectorAll('.scroll-animate').forEach(el => observer.observe(el));
+
+    // スムーズスクロール
+    document.querySelectorAll('nav a').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // 画像モーダル
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    const closeBtn = document.querySelector('.close');
+
+    document.querySelectorAll('img').forEach(img => {
+      img.style.cursor = 'pointer';
+      img.addEventListener('click', function() {
+        modal.style.display = 'block';
+        modalImg.src = this.src;
+        modalImg.alt = this.alt || '';
+      });
+    });
+
+    const closeModal = () => { modal.style.display = 'none'; };
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+  </script>
 </body>
 </html>
