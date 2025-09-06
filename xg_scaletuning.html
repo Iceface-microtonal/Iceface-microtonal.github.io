@@ -2,22 +2,26 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <title>XG Scale Tuning)</title>
+  <title>XG Scale Tuning</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root { --gap: 10px; }
     body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin: 24px; }
     h1 { font-size: 1.2rem; margin: 0 0 12px; }
     .row { display: flex; flex-wrap: wrap; gap: var(--gap); align-items: center; margin: 8px 0; }
-    button, select, input[type="number"] { font-size: 1rem; padding: 8px 12px; }
+    button, select, input[type="number"], a.download {
+      font-size: 1rem; padding: 8px 12px;
+    }
     label { font-size: 0.95rem; }
     .pill { border: 1px solid #ddd; border-radius: 999px; padding: 8px 12px; }
     #log { width: 100%; height: 220px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    table { border-collapse: collapse; width: 100%; max-width: 480px; }
+    table { border-collapse: collapse; width: 100%; max-width: 520px; }
     th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: center; }
     th { background: #f6f6f6; }
     small { color: #666; }
     .spacer { flex: 1 1 auto; }
+    .downloads { display:flex; flex-wrap:wrap; gap:8px; }
+    .downloads a.download { border:1px solid #ddd; border-radius:8px; text-decoration:none; }
   </style>
 </head>
 <body>
@@ -25,7 +29,7 @@
 
   <div class="row">
     <button id="connect">MIDIに接続（SysEx許可）</button>
-    <select id="outputs"></select>
+    <select id="outputs" aria-label="MIDI出力デバイス一覧"></select>
     <label class="pill">Device ID:
       <input id="deviceId" type="number" min="0" max="15" value="0" style="width:4.5em">
     </label>
@@ -52,6 +56,10 @@
     <div class="spacer"></div>
     <button id="presetEqual">Equal（全0）</button>
     <button id="presetIceface">Iceface（黒鍵+50c）</button>
+    <!-- NEW: 追加プリセット -->
+    <button id="presetKotori">Kotori（F+50, B−50）</button>
+    <button id="presetSowaSowa">SowaSowa（D/E/F/A/B +50）</button>
+    <button id="presetBalloon">Balloon（E/B +50）</button>
   </div>
 
   <div class="row">
@@ -61,6 +69,15 @@
         <tbody></tbody>
       </table>
       <small>ヒント：VL70‑mは各音（C..B）に−64〜+63cを設定できます（オクターブ反復）。送信形式はXG Parameter Changeです。</small>
+    </div>
+  </div>
+
+  <!-- NEW: .scl ダウンロード -->
+  <div class="row">
+    <div class="downloads" aria-label=".sclダウンロード">
+      <a id="dlKotori"  class="download" href="#" download="kotori.scl">kotori.scl をダウンロード</a>
+      <a id="dlSowaSowa" class="download" href="#" download="SowaSowa.scl">SowaSowa.scl をダウンロード</a>
+      <a id="dlBalloon" class="download" href="#" download="Balloon.scl">Balloon.scl をダウンロード</a>
     </div>
   </div>
 
@@ -90,13 +107,36 @@
   const removeBtn = document.getElementById('remove');
   const presetEqualBtn = document.getElementById('presetEqual');
   const presetIcefaceBtn = document.getElementById('presetIceface');
+  // NEW: 追加プリセット
+  const presetKotoriBtn = document.getElementById('presetKotori');
+  const presetSowaSowaBtn = document.getElementById('presetSowaSowa');
+  const presetBalloonBtn = document.getElementById('presetBalloon');
+
   const tableBody = document.querySelector('#tuningTable tbody');
   const logEl = document.getElementById('log');
+
+  // NEW: ダウンロードリンク
+  const dlKotori = document.getElementById('dlKotori');
+  const dlSowaSowa = document.getElementById('dlSowaSowa');
+  const dlBalloon = document.getElementById('dlBalloon');
 
   // --- State ---
   let midiAccess = null;
   let output = null;
   let tuning = Object.fromEntries(ORDER.map(n => [n, 0])); // current cents map
+
+  // NEW: プリセット定義（指定以外は0）
+  const PRESETS = {
+    "Equal": Object.fromEntries(ORDER.map(n => [n, 0])),
+    "Iceface": Object.assign(Object.fromEntries(ORDER.map(n => [n, 0])), 
+      {"C#":50,"D#":50,"F#":50,"G#":50,"A#":50}),
+    "Kotori": Object.assign(Object.fromEntries(ORDER.map(n => [n, 0])),
+      {"F":50, "B":-50}),
+    "SowaSowa": Object.assign(Object.fromEntries(ORDER.map(n => [n, 0])),
+      {"D":50,"E":50,"F":50,"A":50,"B":50}),
+    "Balloon": Object.assign(Object.fromEntries(ORDER.map(n => [n, 0])),
+      {"E":50,"B":50})
+  };
 
   function log(msg){
     const t = new Date().toLocaleTimeString();
@@ -173,6 +213,49 @@
     log("完了: 送信しました。");
   }
 
+  // --- Preset helpers ---
+  function applyPreset(name){
+    const src = PRESETS[name];
+    if (!src) return;
+    for (const n of ORDER) tuning[n] = src[n] || 0;
+    refreshTable();
+    log(`プリセット: ${name} を適用`);
+  }
+
+  // --- .scl generator（Cを基準、12度数、1200c周期） ---
+  function sclFromOffsets(name, comment, offsets){
+    // offsets: {C..B} 各音のオフセットcents（Cは0想定）
+    const lines = [];
+    lines.push(`! ${name}`);
+    if (comment) lines.push(`! ${comment}`);
+    lines.push("12");
+    lines.push("!");
+    for (let i=1; i<=11; i++){
+      const note = ORDER[i]; // C#, D, ..., B
+      const cents = 100*i + (offsets[note] || 0);
+      // Scalaは小数OK。固定少数で出力。
+      lines.push(cents.toFixed(4));
+    }
+    lines.push("1200.0000");
+    return lines.join("\n");
+  }
+
+  function makeSclBlobUrl(str){
+    const blob = new Blob([str], {type:"text/plain"});
+    return URL.createObjectURL(blob);
+  }
+
+  function setupSclDownloads(){
+    // それぞれのSCL文字列を生成
+    const sKotori = sclFromOffsets("kotori.scl", "F:+50c, B:-50c", PRESETS["Kotori"]);
+    const sSowa   = sclFromOffsets("SowaSowa.scl", "D/E/F/A/B:+50c (C,Gは0c)", PRESETS["SowaSowa"]);
+    const sBall   = sclFromOffsets("Balloon.scl", "E/B:+50c", PRESETS["Balloon"]);
+
+    dlKotori.href   = makeSclBlobUrl(sKotori);
+    dlSowaSowa.href = makeSclBlobUrl(sSowa);
+    dlBalloon.href  = makeSclBlobUrl(sBall);
+  }
+
   // --- UI actions ---
   connectBtn.addEventListener('click', async () => {
     try {
@@ -203,18 +286,11 @@
     log(`設定解除: ${n} を 0c に戻しました`);
   });
 
-  presetEqualBtn.addEventListener('click', () => {
-    for (const n of ORDER) tuning[n] = 0;
-    refreshTable();
-    log("プリセット: Equal（全0）を適用");
-  });
-
-  presetIcefaceBtn.addEventListener('click', () => {
-    for (const n of ORDER) tuning[n] = 0;
-    for (const n of ["C#","D#","F#","G#","A#"]) tuning[n] = 50;
-    refreshTable();
-    log("プリセット: Iceface（黒鍵+50c）を適用");
-  });
+  presetEqualBtn.addEventListener('click', () => applyPreset("Equal"));
+  presetIcefaceBtn.addEventListener('click', () => applyPreset("Iceface"));
+  presetKotoriBtn.addEventListener('click', () => applyPreset("Kotori"));
+  presetSowaSowaBtn.addEventListener('click', () => applyPreset("SowaSowa"));
+  presetBalloonBtn.addEventListener('click', () => applyPreset("Balloon"));
 
   sendAllBtn.addEventListener('click', async () => {
     try {
@@ -228,6 +304,7 @@
 
   // init
   refreshTable();
+  setupSclDownloads();
 })();
 </script>
 </body>
