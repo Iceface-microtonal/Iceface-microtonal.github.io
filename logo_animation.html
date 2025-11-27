@@ -3,43 +3,58 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>カオスロゴ（5枚画像版）</title>
+<title>小さなカオス</title>
 <style>
     body, html {
         height: 100%;
         margin: 0;
         overflow: hidden;
         background-color: #f0f4f8;
+        /* 中央に配置するためのフレックスボックス設定 */
+        display: flex;
+        justify_content: center;
+        align-items: center;
     }
     
+    /* アニメーションの舞台（この枠内だけで動きます） */
     #chaos-container {
         position: relative;
-        width: 100%;
-        height: 100%;
+        width: 600px;  /* 横幅の制限 */
+        height: 400px; /* 縦幅の制限 */
+        /* 枠が見たい場合は下のコメントアウトを外してください */
+        /* border: 1px dashed #ccc; */
         pointer-events: none;
     }
 
-    /* 画像の共通設定 */
     .chaos-img {
         position: absolute;
-        width: 100px; /* 基本のサイズ（ここから拡大縮小されます） */
-        height: auto; /* 縦横比を維持 */
-        will-change: transform, left, top;
+        width: 60px; /* 基本サイズを小さめに */
+        height: auto;
+        will-change: transform, left, top, opacity;
+        opacity: 0; /* 最初は透明 */
     }
 
-    /* --- アニメーション定義（回転や振動） --- */
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    @keyframes spin-rev { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
-    @keyframes wobble { 
-        0%, 100% { transform: scale(1) rotate(0deg); } 
-        50% { transform: scale(1.1) rotate(10deg); } 
+    /* --- ゆったりとしたアニメーション定義 --- */
+    /* 非常にゆっくり回転 */
+    @keyframes slow-spin { 
+        from { transform: rotate(0deg); } 
+        to { transform: rotate(360deg); } 
+    }
+    /* 逆回転 */
+    @keyframes slow-spin-rev { 
+        from { transform: rotate(360deg); } 
+        to { transform: rotate(0deg); } 
+    }
+    /* ゆらゆら揺れる */
+    @keyframes gentle-sway { 
+        0%, 100% { transform: rotate(-10deg); } 
+        50% { transform: rotate(10deg); } 
     }
 
-    /* JSで付与するクラス */
-    .anim-spin { animation: spin 3s linear infinite; }
-    .anim-spin-fast { animation: spin 0.5s linear infinite; } /* 超高速回転 */
-    .anim-spin-rev { animation: spin-rev 5s linear infinite; }
-    .anim-wobble { animation: wobble 0.5s ease-in-out infinite; }
+    /* JavaScriptで付与するクラス（時間は長めに設定） */
+    .anim-spin { animation: slow-spin 20s linear infinite; }
+    .anim-spin-rev { animation: slow-spin-rev 25s linear infinite; }
+    .anim-sway { animation: gentle-sway 8s ease-in-out infinite; }
 
 </style>
 </head>
@@ -49,96 +64,85 @@
 
 <script>
     const container = document.getElementById('chaos-container');
+    const imageFiles = ['pa.png', 'pe.png', 'to.png', 'i.png', 'n.png'];
+    
+    // 動きのパターンのリスト
+    const animClasses = ['anim-spin', 'anim-spin-rev', 'anim-sway', ''];
 
-    // 画像ファイル名のリスト
-    // ファイル名が違う場合はここを書き換えてください
-    const imageFiles = [
-        'pa.png', // パ
-        'pe.png', // ペ
-        'to.png', // トゥ
-        'i.png', // イ
-        'n.png'  // ン
-    ];
-
-    // 付与する動きのパターンのリスト
-    const animClasses = ['anim-spin', 'anim-spin-fast', 'anim-spin-rev', 'anim-wobble', ''];
-
-    function createChaosChar() {
-        // img要素を作成
+    function createLittleChaos() {
         const img = document.createElement('img');
         img.classList.add('chaos-img');
 
-        // 1. ランダムに画像を選んでセット
-        const randomFile = imageFiles[Math.floor(Math.random() * imageFiles.length)];
-        img.src = randomFile;
+        // 画像選択
+        img.src = imageFiles[Math.floor(Math.random() * imageFiles.length)];
 
-        // 2. 出現位置とゴール地点を計算
-        const viewportW = window.innerWidth;
-        const viewportH = window.innerHeight;
-        const offset = 200; // 画面外のマージン
+        // コンテナのサイズを取得
+        const containerW = container.offsetWidth;
+        const containerH = container.offsetHeight;
 
-        // 4方向のどこから出るかランダム決定
-        const startSide = Math.floor(Math.random() * 4);
-        let startX, startY, endX, endY;
-
-        switch(startSide) {
-            case 0: // 上から
-                startX = Math.random() * viewportW; startY = -offset;
-                endX = Math.random() * viewportW; endY = viewportH + offset; break;
-            case 1: // 右から
-                startX = viewportW + offset; startY = Math.random() * viewportH;
-                endX = -offset; endY = Math.random() * viewportH; break;
-            case 2: // 下から
-                startX = Math.random() * viewportW; startY = viewportH + offset;
-                endX = Math.random() * viewportW; endY = -offset; break;
-            case 3: // 左から
-                startX = -offset; startY = Math.random() * viewportH;
-                endX = viewportW + offset; endY = Math.random() * viewportH; break;
-        }
+        // --- 狭い範囲での座標計算 ---
+        // コンテナ内のどこかランダムな位置に出現
+        const startX = Math.random() * (containerW - 50);
+        const startY = Math.random() * (containerH - 50);
+        
+        // コンテナ内の別の位置へ移動（移動距離を短めに制限）
+        // 現在地から -100px ～ +100px くらいの範囲で少しだけ動くイメージ
+        const moveRange = 150; 
+        const endX = startX + (Math.random() * moveRange * 2 - moveRange);
+        const endY = startY + (Math.random() * moveRange * 2 - moveRange);
 
         img.style.left = `${startX}px`;
         img.style.top = `${startY}px`;
 
-        // 3. ランダムなパラメータ設定
-        const duration = 3 + Math.random() * 5; // 移動時間 (3〜8秒)
-        const delay = Math.random() * 0.5; // 少し遅れて出る
-        const scale = 0.5 + Math.random() * 2.5; // 大きさ (0.5倍〜3倍)
-        const finalRotate = Math.random() * 720 - 360; // 移動中の回転
+        // --- ゆっくりとしたパラメータ設定 ---
+        const duration = 10 + Math.random() * 10; // 10秒〜20秒かけてゆっくり動く
+        const scale = 0.6 + Math.random() * 0.6; // 大きさは0.6倍〜1.2倍程度（あまり大きくしない）
+        const rotate = Math.random() * 90 - 45; // 移動に伴う回転も控えめに(-45度〜45度)
 
-        // 追加の動き（ぐるぐる回り続けるなど）をランダム適用
+        // 追加のゆったりアニメーションを付与
         const extraAnim = animClasses[Math.floor(Math.random() * animClasses.length)];
         if(extraAnim) img.classList.add(extraAnim);
 
-        // CSS Transitionの設定
+        // CSS Transitionの設定（透明度も変化させる）
+        // ふわっと現れて(ease-in)、ふわっと消える
         img.style.transition = `
-            left ${duration}s linear ${delay}s,
-            top ${duration}s linear ${delay}s,
-            transform ${duration}s ease-out ${delay}s
+            left ${duration}s ease-in-out,
+            top ${duration}s ease-in-out,
+            transform ${duration}s ease-in-out,
+            opacity 2s ease-in-out
         `;
 
-        // 初期状態（小さくしておく）
-        img.style.transform = `scale(0)`;
-
+        // 初期変形
+        img.style.transform = `scale(0.1) rotate(0deg)`;
+        
         container.appendChild(img);
 
-        // アニメーション実行
+        // アニメーション開始
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
+                // 座標移動
                 img.style.left = `${endX}px`;
                 img.style.top = `${endY}px`;
-                // ここで「移動自体の回転・拡大」と「CSS Animationの回転」が合わさる
-                img.style.transform = `scale(${scale}) rotate(${finalRotate}deg)`;
+                // 変形適用
+                img.style.transform = `scale(${scale}) rotate(${rotate}deg)`;
+                // 不透明にする（表示）
+                img.style.opacity = '0.8'; 
             });
         });
 
-        // 画面外に出たら削除
+        // 寿命が来る少し前にフェードアウトさせる
+        setTimeout(() => {
+            img.style.opacity = '0'; // 消える
+        }, (duration - 2) * 1000);
+
+        // 完全に終わったらDOMから削除
         setTimeout(() => {
             img.remove();
-        }, (duration + delay + 1) * 1000);
+        }, duration * 1000);
     }
 
-    // 0.1秒ごとに生成（かなり賑やかになります）
-    setInterval(createChaosChar, 100);
+    // 生成ペースもゆっくりに（0.8秒に1個）
+    setInterval(createLittleChaos, 800);
 
 </script>
 </body>
