@@ -3,59 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>カオスロゴアニメーション</title>
+<title>カオスロゴ（5枚画像版）</title>
 <style>
-    /* 画面全体の基本設定 */
     body, html {
         height: 100%;
         margin: 0;
-        overflow: hidden; /* 画面外に出た要素を隠す */
-        background-color: #f0f4f8; /* 背景色 */
+        overflow: hidden;
+        background-color: #f0f4f8;
     }
     
-    /* アニメーションの舞台となるコンテナ */
     #chaos-container {
         position: relative;
         width: 100%;
         height: 100%;
-        pointer-events: none; /* 文字がマウス操作の邪魔にならないように */
+        pointer-events: none;
     }
 
-    /* 個々の文字の共通スタイル */
-    .chaos-char {
+    /* 画像の共通設定 */
+    .chaos-img {
         position: absolute;
-        /* 元の画像を背景として設定 */
-        background-image: url('https://iceface-microtonal.github.io/puppetwin_logo.png');
-        background-repeat: no-repeat;
-        /* 画像全体のサイズを固定（ここから特定部分を表示させるため） */
-        background-size: 500px auto; 
-        /* パフォーマンス向上のためのヒント */
-        will-change: transform, opacity, left, top;
+        width: 100px; /* 基本のサイズ（ここから拡大縮小されます） */
+        height: auto; /* 縦横比を維持 */
+        will-change: transform, left, top;
     }
 
-    /* --- 動きの定義 (CSSアニメーション) --- */
-    
-    /* ぐるぐる回転し続ける動き */
-    @keyframes spin-forever {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-    /* 逆回転 */
-    @keyframes spin-reverse-forever {
-        from { transform: rotate(360deg); }
-        to { transform: rotate(0deg); }
-    }
-    /* ドクンドクンと拡大縮小する動き */
-    @keyframes pulse-forever {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.5); }
+    /* --- アニメーション定義（回転や振動） --- */
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes spin-rev { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+    @keyframes wobble { 
+        0%, 100% { transform: scale(1) rotate(0deg); } 
+        50% { transform: scale(1.1) rotate(10deg); } 
     }
 
-    /* JavaScriptで付与するアニメーション用クラス */
-    .anim-spin { animation: spin-forever 3s linear infinite; }
-    .anim-spin-fast { animation: spin-forever 1s linear infinite; }
-    .anim-spin-rev { animation: spin-reverse-forever 4s linear infinite; }
-    .anim-pulse { animation: pulse-forever 0.8s ease-in-out infinite; }
+    /* JSで付与するクラス */
+    .anim-spin { animation: spin 3s linear infinite; }
+    .anim-spin-fast { animation: spin 0.5s linear infinite; } /* 超高速回転 */
+    .anim-spin-rev { animation: spin-rev 5s linear infinite; }
+    .anim-wobble { animation: wobble 0.5s ease-in-out infinite; }
 
 </style>
 </head>
@@ -66,110 +50,95 @@
 <script>
     const container = document.getElementById('chaos-container');
 
-    // 文字の切り出し定義
-    // 画像の中から「ここを表示する」という位置(bgPos)とサイズ(width, height)を指定
-    // ※おおよその位置を目分量で設定しています
-    const charDefinitions = [
-        { bgPos: '10px 10px', width: '70px', height: '110px' },   // パ
-        { bgPos: '-75px 30px', width: '60px', height: '80px' },    // ペ
-        { bgPos: '-140px 10px', width: '80px', height: '110px' },  // トゥ
-        { bgPos: '-240px 10px', width: '50px', height: '110px' },  // 棒（イ？）
-        { bgPos: '-310px 60px', width: '60px', height: '70px' },   // 小さいの（ン？）
-        { bgPos: '-370px 0px', width: '100px', height: '150px' }   // 最後のぐるぐる（グ？）
+    // 画像ファイル名のリスト
+    // ファイル名が違う場合はここを書き換えてください
+    const imageFiles = [
+        'pa.png', // パ
+        'pe.png', // ペ
+        'to.png', // トゥ
+        'i.png', // イ
+        'n.png'  // ン
     ];
 
-    // 付与するアニメーションクラスの候補
-    const animClasses = ['anim-spin', 'anim-spin-fast', 'anim-spin-rev', 'anim-pulse', ''];
+    // 付与する動きのパターンのリスト
+    const animClasses = ['anim-spin', 'anim-spin-fast', 'anim-spin-rev', 'anim-wobble', ''];
 
-    // カオスな文字を1つ生成する関数
     function createChaosChar() {
-        const charDiv = document.createElement('div');
-        charDiv.classList.add('chaos-char');
+        // img要素を作成
+        const img = document.createElement('img');
+        img.classList.add('chaos-img');
 
-        // 1. ランダムな文字（切り抜き）を選択して適用
-        const charDef = charDefinitions[Math.floor(Math.random() * charDefinitions.length)];
-        charDiv.style.backgroundPosition = charDef.bgPos;
-        charDiv.style.width = charDef.width;
-        charDiv.style.height = charDef.height;
+        // 1. ランダムに画像を選んでセット
+        const randomFile = imageFiles[Math.floor(Math.random() * imageFiles.length)];
+        img.src = randomFile;
 
-        // 2. 出現位置と移動目標位置をランダムに決定
+        // 2. 出現位置とゴール地点を計算
         const viewportW = window.innerWidth;
         const viewportH = window.innerHeight;
-        const offset = 200; // 画面外の余白
+        const offset = 200; // 画面外のマージン
 
-        // 画面の4辺のどこかから出現させる
-        const startSide = Math.floor(Math.random() * 4); // 0:上, 1:右, 2:下, 3:左
+        // 4方向のどこから出るかランダム決定
+        const startSide = Math.floor(Math.random() * 4);
         let startX, startY, endX, endY;
 
         switch(startSide) {
-            case 0: // 上から下へ
+            case 0: // 上から
                 startX = Math.random() * viewportW; startY = -offset;
                 endX = Math.random() * viewportW; endY = viewportH + offset; break;
-            case 1: // 右から左へ
+            case 1: // 右から
                 startX = viewportW + offset; startY = Math.random() * viewportH;
                 endX = -offset; endY = Math.random() * viewportH; break;
-            case 2: // 下から上へ
+            case 2: // 下から
                 startX = Math.random() * viewportW; startY = viewportH + offset;
                 endX = Math.random() * viewportW; endY = -offset; break;
-            case 3: // 左から右へ
+            case 3: // 左から
                 startX = -offset; startY = Math.random() * viewportH;
                 endX = viewportW + offset; endY = Math.random() * viewportH; break;
         }
 
-        // 初期位置を設定
-        charDiv.style.left = `${startX}px`;
-        charDiv.style.top = `${startY}px`;
+        img.style.left = `${startX}px`;
+        img.style.top = `${startY}px`;
 
-        // 3. ランダムな動作パラメータを設定
-        const duration = 4 + Math.random() * 6; // 移動にかかる時間（4〜10秒）
-        const delay = Math.random() * 1; // 開始までの遅延（0〜1秒）
-        const randomScale = 0.5 + Math.random() * 2.0; // 最終的な大きさ（0.5倍〜2.5倍）
-        const randomRotate = Math.random() * 720 - 360; // 移動中の全体的な回転角度
-        
-        // ランダムな追加アニメーション（回転し続けるなど）を付与
-        const randomAnimClass = animClasses[Math.floor(Math.random() * animClasses.length)];
-        if (randomAnimClass) {
-            charDiv.classList.add(randomAnimClass);
-        }
+        // 3. ランダムなパラメータ設定
+        const duration = 3 + Math.random() * 5; // 移動時間 (3〜8秒)
+        const delay = Math.random() * 0.5; // 少し遅れて出る
+        const scale = 0.5 + Math.random() * 2.5; // 大きさ (0.5倍〜3倍)
+        const finalRotate = Math.random() * 720 - 360; // 移動中の回転
 
-        // 移動のスタイル（transition）を設定
-        // left, top, transform, opacity が変化する際のアニメーション設定
-        charDiv.style.transition = `
+        // 追加の動き（ぐるぐる回り続けるなど）をランダム適用
+        const extraAnim = animClasses[Math.floor(Math.random() * animClasses.length)];
+        if(extraAnim) img.classList.add(extraAnim);
+
+        // CSS Transitionの設定
+        img.style.transition = `
             left ${duration}s linear ${delay}s,
             top ${duration}s linear ${delay}s,
-            transform ${duration}s ease-out ${delay}s,
-            opacity ${duration}s ease-in ${delay}s
+            transform ${duration}s ease-out ${delay}s
         `;
-        
-        // 初期状態の見た目（小さく、少し透明に）
-        // ※追加アニメーションと競合しないよう、transformのベースとなる値を設定
-        charDiv.style.transform = `scale(0.1) rotate(0deg)`;
-        charDiv.style.opacity = '0.5';
 
-        // 画面に追加
-        container.appendChild(charDiv);
+        // 初期状態（小さくしておく）
+        img.style.transform = `scale(0)`;
 
-        // 4. アニメーション開始（少し時間をおいて目標値を設定することで動き出す）
-        // requestAnimationFrameを使うとブラウザの描画タイミングに合わせられてスムーズ
+        container.appendChild(img);
+
+        // アニメーション実行
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-                 charDiv.style.left = `${endX}px`;
-                 charDiv.style.top = `${endY}px`;
-                 // 目標の大きさと角度（ベースの変形＋追加アニメーションが合成される）
-                 charDiv.style.transform = `scale(${randomScale}) rotate(${randomRotate}deg)`;
-                 charDiv.style.opacity = '1';
+                img.style.left = `${endX}px`;
+                img.style.top = `${endY}px`;
+                // ここで「移動自体の回転・拡大」と「CSS Animationの回転」が合わさる
+                img.style.transform = `scale(${scale}) rotate(${finalRotate}deg)`;
             });
         });
 
-        // 5. お片付け：画面外に出たであろう時間後に要素を削除（メモリ節約）
+        // 画面外に出たら削除
         setTimeout(() => {
-            charDiv.remove();
+            img.remove();
         }, (duration + delay + 1) * 1000);
     }
 
-    // --- 実行開始 ---
-    // 0.15秒ごとに新しい文字を生成し続ける
-    setInterval(createChaosChar, 150);
+    // 0.1秒ごとに生成（かなり賑やかになります）
+    setInterval(createChaosChar, 100);
 
 </script>
 </body>
