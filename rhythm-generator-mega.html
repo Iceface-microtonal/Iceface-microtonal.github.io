@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🥁 MEGA リズムマシン - 70音色</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { margin: 0; }
+    input[type="range"] {
+      -webkit-appearance: none;
+      height: 6px;
+      background: #4a5568;
+      border-radius: 3px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #ec4899;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useRef, useEffect, useCallback } = React;
+
+
+// 全ドラム音リスト（50音以上）
+const ALL_DRUMS = {
+  // === 基本キット ===
+  kick: { name: "Kick", category: "basic" },
+  snare: { name: "Snare", category: "basic" },
+  hihat: { name: "Hi-Hat", category: "basic" },
+  openhat: { name: "Open HH", category: "basic" },
+  clap: { name: "Clap", category: "basic" },
+  rimshot: { name: "Rimshot", category: "basic" },
+  tom: { name: "Tom Hi", category: "basic" },
+  tomMid: { name: "Tom Mid", category: "basic" },
+  tomLow: { name: "Tom Low", category: "basic" },
+  crash: { name: "Crash", category: "basic" },
+  ride: { name: "Ride", category: "basic" },
+  
+  // === 808/909系 ===
+  kick808: { name: "808 Kick", category: "808" },
+  snare808: { name: "808 Snare", category: "808" },
+  clap808: { name: "808 Clap", category: "808" },
+  cowbell808: { name: "808 Cowbell", category: "808" },
+  clave808: { name: "808 Clave", category: "808" },
+  maracas808: { name: "808 Maracas", category: "808" },
+  tomHi808: { name: "808 Tom Hi", category: "808" },
+  tomLow808: { name: "808 Tom Low", category: "808" },
+  conga808: { name: "808 Conga", category: "808" },
+  kick909: { name: "909 Kick", category: "909" },
+  snare909: { name: "909 Snare", category: "909" },
+  hihat909: { name: "909 HH Closed", category: "909" },
+  openhat909: { name: "909 HH Open", category: "909" },
+  clap909: { name: "909 Clap", category: "909" },
+  ride909: { name: "909 Ride", category: "909" },
+  
+  // === ラテン・パーカッション ===
+  conga: { name: "Conga", category: "latin" },
+  congaHi: { name: "Conga Hi", category: "latin" },
+  congaSlap: { name: "Conga Slap", category: "latin" },
+  bongo: { name: "Bongo", category: "latin" },
+  bongoHi: { name: "Bongo Hi", category: "latin" },
+  timbale: { name: "Timbale", category: "latin" },
+  timbaleHi: { name: "Timbale Hi", category: "latin" },
+  cowbell: { name: "Cowbell", category: "latin" },
+  claves: { name: "Claves", category: "latin" },
+  guiro: { name: "Guiro", category: "latin" },
+  maracas: { name: "Maracas", category: "latin" },
+  shaker: { name: "Shaker", category: "latin" },
+  cabasa: { name: "Cabasa", category: "latin" },
+  agogo: { name: "Agogo", category: "latin" },
+  agogoHi: { name: "Agogo Hi", category: "latin" },
+  cuica: { name: "Cuica", category: "latin" },
+  surdo: { name: "Surdo", category: "latin" },
+  pandeiro: { name: "Pandeiro", category: "latin" },
+  
+  // === 民族楽器 ===
+  djembe: { name: "Djembe", category: "world" },
+  djembeSlap: { name: "Djembe Slap", category: "world" },
+  djembeBass: { name: "Djembe Bass", category: "world" },
+  tabla: { name: "Tabla", category: "world" },
+  tablaBaya: { name: "Tabla Baya", category: "world" },
+  taiko: { name: "Taiko", category: "world" },
+  taikoBig: { name: "Taiko Big", category: "world" },
+  cajon: { name: "Cajon", category: "world" },
+  cajonSnare: { name: "Cajon Snare", category: "world" },
+  darbuka: { name: "Darbuka", category: "world" },
+  udu: { name: "Udu", category: "world" },
+  steelDrum: { name: "Steel Drum", category: "world" },
+  woodblock: { name: "Woodblock", category: "world" },
+  woodblockHi: { name: "Woodblock Hi", category: "world" },
+  templeBlock: { name: "Temple Block", category: "world" },
+  
+  // === シンバル・金属 ===
+  splash: { name: "Splash", category: "cymbal" },
+  china: { name: "China", category: "cymbal" },
+  bell: { name: "Bell", category: "cymbal" },
+  rideBell: { name: "Ride Bell", category: "cymbal" },
+  gong: { name: "Gong", category: "cymbal" },
+  chime: { name: "Chime", category: "cymbal" },
+  triangle: { name: "Triangle", category: "cymbal" },
+  triangleMute: { name: "Triangle Mute", category: "cymbal" },
+  tambourine: { name: "Tambourine", category: "cymbal" },
+  
+  // === 電子音・グリッチ ===
+  zap: { name: "Zap", category: "electronic" },
+  laser: { name: "Laser", category: "electronic" },
+  blip: { name: "Blip", category: "electronic" },
+  beep: { name: "Beep", category: "electronic" },
+  click: { name: "Click", category: "electronic" },
+  snap: { name: "Snap", category: "electronic" },
+  pop: { name: "Pop", category: "electronic" },
+  glitch: { name: "Glitch", category: "electronic" },
+  noise: { name: "Noise Burst", category: "electronic" },
+  static: { name: "Static", category: "electronic" },
+  whistle: { name: "Whistle", category: "electronic" },
+  siren: { name: "Siren", category: "electronic" },
+  alarm: { name: "Alarm", category: "electronic" },
+  buzz: { name: "Buzz", category: "electronic" },
+  wobble: { name: "Wobble", category: "electronic" },
+};
+
+// カテゴリ色
+const CATEGORY_COLORS = {
+  basic: "#4488ff",
+  "808": "#ff4488",
+  "909": "#ff8844",
+  latin: "#44ff88",
+  world: "#ffaa44",
+  cymbal: "#ffff44",
+  electronic: "#ff44ff",
+};
+
+// キャラクタープリセット（リミッター付き）
+const CHARACTER_PRESETS = {
+  alien: {
+    emoji: "👽", title: "宇宙人のUFOビート", bpm: 90,
+    drums: ["hihat909", "laser", "zap", "blip", "wobble", "beep"],
+    kickProb: 15, snareProb: 10, swing: 30, density: 60, chaos: 80,
+    colors: ["#00ff00", "#00cc00", "#88ff88", "#00ff88"],
+    effects: {
+      reverb: { decay: 3.0, wetMix: 0.5 },
+      delay: { time: 0.33, feedback: 0.6, wetMix: 0.4 },
+      filter: { type: 'bandpass', frequency: 2000, Q: 5.0 },
+      distortion: { amount: 10 },
+      bitcrusher: { bits: 6, downsample: 8 },
+      chorus: { rate: 0.5, depth: 0.8 },
+      limiter: { threshold: -6, ratio: 12, attack: 0.003, release: 0.1 },
+    }
+  },
+  police: {
+    emoji: "👮", title: "警察のマーチ", bpm: 120,
+    drums: ["snare909", "hihat909", "rimshot", "cowbell"],
+    kickProb: 80, snareProb: 70, swing: 0, density: 70, chaos: 10,
+    colors: ["#0066ff", "#ff0000", "#ffffff", "#0044cc"],
+    effects: {
+      reverb: { decay: 0.8, wetMix: 0.2 },
+      delay: { time: 0.125, feedback: 0.1, wetMix: 0.1 },
+      filter: { type: 'highpass', frequency: 200, Q: 0.5 },
+      distortion: { amount: 0 },
+      bitcrusher: { bits: 16, downsample: 1 },
+      chorus: { rate: 0, depth: 0 },
+      limiter: { threshold: -3, ratio: 20, attack: 0.001, release: 0.05 },
+    }
+  },
+  robot: {
+    emoji: "🤖", title: "ロボットファクトリー", bpm: 130,
+    drums: ["click", "glitch", "static", "blip", "pop"],
+    kickProb: 90, snareProb: 50, swing: 0, density: 80, chaos: 5,
+    colors: ["#888888", "#aaaaaa", "#666666", "#cccccc"],
+    effects: {
+      reverb: { decay: 0.5, wetMix: 0.15 },
+      delay: { time: 0.0625, feedback: 0.3, wetMix: 0.2 },
+      filter: { type: 'lowpass', frequency: 4000, Q: 2.0 },
+      distortion: { amount: 20 },
+      bitcrusher: { bits: 4, downsample: 12 },
+      chorus: { rate: 0, depth: 0 },
+      limiter: { threshold: -6, ratio: 15, attack: 0.001, release: 0.05 },
+    }
+  },
+  circus: {
+    emoji: "🎪", title: "カオスサーカス", bpm: 150,
+    drums: ["snare", "clap909", "tambourine", "cowbell", "whistle", "triangle", "bell"],
+    kickProb: 60, snareProb: 50, swing: 20, density: 90, chaos: 95,
+    colors: ["#ff0000", "#ffff00", "#00ff00", "#ff00ff"],
+    effects: {
+      reverb: { decay: 2.5, wetMix: 0.45 },
+      delay: { time: 0.2, feedback: 0.7, wetMix: 0.5 },
+      filter: { type: 'bandpass', frequency: 1500, Q: 8.0 },
+      distortion: { amount: 40 },
+      bitcrusher: { bits: 8, downsample: 4 },
+      chorus: { rate: 6, depth: 0.6 },
+      limiter: { threshold: -9, ratio: 8, attack: 0.005, release: 0.15 },
+    }
+  },
+  jungle: {
+    emoji: "🌴", title: "ジャングルトライブ", bpm: 100,
+    drums: ["djembe", "djembeSlap", "congaHi", "agogo", "shaker", "udu"],
+    kickProb: 40, snareProb: 20, swing: 40, density: 75, chaos: 50,
+    colors: ["#228B22", "#8B4513", "#FFD700", "#FF8C00"],
+    effects: {
+      reverb: { decay: 2.0, wetMix: 0.4 },
+      delay: { time: 0.375, feedback: 0.35, wetMix: 0.25 },
+      filter: { type: 'lowpass', frequency: 6000, Q: 0.5 },
+      distortion: { amount: 5 },
+      bitcrusher: { bits: 12, downsample: 2 },
+      chorus: { rate: 0.8, depth: 0.3 },
+      limiter: { threshold: -6, ratio: 10, attack: 0.003, release: 0.1 },
+    }
+  },
+  brazil: {
+    emoji: "🇧🇷", title: "サンバカーニバル", bpm: 110,
+    drums: ["surdo", "pandeiro", "agogo", "agogoHi", "cuica", "shaker", "tambourine"],
+    kickProb: 70, snareProb: 30, swing: 35, density: 85, chaos: 40,
+    colors: ["#009739", "#FEDD00", "#002776", "#ffffff"],
+    effects: {
+      reverb: { decay: 1.5, wetMix: 0.35 },
+      delay: { time: 0.25, feedback: 0.2, wetMix: 0.15 },
+      filter: { type: 'highpass', frequency: 200, Q: 0.7 },
+      distortion: { amount: 0 },
+      bitcrusher: { bits: 14, downsample: 1 },
+      chorus: { rate: 2, depth: 0.2 },
+      limiter: { threshold: -3, ratio: 16, attack: 0.002, release: 0.08 },
+    }
+  },
+  india: {
+    emoji: "🇮🇳", title: "ボリウッドビート", bpm: 95,
+    drums: ["tabla", "tablaBaya", "darbuka", "bell", "chime"],
+    kickProb: 50, snareProb: 40, swing: 20, density: 70, chaos: 35,
+    colors: ["#FF9933", "#138808", "#ffffff", "#000080"],
+    effects: {
+      reverb: { decay: 2.5, wetMix: 0.45 },
+      delay: { time: 0.3, feedback: 0.4, wetMix: 0.3 },
+      filter: { type: 'bandpass', frequency: 1500, Q: 2.0 },
+      distortion: { amount: 0 },
+      bitcrusher: { bits: 14, downsample: 1 },
+      chorus: { rate: 1, depth: 0.3 },
+      limiter: { threshold: -6, ratio: 10, attack: 0.003, release: 0.1 },
+    }
+  },
+  japan: {
+    emoji: "🇯🇵", title: "和太鼓の祭り", bpm: 80,
+    drums: ["taiko", "taikoBig", "templeBlock", "bell", "chime"],
+    kickProb: 60, snareProb: 30, swing: 10, density: 50, chaos: 30,
+    colors: ["#BC002D", "#ffffff", "#000000", "#FFD700"],
+    effects: {
+      reverb: { decay: 4.0, wetMix: 0.5 },
+      delay: { time: 0.4, feedback: 0.3, wetMix: 0.25 },
+      filter: { type: 'lowpass', frequency: 3000, Q: 0.5 },
+      distortion: { amount: 5 },
+      bitcrusher: { bits: 14, downsample: 1 },
+      chorus: { rate: 0.3, depth: 0.2 },
+      limiter: { threshold: -6, ratio: 12, attack: 0.005, release: 0.15 },
+    }
+  },
+  hiphop: {
+    emoji: "🎤", title: "90s ヒップホップ", bpm: 90,
+    drums: ["kick808", "snare808", "hihat909", "openhat909", "clap808"],
+    kickProb: 85, snareProb: 70, swing: 25, density: 60, chaos: 20,
+    colors: ["#FFD700", "#000000", "#ff0000", "#ffffff"],
+    effects: {
+      reverb: { decay: 1.0, wetMix: 0.2 },
+      delay: { time: 0.25, feedback: 0.15, wetMix: 0.1 },
+      filter: { type: 'lowpass', frequency: 5000, Q: 1.0 },
+      distortion: { amount: 10 },
+      bitcrusher: { bits: 12, downsample: 2 },
+      chorus: { rate: 0, depth: 0 },
+      limiter: { threshold: -3, ratio: 20, attack: 0.001, release: 0.05 },
+    }
+  },
+  techno: {
+    emoji: "🔊", title: "テクノウェアハウス", bpm: 138,
+    drums: ["kick909", "clap909", "hihat909", "openhat909", "ride909"],
+    kickProb: 95, snareProb: 40, swing: 0, density: 75, chaos: 15,
+    colors: ["#000000", "#ff00ff", "#00ffff", "#ffffff"],
+    effects: {
+      reverb: { decay: 1.5, wetMix: 0.3 },
+      delay: { time: 0.1875, feedback: 0.4, wetMix: 0.25 },
+      filter: { type: 'highpass', frequency: 100, Q: 1.0 },
+      distortion: { amount: 15 },
+      bitcrusher: { bits: 12, downsample: 1 },
+      chorus: { rate: 0, depth: 0 },
+      limiter: { threshold: -3, ratio: 20, attack: 0.001, release: 0.03 },
+    }
+  },
+  halloween: {
+    emoji: "🎃", title: "ホラーナイト", bpm: 70,
+    drums: ["tomLow808", "gong", "chime", "noise", "buzz"],
+    kickProb: 30, snareProb: 20, swing: 50, density: 40, chaos: 70,
+    colors: ["#ff6600", "#000000", "#8B008B", "#4B0082"],
+    effects: {
+      reverb: { decay: 5.0, wetMix: 0.6 },
+      delay: { time: 0.666, feedback: 0.5, wetMix: 0.4 },
+      filter: { type: 'lowpass', frequency: 1000, Q: 3.0 },
+      distortion: { amount: 30 },
+      bitcrusher: { bits: 6, downsample: 6 },
+      chorus: { rate: 0.2, depth: 0.7 },
+      limiter: { threshold: -9, ratio: 8, attack: 0.01, release: 0.2 },
+    }
+  },
+  clown: {
+    emoji: "🤡", title: "おバカピエロ", bpm: 160,
+    drums: ["clap", "tambourine", "cowbell", "whistle", "pop", "snap", "alarm"],
+    kickProb: 40, snareProb: 60, swing: 45, density: 70, chaos: 85,
+    colors: ["#ff0066", "#00ffff", "#ffff00", "#ff00ff"],
+    effects: {
+      reverb: { decay: 1.8, wetMix: 0.5 },
+      delay: { time: 0.15, feedback: 0.8, wetMix: 0.6 },
+      filter: { type: 'bandpass', frequency: 800, Q: 12.0 },
+      distortion: { amount: 50 },
+      bitcrusher: { bits: 3, downsample: 16 },
+      chorus: { rate: 8, depth: 0.9 },
+      limiter: { threshold: -12, ratio: 6, attack: 0.01, release: 0.2 },
+    }
+  },
+  flamenco: {
+    emoji: "💃", title: "フラメンコ", bpm: 105,
+    drums: ["cajon", "cajonSnare", "clap", "snap", "claves"],
+    kickProb: 70, snareProb: 60, swing: 30, density: 65, chaos: 25,
+    colors: ["#c60b1e", "#ffc400", "#000000", "#ffffff"],
+    effects: {
+      reverb: { decay: 1.8, wetMix: 0.35 },
+      delay: { time: 0.2, feedback: 0.2, wetMix: 0.15 },
+      filter: { type: 'highpass', frequency: 150, Q: 0.7 },
+      distortion: { amount: 5 },
+      bitcrusher: { bits: 14, downsample: 1 },
+      chorus: { rate: 0.5, depth: 0.2 },
+      limiter: { threshold: -6, ratio: 12, attack: 0.003, release: 0.1 },
+    }
+  },
+  steelband: {
+    emoji: "🏝️", title: "カリビアンスティール", bpm: 115,
+    drums: ["steelDrum", "cowbell", "shaker", "claves", "bongo"],
+    kickProb: 50, snareProb: 30, swing: 35, density: 70, chaos: 35,
+    colors: ["#00CED1", "#FFD700", "#FF6347", "#32CD32"],
+    effects: {
+      reverb: { decay: 2.0, wetMix: 0.4 },
+      delay: { time: 0.25, feedback: 0.3, wetMix: 0.25 },
+      filter: { type: 'bandpass', frequency: 2500, Q: 1.0 },
+      distortion: { amount: 0 },
+      bitcrusher: { bits: 14, downsample: 1 },
+      chorus: { rate: 2, depth: 0.3 },
+      limiter: { threshold: -6, ratio: 10, attack: 0.003, release: 0.1 },
+    }
+  },
+  glitch: {
+    emoji: "💾", title: "グリッチマシン", bpm: 140,
+    drums: ["glitch", "static", "click", "pop", "noise", "zap"],
+    kickProb: 50, snareProb: 40, swing: 0, density: 80, chaos: 90,
+    colors: ["#00ff00", "#ff0000", "#0000ff", "#ffffff"],
+    effects: {
+      reverb: { decay: 0.3, wetMix: 0.15 },
+      delay: { time: 0.0833, feedback: 0.6, wetMix: 0.4 },
+      filter: { type: 'bandpass', frequency: 3000, Q: 10.0 },
+      distortion: { amount: 60 },
+      bitcrusher: { bits: 2, downsample: 24 },
+      chorus: { rate: 10, depth: 0.5 },
+      limiter: { threshold: -12, ratio: 4, attack: 0.01, release: 0.1 },
+    }
+  },
+  arcade: {
+    emoji: "👾", title: "レトロアーケード", bpm: 125,
+    drums: ["blip", "beep", "zap", "laser", "pop", "click"],
+    kickProb: 70, snareProb: 50, swing: 0, density: 75, chaos: 50,
+    colors: ["#ff00ff", "#00ffff", "#ffff00", "#ff0000"],
+    effects: {
+      reverb: { decay: 0.5, wetMix: 0.2 },
+      delay: { time: 0.125, feedback: 0.3, wetMix: 0.2 },
+      filter: { type: 'highpass', frequency: 500, Q: 1.0 },
+      distortion: { amount: 15 },
+      bitcrusher: { bits: 8, downsample: 4 },
+      chorus: { rate: 3, depth: 0.3 },
+      limiter: { threshold: -6, ratio: 12, attack: 0.003, release: 0.08 },
+    }
+  },
+};
+
+// ドラムシンセクラス（全音色対応）
+class MegaDrumSynth {
+  constructor() {
+    this.ctx = null;
+    this.initialized = false;
+    this.masterGain = null;
+  }
+
+  init() {
+    if (this.initialized) return;
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    this.masterGain = this.ctx.createGain();
+    this.masterGain.gain.value = 0.5;
+    this.masterGain.connect(this.ctx.destination);
+    this.initialized = true;
+  }
+
+  createBitcrusherCurve(bits) {
+    const samples = 65536;
+    const curve = new Float32Array(samples);
+    const steps = Math.pow(2, bits);
+    for (let i = 0; i < samples; i++) {
+      const x = (i * 2) / samples - 1;
+      curve[i] = Math.round(x * steps) / steps;
+    }
+    return curve;
+  }
+
+  createReverb(decay = 2.0) {
+    const length = this.ctx.sampleRate * decay;
+    const impulse = this.ctx.createBuffer(2, length, this.ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = impulse.getChannelData(ch);
+      for (let i = 0; i < length; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (length / 4));
+      }
+    }
+    const convolver = this.ctx.createConvolver();
+    convolver.buffer = impulse;
+    return convolver;
+  }
+
+  makeDistortionCurve(amount) {
+    const samples = 44100;
+    const curve = new Float32Array(samples);
+    const deg = Math.PI / 180;
+    for (let i = 0; i < samples; i++) {
+      const x = (i * 2) / samples - 1;
+      curve[i] = ((3 + amount) * x * 20 * deg) / (Math.PI + amount * Math.abs(x));
+    }
+    return curve;
+  }
+
+  setupEffects(effectsConfig) {
+    const fx = effectsConfig;
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = fx.filter.type;
+    filter.frequency.value = fx.filter.frequency;
+    filter.Q.value = fx.filter.Q;
+
+    const bitcrusher = this.ctx.createWaveShaper();
+    if (fx.bitcrusher.bits < 16) {
+      bitcrusher.curve = this.createBitcrusherCurve(fx.bitcrusher.bits);
+    }
+
+    const distortion = this.ctx.createWaveShaper();
+    if (fx.distortion.amount > 0) {
+      distortion.curve = this.makeDistortionCurve(fx.distortion.amount);
+      distortion.oversample = '4x';
+    }
+
+    const delay = this.ctx.createDelay(2.0);
+    delay.delayTime.value = fx.delay.time;
+    const delayFeedback = this.ctx.createGain();
+    delayFeedback.gain.value = Math.min(0.9, fx.delay.feedback);
+    const delayWet = this.ctx.createGain();
+    delayWet.gain.value = fx.delay.wetMix;
+
+    const reverb = this.createReverb(fx.reverb.decay);
+    const reverbWet = this.ctx.createGain();
+    reverbWet.gain.value = fx.reverb.wetMix;
+    const reverbDry = this.ctx.createGain();
+    reverbDry.gain.value = 1 - fx.reverb.wetMix * 0.3;
+
+    const chorusDelay = this.ctx.createDelay(0.05);
+    chorusDelay.delayTime.value = 0.02;
+    const chorusLFO = this.ctx.createOscillator();
+    chorusLFO.frequency.value = fx.chorus.rate;
+    const chorusDepth = this.ctx.createGain();
+    chorusDepth.gain.value = fx.chorus.depth * 0.015;
+    const chorusWet = this.ctx.createGain();
+    chorusWet.gain.value = fx.chorus.depth > 0 ? 0.4 : 0;
+    chorusLFO.connect(chorusDepth);
+    chorusDepth.connect(chorusDelay.delayTime);
+    chorusLFO.start();
+
+    // リミッター（DynamicsCompressor）
+    const limiter = this.ctx.createDynamicsCompressor();
+    const limiterSettings = fx.limiter || { threshold: -6, ratio: 12, attack: 0.003, release: 0.1 };
+    limiter.threshold.value = limiterSettings.threshold;
+    limiter.knee.value = 0;  // ハードニー（リミッター動作）
+    limiter.ratio.value = limiterSettings.ratio;
+    limiter.attack.value = limiterSettings.attack;
+    limiter.release.value = limiterSettings.release;
+
+    return {
+      connect: (source) => {
+        source.connect(filter);
+        let node = filter;
+        if (fx.bitcrusher.bits < 16) { filter.connect(bitcrusher); node = bitcrusher; }
+        if (fx.distortion.amount > 0) { node.connect(distortion); node = distortion; }
+        node.connect(reverbDry);
+        node.connect(delay);
+        node.connect(reverb);
+        node.connect(chorusDelay);
+        delay.connect(delayFeedback);
+        delayFeedback.connect(delay);
+        delay.connect(delayWet);
+        
+        // リミッターを通してマスターへ
+        reverbDry.connect(limiter);
+        delayWet.connect(limiter);
+        reverb.connect(reverbWet);
+        reverbWet.connect(limiter);
+        chorusDelay.connect(chorusWet);
+        chorusWet.connect(limiter);
+        
+        limiter.connect(this.masterGain);
+      }
+    };
+  }
+
+  createNoise(duration) {
+    const bufferSize = this.ctx.sampleRate * duration;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+    return noise;
+  }
+
+  play(type, velocity = 0.8, effectsConfig) {
+    if (!this.ctx) this.init();
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    const now = this.ctx.currentTime;
+    const vol = velocity * 0.4;
+    const gain = this.ctx.createGain();
+    gain.gain.value = vol;
+
+    this.createDrumSound(type, now, vol, gain);
+    const fx = this.setupEffects(effectsConfig);
+    fx.connect(gain);
+  }
+
+  createDrumSound(type, now, vol, gain) {
+    switch (type) {
+      // === 基本キット ===
+      case 'kick': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(30, now + 0.1);
+        osc.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now); osc.stop(now + 0.3);
+        break;
+      }
+      case 'snare': {
+        const noise = this.createNoise(0.2);
+        const nf = this.ctx.createBiquadFilter();
+        nf.type = 'highpass'; nf.frequency.value = 1000;
+        noise.connect(nf); nf.connect(gain);
+        noise.start(now); noise.stop(now + 0.2);
+        const osc = this.ctx.createOscillator();
+        osc.type = 'triangle'; osc.frequency.value = 180;
+        const og = this.ctx.createGain(); og.gain.value = vol * 0.7;
+        osc.connect(og); og.connect(gain);
+        og.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now); osc.stop(now + 0.1);
+        break;
+      }
+      case 'hihat': {
+        const noise = this.createNoise(0.05);
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'highpass'; f.frequency.value = 7000;
+        noise.connect(f); f.connect(gain);
+        gain.gain.value = vol * 0.3;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+        noise.start(now); noise.stop(now + 0.05);
+        break;
+      }
+      case 'openhat': {
+        const noise = this.createNoise(0.3);
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'highpass'; f.frequency.value = 6000;
+        noise.connect(f); f.connect(gain);
+        gain.gain.value = vol * 0.3;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        noise.start(now); noise.stop(now + 0.3);
+        break;
+      }
+      case 'clap': {
+        for (let i = 0; i < 4; i++) {
+          const noise = this.createNoise(0.02);
+          const f = this.ctx.createBiquadFilter();
+          f.type = 'bandpass'; f.frequency.value = 2000;
+          const g = this.ctx.createGain(); g.gain.value = vol * 0.25;
+          noise.connect(f); f.connect(g); g.connect(gain);
+          noise.start(now + i * 0.01); noise.stop(now + 0.03 + i * 0.01);
+        }
+        break;
+      }
+      case 'rimshot': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(400, now + 0.02);
+        osc.connect(gain);
+        gain.gain.value = vol * 0.5;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+        osc.start(now); osc.stop(now + 0.05);
+        break;
+      }
+      case 'tom': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(200, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+        osc.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now); osc.stop(now + 0.3);
+        break;
+      }
+      case 'tomMid': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.25);
+        osc.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+        osc.start(now); osc.stop(now + 0.35);
+        break;
+      }
+      case 'tomLow': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(100, now);
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+        osc.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        osc.start(now); osc.stop(now + 0.4);
+        break;
+      }
+      case 'crash': {
+        const noise = this.createNoise(1.2);
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'highpass'; f.frequency.value = 5000;
+        noise.connect(f); f.connect(gain);
+        gain.gain.value = vol * 0.4;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 1.2);
+        noise.start(now); noise.stop(now + 1.2);
+        break;
+      }
+      case 'ride': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'triangle'; osc.frequency.value = 400;
+        osc.connect(gain);
+        gain.gain.value = vol * 0.2;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+        osc.start(now); osc.stop(now + 0.5);
+        break;
+      }
+
+      // === 808 ===
+      case 'kick808': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(60, now);
+        osc.frequency.exponentialRampToValueAtTime(25, now + 0.5);
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(vol * 1.2, now);
+        g.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+        osc.connect(g); g.connect(gain);
+        osc.start(now); osc.stop(now + 0.8);
+        // Click
+        const click = this.ctx.createOscillator();
+        click.type = 'sine';
+        click.frequency.value = 1000;
+        const cg = this.ctx.createGain();
+        cg.gain.setValueAtTime(vol * 0.3, now);
+        cg.gain.exponentialRampToValueAtTime(0.01, now + 0.01);
+        click.connect(cg); cg.connect(gain);
+        click.start(now); click.stop(now + 0.02);
+        break;
+      }
+      case 'snare808': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(200, now);
+        osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
+        const og = this.ctx.createGain();
+        og.gain.setValueAtTime(vol * 0.6, now);
+        og.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.connect(og); og.connect(gain);
+        osc.start(now); osc.stop(now + 0.2);
+        const noise = this.createNoise(0.25);
+        const nf = this.ctx.createBiquadFilter();
+        nf.type = 'highpass'; nf.frequency.value = 2000;
+        const ng = this.ctx.createGain();
+        ng.gain.setValueAtTime(vol * 0.4, now);
+        ng.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        noise.connect(nf); nf.connect(ng); ng.connect(gain);
+        noise.start(now); noise.stop(now + 0.25);
+        break;
+      }
+      case 'clap808': {
+        for (let i = 0; i < 5; i++) {
+          const noise = this.createNoise(0.015);
+          const f = this.ctx.createBiquadFilter();
+          f.type = 'bandpass'; f.frequency.value = 1500; f.Q.value = 2;
+          const g = this.ctx.createGain();
+          g.gain.setValueAtTime(vol * 0.2, now + i * 0.008);
+          g.gain.exponentialRampToValueAtTime(0.01, now + 0.05 + i * 0.008);
+          noise.connect(f); f.connect(g); g.connect(gain);
+          noise.start(now + i * 0.008); noise.stop(now + 0.05 + i * 0.008);
+        }
+        const tail = this.createNoise(0.15);
+        const tf = this.ctx.createBiquadFilter();
+        tf.type = 'bandpass'; tf.frequency.value = 1200;
+        const tg = this.ctx.createGain();
+        tg.gain.setValueAtTime(vol * 0.3, now + 0.04);
+        tg.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        tail.connect(tf); tf.connect(tg); tg.connect(gain);
+        tail.start(now + 0.04); tail.stop(now + 0.2);
+        break;
+      }
+      case 'cowbell808': {
+        const o1 = this.ctx.createOscillator();
+        const o2 = this.ctx.createOscillator();
+        o1.type = 'square'; o2.type = 'square';
+        o1.frequency.value = 560; o2.frequency.value = 845;
+        const g1 = this.ctx.createGain(); g1.gain.value = vol * 0.15;
+        const g2 = this.ctx.createGain(); g2.gain.value = vol * 0.15;
+        o1.connect(g1); o2.connect(g2);
+        g1.connect(gain); g2.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        o1.start(now); o2.start(now);
+        o1.stop(now + 0.15); o2.stop(now + 0.15);
+        break;
+      }
+      case 'clave808': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = 2500;
+        osc.connect(gain);
+        gain.gain.value = vol * 0.4;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.02);
+        osc.start(now); osc.stop(now + 0.02);
+        break;
+      }
+      case 'maracas808': {
+        const noise = this.createNoise(0.03);
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'highpass'; f.frequency.value = 10000;
+        noise.connect(f); f.connect(gain);
+        gain.gain.value = vol * 0.2;
+        noise.start(now); noise.stop(now + 0.03);
+        break;
+      }
+      case 'tomHi808': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(280, now);
+        osc.frequency.exponentialRampToValueAtTime(140, now + 0.15);
+        osc.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.start(now); osc.stop(now + 0.25);
+        break;
+      }
+      case 'tomLow808': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(100, now);
+        osc.frequency.exponentialRampToValueAtTime(45, now + 0.4);
+        osc.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+        osc.start(now); osc.stop(now + 0.6);
+        break;
+      }
+      case 'conga808': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(350, now);
+        osc.frequency.exponentialRampToValueAtTime(200, now + 0.1);
+        osc.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+        break;
+      }
+
+      // === 909 ===
+      case 'kick909': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.08);
+        const og = this.ctx.createGain();
+        og.gain.setValueAtTime(vol * 1.0, now);
+        og.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        osc.connect(og); og.connect(gain);
+        osc.start(now); osc.stop(now + 0.4);
+        // Click
+        const click = this.ctx.createOscillator();
+        click.type = 'sine';
+        click.frequency.value = 4000;
+        const cg = this.ctx.createGain();
+        cg.gain.setValueAtTime(vol * 0.5, now);
+        cg.gain.exponentialRampToValueAtTime(0.01, now + 0.005);
+        click.connect(cg); cg.connect(gain);
+        click.start(now); click.stop(now + 0.01);
+        break;
+      }
+      case 'snare909': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(180, now + 0.05);
+        const og = this.ctx.createGain();
+        og.gain.setValueAtTime(vol * 0.5, now);
+        og.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.connect(og); og.connect(gain);
+        osc.start(now); osc.stop(now + 0.15);
+        const noise = this.createNoise(0.2);
+        const nf = this.ctx.createBiquadFilter();
+        nf.type = 'highpass'; nf.frequency.value = 1500;
+        const ng = this.ctx.createGain();
+        ng.gain.setValueAtTime(vol * 0.5, now);
+        ng.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        noise.connect(nf); nf.connect(ng); ng.connect(gain);
+        noise.start(now); noise.stop(now + 0.2);
+        break;
+      }
+      case 'hihat909': {
+        // 6矩形波合成
+        const freqs = [205, 298, 368, 416, 520, 601];
+        freqs.forEach(f => {
+          const osc = this.ctx.createOscillator();
+          osc.type = 'square';
+          osc.frequency.value = f;
+          const og = this.ctx.createGain();
+          og.gain.value = vol * 0.05;
+          const bp = this.ctx.createBiquadFilter();
+          bp.type = 'bandpass'; bp.frequency.value = 10000; bp.Q.value = 1;
+          osc.connect(bp); bp.connect(og); og.connect(gain);
+          osc.start(now); osc.stop(now + 0.05);
+        });
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+        break;
+      }
+      case 'openhat909': {
+        const freqs = [205, 298, 368, 416, 520, 601];
+        freqs.forEach(f => {
+          const osc = this.ctx.createOscillator();
+          osc.type = 'square';
+          osc.frequency.value = f;
+          const og = this.ctx.createGain();
+          og.gain.value = vol * 0.05;
+          const bp = this.ctx.createBiquadFilter();
+          bp.type = 'bandpass'; bp.frequency.value = 10000; bp.Q.value = 1;
+          osc.connect(bp); bp.connect(og); og.connect(gain);
+          osc.start(now); osc.stop(now + 0.4);
+        });
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        break;
+      }
+      case 'clap909': {
+        for (let i = 0; i < 4; i++) {
+          const noise = this.createNoise(0.015);
+          const f = this.ctx.createBiquadFilter();
+          f.type = 'bandpass'; f.frequency.value = 1800;
+          const g = this.ctx.createGain();
+          g.gain.value = vol * 0.25;
+          noise.connect(f); f.connect(g); g.connect(gain);
+          noise.start(now + i * 0.01); noise.stop(now + 0.025 + i * 0.01);
+        }
+        const tail = this.createNoise(0.15);
+        const tf = this.ctx.createBiquadFilter();
+        tf.type = 'bandpass'; tf.frequency.value = 1500;
+        const tg = this.ctx.createGain();
+        tg.gain.setValueAtTime(vol * 0.3, now + 0.04);
+        tg.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+        tail.connect(tf); tf.connect(tg); tg.connect(gain);
+        tail.start(now + 0.04); tail.stop(now + 0.18);
+        break;
+      }
+      case 'ride909': {
+        const freqs = [650, 850, 1050];
+        freqs.forEach(f => {
+          const osc = this.ctx.createOscillator();
+          osc.type = 'triangle';
+          osc.frequency.value = f;
+          const og = this.ctx.createGain();
+          og.gain.value = vol * 0.1;
+          osc.connect(og); og.connect(gain);
+          osc.start(now); osc.stop(now + 0.8);
+        });
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+        break;
+      }
+
+      // === ラテン ===
+      case 'conga': case 'congaHi': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        const f = type === 'congaHi' ? 300 : 200;
+        osc.frequency.setValueAtTime(f, now);
+        osc.frequency.exponentialRampToValueAtTime(f * 0.6, now + 0.15);
+        osc.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.start(now); osc.stop(now + 0.25);
+        break;
+      }
+      case 'congaSlap': {
+        const noise = this.createNoise(0.05);
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'bandpass'; f.frequency.value = 3000;
+        noise.connect(f); f.connect(gain);
+        gain.gain.value = vol * 0.4;
+        noise.start(now); noise.stop(now + 0.05);
+        break;
+      }
+      case 'bongo': case 'bongoHi': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        const f = type === 'bongoHi' ? 500 : 350;
+        osc.frequency.setValueAtTime(f, now);
+        osc.frequency.exponentialRampToValueAtTime(f * 0.5, now + 0.1);
+        osc.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.start(now); osc.stop(now + 0.15);
+        break;
+      }
+      case 'timbale': case 'timbaleHi': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.value = type === 'timbaleHi' ? 400 : 280;
+        osc.connect(gain);
+        gain.gain.value = vol * 0.4;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now); osc.stop(now + 0.1);
+        break;
+      }
+      case 'cowbell': {
+        const o1 = this.ctx.createOscillator();
+        const o2 = this.ctx.createOscillator();
+        o1.type = 'square'; o2.type = 'square';
+        o1.frequency.value = 560; o2.frequency.value = 845;
+        o1.connect(gain); o2.connect(gain);
+        gain.gain.value = vol * 0.15;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        o1.start(now); o2.start(now);
+        o1.stop(now + 0.1); o2.stop(now + 0.1);
+        break;
+      }
+      case 'claves': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = 2500;
+        osc.connect(gain);
+        gain.gain.value = vol * 0.4;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
+        osc.start(now); osc.stop(now + 0.03);
+        break;
+      }
+      case 'guiro': {
+        for (let i = 0; i < 8; i++) {
+          const noise = this.createNoise(0.01);
+          const f = this.ctx.createBiquadFilter();
+          f.type = 'bandpass'; f.frequency.value = 3000 + i * 200;
+          const g = this.ctx.createGain();
+          g.gain.value = vol * 0.15;
+          noise.connect(f); f.connect(g); g.connect(gain);
+          noise.start(now + i * 0.015); noise.stop(now + 0.02 + i * 0.015);
+        }
+        break;
+      }
+      case 'maracas': {
+        const noise = this.createNoise(0.06);
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'highpass'; f.frequency.value = 8000;
+        noise.connect(f); f.connect(gain);
+        gain.gain.value = vol * 0.2;
+        noise.start(now); noise.stop(now + 0.06);
+        break;
+      }
+      case 'shaker': {
+        const noise = this.createNoise(0.08);
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'highpass'; f.frequency.value = 6000;
+        noise.connect(f); f.connect(gain);
+        gain.gain.value = vol * 0.2;
+        noise.start(now); noise.stop(now + 0.08);
+        break;
+      }
+      case 'cabasa': {
+        const noise = this.createNoise(0.1);
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'bandpass'; f.frequency.value = 8000; f.Q.value = 0.5;
+        noise.connect(f); f.connect(gain);
+        gain.gain.value = vol * 0.25;
+        noise.start(now); noise.stop(now + 0.1);
+        break;
+      }
+      case 'agogo': case 'agogoHi': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = type === 'agogoHi' ? 1200 : 800;
+        osc.connect(gain);
+        gain.gain.value = vol * 0.3;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.start(now); osc.stop(now + 0.15);
+        break;
+      }
+      case 'cuica': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.linearRampToValueAtTime(600, now + 0.15);
+        osc.connect(gain);
+        gain.gain.value = vol * 0.3;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+        break;
+      }
+      case 'surdo': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(80, now);
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+        osc.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+        osc.start(now); osc.stop(now + 0.5);
+        break;
+      }
+      case 'pandeiro': {
+        const noise = this.createNoise(0.08);
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'bandpass'; f.frequency.value = 8000;
+        noise.connect(f); f.connect(gain);
+        gain.gain.value = vol * 0.25;
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine'; osc.frequency.value = 300;
+        const og = this.ctx.createGain(); og.gain.value = vol * 0.2;
+        osc.connect(og); og.connect(gain);
+        noise.start(now); noise.stop(now + 0.08);
+        osc.start(now); osc.stop(now + 0.1);
+        break;
+      }
+
+      // === 民族楽器 ===
+      case 'djembe': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.2);
+        osc.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+        osc.start(now); osc.stop(now + 0.35);
+        break;
+      }
+      case 'djembeSlap': {
+        const noise = this.createNoise(0.05);
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'bandpass'; f.frequency.value = 2500;
+        noise.connect(f); f.connect(gain);
+        gain.gain.value = vol * 0.4;
+        noise.start(now); noise.stop(now + 0.05);
+        break;
+      }
+      case 'djembeBass': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(100, now);
+        osc.frequency.exponentialRampToValueAtTime(60, now + 0.3);
+        osc.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        osc.start(now); osc.stop(now + 0.4);
+        break;
+      }
+      case 'tabla': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(350, now);
+        osc.frequency.exponentialRampToValueAtTime(250, now + 0.1);
+        osc.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+        // Harmonic
+        const o2 = this.ctx.createOscillator();
+        o2.type = 'sine'; o2.frequency.value = 700;
+        const g2 = this.ctx.createGain(); g2.gain.value = vol * 0.2;
+        g2.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        o2.connect(g2); g2.connect(gain);
+        o2.start(now); o2.stop(now + 0.1);
+        break;
+      }
+      case 'tablaBaya': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(100, now);
+        osc.frequency.exponentialRampToValueAtTime(60, now + 0.3);
+        osc.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        osc.start(now); osc.stop(now + 0.4);
+        break;
+      }
+      case 'taiko': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.exponentialRampToValueAtTime(70, now + 0.3);
+        const og = this.ctx.createGain();
+        og.gain.setValueAtTime(vol * 1.0, now);
+        og.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+        osc.connect(og); og.connect(gain);
+        osc.start(now); osc.stop(now + 0.5);
+        break;
+      }
+      case 'taikoBig': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(60, now);
+        osc.frequency.exponentialRampToValueAtTime(35, now + 0.5);
+        const og = this.ctx.createGain();
+        og.gain.setValueAtTime(vol * 1.2, now);
+        og.gain.exponentialRampToValueAtTime(0.01, now + 1.0);
+        osc.connect(og); og.connect(gain);
+        osc.start(now); osc.stop(now + 1.0);
+        break;
+      }
+      case 'cajon': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(100, now);
+        osc.frequency.exponentialRampToValueAtTime(60, now + 0.15);
+        osc.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now); osc.stop(now + 0.3);
+        break;
+      }
+      case 'cajonSnare': {
+        const noise = this.createNoise(0.15);
+        const nf = this.ctx.createBiquadFilter();
+        nf.type = 'bandpass'; nf.frequency.value = 2000;
+        noise.connect(nf); nf.connect(gain);
+        gain.gain.value = vol * 0.4;
+        noise.start(now); noise.stop(now + 0.15);
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine'; osc.frequency.value = 150;
+        const og = this.ctx.createGain(); og.gain.value = vol * 0.3;
+        og.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.connect(og); og.connect(gain);
+        osc.start(now); osc.stop(now + 0.1);
+        break;
+      }
+      case 'darbuka': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(250, now);
+        osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
+        osc.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+        break;
+      }
+      case 'udu': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.2);
+        osc.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+        osc.start(now); osc.stop(now + 0.35);
+        break;
+      }
+      case 'steelDrum': {
+        const freqs = [440, 554, 659];
+        freqs.forEach((f, i) => {
+          const osc = this.ctx.createOscillator();
+          osc.type = 'sine';
+          osc.frequency.value = f;
+          const og = this.ctx.createGain();
+          og.gain.value = vol * (0.3 - i * 0.08);
+          og.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+          osc.connect(og); og.connect(gain);
+          osc.start(now); osc.stop(now + 0.5);
+        });
+        break;
+      }
+      case 'woodblock': case 'woodblockHi': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = type === 'woodblockHi' ? 1200 : 800;
+        osc.connect(gain);
+        gain.gain.value = vol * 0.4;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+        osc.start(now); osc.stop(now + 0.04);
+        break;
+      }
+      case 'templeBlock': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = 600;
+        osc.connect(gain);
+        gain.gain.value = vol * 0.35;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+        osc.start(now); osc.stop(now + 0.08);
+        break;
+      }
+
+      // === シンバル・金属 ===
+      case 'splash': {
+        const noise = this.createNoise(0.5);
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'highpass'; f.frequency.value = 7000;
+        noise.connect(f); f.connect(gain);
+        gain.gain.value = vol * 0.3;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+        noise.start(now); noise.stop(now + 0.5);
+        break;
+      }
+      case 'china': {
+        const noise = this.createNoise(0.8);
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'bandpass'; f.frequency.value = 6000; f.Q.value = 2;
+        noise.connect(f); f.connect(gain);
+        gain.gain.value = vol * 0.35;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+        noise.start(now); noise.stop(now + 0.8);
+        break;
+      }
+      case 'bell': {
+        const freqs = [800, 1600, 2400];
+        freqs.forEach(f => {
+          const osc = this.ctx.createOscillator();
+          osc.type = 'sine';
+          osc.frequency.value = f;
+          const og = this.ctx.createGain();
+          og.gain.value = vol * 0.15;
+          og.gain.exponentialRampToValueAtTime(0.01, now + 1.0);
+          osc.connect(og); og.connect(gain);
+          osc.start(now); osc.stop(now + 1.0);
+        });
+        break;
+      }
+      case 'rideBell': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = 900;
+        osc.connect(gain);
+        gain.gain.value = vol * 0.3;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        osc.start(now); osc.stop(now + 0.4);
+        break;
+      }
+      case 'gong': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = 100;
+        const og = this.ctx.createGain();
+        og.gain.setValueAtTime(vol * 0.8, now);
+        og.gain.exponentialRampToValueAtTime(0.01, now + 3.0);
+        osc.connect(og); og.connect(gain);
+        osc.start(now); osc.stop(now + 3.0);
+        const noise = this.createNoise(2.5);
+        const nf = this.ctx.createBiquadFilter();
+        nf.type = 'lowpass'; nf.frequency.value = 500;
+        const ng = this.ctx.createGain();
+        ng.gain.setValueAtTime(vol * 0.3, now);
+        ng.gain.exponentialRampToValueAtTime(0.01, now + 2.5);
+        noise.connect(nf); nf.connect(ng); ng.connect(gain);
+        noise.start(now); noise.stop(now + 2.5);
+        break;
+      }
+      case 'chime': {
+        const freqs = [2000, 2500, 3000, 3500];
+        freqs.forEach((f, i) => {
+          const osc = this.ctx.createOscillator();
+          osc.type = 'sine';
+          osc.frequency.value = f;
+          const og = this.ctx.createGain();
+          og.gain.value = vol * 0.1;
+          og.gain.exponentialRampToValueAtTime(0.01, now + 1.5 - i * 0.2);
+          osc.connect(og); og.connect(gain);
+          osc.start(now + i * 0.05); osc.stop(now + 1.5);
+        });
+        break;
+      }
+      case 'triangle': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = 1500;
+        osc.connect(gain);
+        gain.gain.value = vol * 0.2;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+        osc.start(now); osc.stop(now + 0.8);
+        break;
+      }
+      case 'triangleMute': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = 1500;
+        osc.connect(gain);
+        gain.gain.value = vol * 0.2;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+        osc.start(now); osc.stop(now + 0.05);
+        break;
+      }
+      case 'tambourine': {
+        const noise = this.createNoise(0.1);
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'bandpass'; f.frequency.value = 10000;
+        noise.connect(f); f.connect(gain);
+        gain.gain.value = vol * 0.25;
+        noise.start(now); noise.stop(now + 0.1);
+        break;
+      }
+
+      // === 電子音 ===
+      case 'zap': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(1000, now);
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
+        osc.connect(gain);
+        gain.gain.value = vol * 0.3;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now); osc.stop(now + 0.1);
+        break;
+      }
+      case 'laser': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(2000, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
+        osc.connect(gain);
+        gain.gain.value = vol * 0.25;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.start(now); osc.stop(now + 0.15);
+        break;
+      }
+      case 'blip': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = 1000;
+        osc.connect(gain);
+        gain.gain.value = vol * 0.3;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.02);
+        osc.start(now); osc.stop(now + 0.02);
+        break;
+      }
+      case 'beep': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'square';
+        osc.frequency.value = 880;
+        osc.connect(gain);
+        gain.gain.value = vol * 0.2;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+        osc.start(now); osc.stop(now + 0.05);
+        break;
+      }
+      case 'click': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = 5000;
+        osc.connect(gain);
+        gain.gain.value = vol * 0.4;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.003);
+        osc.start(now); osc.stop(now + 0.005);
+        break;
+      }
+      case 'snap': {
+        const noise = this.createNoise(0.02);
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'bandpass'; f.frequency.value = 3000; f.Q.value = 5;
+        noise.connect(f); f.connect(gain);
+        gain.gain.value = vol * 0.4;
+        noise.start(now); noise.stop(now + 0.02);
+        break;
+      }
+      case 'pop': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.03);
+        osc.connect(gain);
+        gain.gain.value = vol * 0.4;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+        osc.start(now); osc.stop(now + 0.05);
+        break;
+      }
+      case 'glitch': {
+        for (let i = 0; i < 5; i++) {
+          const osc = this.ctx.createOscillator();
+          osc.type = ['sine', 'square', 'sawtooth'][Math.floor(Math.random() * 3)];
+          osc.frequency.value = 100 + Math.random() * 2000;
+          const og = this.ctx.createGain();
+          og.gain.value = vol * 0.15;
+          osc.connect(og); og.connect(gain);
+          osc.start(now + i * 0.01);
+          osc.stop(now + 0.015 + i * 0.01);
+        }
+        break;
+      }
+      case 'noise': {
+        const noise = this.createNoise(0.1);
+        noise.connect(gain);
+        gain.gain.value = vol * 0.3;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        noise.start(now); noise.stop(now + 0.1);
+        break;
+      }
+      case 'static': {
+        const noise = this.createNoise(0.15);
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'bandpass'; f.frequency.value = 5000; f.Q.value = 3;
+        noise.connect(f); f.connect(gain);
+        gain.gain.value = vol * 0.25;
+        noise.start(now); noise.stop(now + 0.15);
+        break;
+      }
+      case 'whistle': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(2000, now);
+        osc.frequency.linearRampToValueAtTime(2500, now + 0.1);
+        osc.connect(gain);
+        gain.gain.value = vol * 0.2;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+        break;
+      }
+      case 'siren': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.linearRampToValueAtTime(1200, now + 0.15);
+        osc.frequency.linearRampToValueAtTime(600, now + 0.3);
+        osc.connect(gain);
+        gain.gain.value = vol * 0.25;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+        osc.start(now); osc.stop(now + 0.35);
+        break;
+      }
+      case 'alarm': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'square';
+        osc.frequency.value = 800;
+        osc.connect(gain);
+        gain.gain.value = vol * 0.2;
+        for (let i = 0; i < 3; i++) {
+          gain.gain.setValueAtTime(vol * 0.2, now + i * 0.08);
+          gain.gain.setValueAtTime(0, now + 0.04 + i * 0.08);
+        }
+        osc.start(now); osc.stop(now + 0.24);
+        break;
+      }
+      case 'buzz': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.value = 100;
+        osc.connect(gain);
+        gain.gain.value = vol * 0.3;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.start(now); osc.stop(now + 0.15);
+        break;
+      }
+      case 'wobble': {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.value = 80;
+        const lfo = this.ctx.createOscillator();
+        lfo.type = 'sine';
+        lfo.frequency.value = 8;
+        const lfoGain = this.ctx.createGain();
+        lfoGain.gain.value = 50;
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
+        osc.connect(gain);
+        gain.gain.value = vol * 0.3;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now); lfo.start(now);
+        osc.stop(now + 0.3); lfo.stop(now + 0.3);
+        break;
+      }
+      default:
+        break;
+    }
+  }
+}
+
+// メインコンポーネント
+export default function MegaRhythmGenerator() {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentPreset, setCurrentPreset] = useState(null);
+  const [playMode, setPlayMode] = useState('oneshot');
+  const [bpm, setBpm] = useState(120);
+  const [density, setDensity] = useState(70);
+  const [chaos, setChaos] = useState(50);
+  const [swing, setSwing] = useState(0);
+  const [kickProb, setKickProb] = useState(70);
+  const [snareProb, setSnareProb] = useState(50);
+  const [effects, setEffects] = useState({
+    reverb: { decay: 2.0, wetMix: 0.3 },
+    delay: { time: 0.25, feedback: 0.3, wetMix: 0.2 },
+    filter: { type: 'lowpass', frequency: 8000, Q: 1.0 },
+    distortion: { amount: 0 },
+    bitcrusher: { bits: 16, downsample: 1 },
+    chorus: { rate: 1, depth: 0.2 },
+    limiter: { threshold: -6, ratio: 12, attack: 0.003, release: 0.1 },
+  });
+  const [hitCount, setHitCount] = useState(0);
+  const [currentHit, setCurrentHit] = useState(null);
+  const [scrollingHits, setScrollingHits] = useState([]);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showEffects, setShowEffects] = useState(false);
+  const [showDrumList, setShowDrumList] = useState(false);
+
+  const synthRef = useRef(null);
+  const isPlayingRef = useRef(false);
+  const presetRef = useRef(null);
+  const effectsRef = useRef(effects);
+  const animationRef = useRef(null);
+  const hitsRef = useRef([]);
+
+  useEffect(() => {
+    synthRef.current = new MegaDrumSynth();
+    return () => { isPlayingRef.current = false; };
+  }, []);
+
+  useEffect(() => { effectsRef.current = effects; }, [effects]);
+
+  useEffect(() => {
+    let lastTime = performance.now();
+    const animate = (currentTime) => {
+      const delta = (currentTime - lastTime) / 1000;
+      lastTime = currentTime;
+      const speed = (bpm / 20) * delta * 60;
+      hitsRef.current = hitsRef.current
+        .map(hit => ({ ...hit, x: hit.x - speed }))
+        .filter(hit => hit.x > -50);
+      setScrollingHits([...hitsRef.current]);
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    animationRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationRef.current);
+  }, [bpm]);
+
+  const spawnHit = useCallback((drumType, velocity, colors, yPos) => {
+    const category = ALL_DRUMS[drumType]?.category || 'basic';
+    const newHit = {
+      id: Date.now() + Math.random(),
+      drumType,
+      x: 290,
+      y: yPos,
+      width: 15 + velocity * 25,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      categoryColor: CATEGORY_COLORS[category],
+      velocity,
+    };
+    hitsRef.current.push(newHit);
+  }, []);
+
+  const playStep = useCallback(async (preset, stepInBar) => {
+    if (!isPlayingRef.current) return;
+    const synth = synthRef.current;
+    const colors = preset.colors;
+    const drums = preset.drums;
+    const currentEffects = effectsRef.current;
+    const densityVal = density / 100;
+    const chaosVal = chaos / 100;
+    const hits = [];
+
+    // Kick
+    if (stepInBar % 4 === 0) {
+      if (Math.random() < kickProb / 100) {
+        hits.push({ type: 'kick909', vel: 0.8 + Math.random() * 0.2, yPos: 170 });
+      }
+    } else if (Math.random() < (kickProb / 100) * 0.3 * (1 + chaosVal)) {
+      hits.push({ type: 'kick909', vel: 0.6 + Math.random() * 0.2, yPos: 170 });
+    }
+
+    // Snare
+    if (stepInBar % 8 === 4) {
+      if (Math.random() < snareProb / 100) {
+        hits.push({ type: 'snare909', vel: 0.8 + Math.random() * 0.2, yPos: 140 });
+      }
+    } else if (Math.random() < (snareProb / 100) * 0.2 * chaosVal) {
+      hits.push({ type: 'snare909', vel: 0.5 + Math.random() * 0.2, yPos: 140 });
+    }
+
+    // Other drums
+    drums.forEach((drum, idx) => {
+      const prob = densityVal * (0.3 + chaosVal * 0.7);
+      if (Math.random() < prob) {
+        hits.push({
+          type: drum,
+          vel: 0.4 + Math.random() * 0.4,
+          yPos: (idx / drums.length) * 120 + 20
+        });
+      }
+    });
+
+    hits.forEach(hit => {
+      synth.play(hit.type, hit.vel, currentEffects);
+      setHitCount(c => c + 1);
+      setCurrentHit(hit.type);
+      spawnHit(hit.type, hit.vel, colors, hit.yPos);
+    });
+  }, [density, chaos, kickProb, snareProb, spawnHit]);
+
+  const startPlay = useCallback(async () => {
+    if (!currentPreset) return;
+    synthRef.current.init();
+    isPlayingRef.current = true;
+    setIsPlaying(true);
+    setHitCount(0);
+    presetRef.current = CHARACTER_PRESETS[currentPreset];
+
+    const stepTime = (60 / bpm) / 4 * 1000;
+    const swingAmount = swing / 100;
+    let step = 0;
+    const totalSteps = playMode === 'endless' ? Infinity : (playMode === 'loop' ? Infinity : 64);
+
+    const loop = async () => {
+      if (!isPlayingRef.current) return;
+      const currentStepInBar = step % 16;
+      const actualDelay = currentStepInBar % 2 === 1 ? stepTime * (1 + swingAmount * 0.5) : stepTime;
+      await playStep(presetRef.current, currentStepInBar);
+      step++;
+      if (step >= totalSteps && playMode === 'oneshot') { stopPlay(); return; }
+      if (playMode === 'loop' && step >= 64) step = 0;
+      setTimeout(loop, actualDelay);
+    };
+    loop();
+  }, [currentPreset, bpm, swing, playMode, playStep]);
+
+  const stopPlay = useCallback(() => {
+    isPlayingRef.current = false;
+    setIsPlaying(false);
+    setCurrentHit(null);
+  }, []);
+
+  const applyPreset = useCallback((key) => {
+    const preset = CHARACTER_PRESETS[key];
+    setCurrentPreset(key);
+    setBpm(preset.bpm);
+    setDensity(preset.density);
+    setChaos(preset.chaos);
+    setSwing(preset.swing);
+    setKickProb(preset.kickProb);
+    setSnareProb(preset.snareProb);
+    setEffects(preset.effects);
+    presetRef.current = preset;
+  }, []);
+
+  const testDrum = useCallback((drumType) => {
+    synthRef.current.init();
+    synthRef.current.play(drumType, 0.8, effectsRef.current);
+  }, []);
+
+  const preset = currentPreset ? CHARACTER_PRESETS[currentPreset] : null;
+  const drumCount = Object.keys(ALL_DRUMS).length;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-purple-900 text-white p-4">
+      <div className="text-center mb-4">
+        <h1 className="text-2xl font-bold text-pink-400">🥁 MEGA リズムマシン</h1>
+        <p className="text-gray-400 text-sm">{drumCount}音色 全部盛り！💀</p>
+      </div>
+
+      {/* Visualizer */}
+      <div className="bg-gray-950 rounded-xl border-2 border-pink-800 overflow-hidden mb-4">
+        <div className="flex items-center gap-3 p-3 bg-gray-950">
+          <span className="text-4xl">{preset?.emoji || '🥁'}</span>
+          <div className="flex-1">
+            <span className="text-pink-400 font-bold text-sm">🥁 DRUM VISUALIZER</span>
+            <div className="text-pink-300 text-sm font-bold">
+              {currentHit ? `🥁 ${ALL_DRUMS[currentHit]?.name || currentHit}` : '--'}
+              {playMode === 'endless' && hitCount > 0 && ` #${hitCount}`}
+            </div>
+          </div>
+          <div className={`text-sm px-2 py-1 rounded ${isPlaying ? 'bg-green-600' : 'bg-gray-700'}`}>
+            {isPlaying ? '▶' : '⏸'}
+          </div>
+        </div>
+        <div className="relative h-48 bg-gray-950 overflow-hidden">
+          {[0,1,2,3,4,5,6,7].map(i => (
+            <div key={i} className="absolute w-full h-px bg-pink-900/30" style={{ top: i * 24 }} />
+          ))}
+          <div className="absolute w-0.5 h-full bg-pink-500" style={{ left: 290 }} />
+          {scrollingHits.map(hit => (
+            <div key={hit.id} className="absolute rounded" style={{
+              left: hit.x, top: hit.y, width: hit.width, height: 12,
+              backgroundColor: hit.color,
+              borderLeft: `3px solid ${hit.categoryColor}`,
+              opacity: 0.8
+            }} />
+          ))}
+        </div>
+      </div>
+
+      {/* Effects Display */}
+      <div className="bg-gray-800/50 rounded-lg p-3 mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-bold text-pink-400">🎛️ Effects</span>
+          <div className="flex gap-1 flex-wrap text-xs">
+            <span className="px-2 py-0.5 bg-blue-900 rounded">Rev {Math.round(effects.reverb.wetMix * 100)}%</span>
+            <span className="px-2 py-0.5 bg-purple-900 rounded">Bit {effects.bitcrusher.bits}</span>
+            <span className="px-2 py-0.5 bg-orange-900 rounded">Lim {effects.limiter.threshold}dB</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Mode */}
+      <div className="bg-gray-800 rounded-lg p-3 mb-4">
+        <div className="flex justify-center gap-2">
+          {[{ value: 'oneshot', label: '1回' }, { value: 'loop', label: 'ループ' }, { value: 'endless', label: '∞' }].map(mode => (
+            <button key={mode.value} onClick={() => setPlayMode(mode.value)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${playMode === mode.value ? 'bg-pink-500' : 'bg-gray-700'}`}>
+              {mode.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Play/Stop */}
+      <div className="flex justify-center gap-4 mb-4">
+        <button onClick={startPlay} disabled={isPlaying || !currentPreset}
+          className="px-8 py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-600 rounded-xl font-bold text-lg">▶ PLAY</button>
+        <button onClick={stopPlay} disabled={!isPlaying}
+          className="px-8 py-3 bg-red-500 hover:bg-red-600 disabled:bg-gray-600 rounded-xl font-bold text-lg">⏹ STOP</button>
+      </div>
+
+      {/* Current Preset */}
+      <div className="bg-pink-900/30 rounded-lg p-3 text-center mb-4">
+        <span className="font-bold text-pink-300">
+          {preset ? `${preset.emoji} ${preset.title}` : '🎭 キャラを選んでね ↓'}
+        </span>
+      </div>
+
+      {/* Character Presets */}
+      <h2 className="text-lg font-bold mb-3">🎭 プリセット（16種類）</h2>
+      <div className="grid grid-cols-4 gap-2 mb-4">
+        {Object.entries(CHARACTER_PRESETS).map(([key, p]) => (
+          <button key={key} onClick={() => applyPreset(key)}
+            className={`p-2 rounded-xl text-center transition-all ${currentPreset === key ? 'bg-pink-600 ring-2 ring-pink-300' : 'bg-gray-800 hover:bg-gray-700'}`}>
+            <div className="text-2xl">{p.emoji}</div>
+            <div className="text-xs font-bold leading-tight truncate">{p.title.slice(0, 6)}</div>
+          </button>
+        ))}
+      </div>
+
+      {/* Drum List */}
+      <button onClick={() => setShowDrumList(!showDrumList)}
+        className="w-full bg-purple-900/50 hover:bg-purple-800/50 rounded-lg p-3 text-left font-bold mb-2 flex justify-between items-center">
+        <span>🥁 全{drumCount}音色リスト</span>
+        <span>{showDrumList ? '▼' : '▶'}</span>
+      </button>
+
+      {showDrumList && (
+        <div className="bg-gray-800 rounded-lg p-4 mb-4 max-h-96 overflow-y-auto">
+          {Object.entries(
+            Object.entries(ALL_DRUMS).reduce((acc, [key, val]) => {
+              if (!acc[val.category]) acc[val.category] = [];
+              acc[val.category].push({ key, ...val });
+              return acc;
+            }, {})
+          ).map(([category, drums]) => (
+            <div key={category} className="mb-4">
+              <div className="text-sm font-bold mb-2" style={{ color: CATEGORY_COLORS[category] }}>
+                {category.toUpperCase()} ({drums.length})
+              </div>
+              <div className="grid grid-cols-4 gap-1">
+                {drums.map(drum => (
+                  <button key={drum.key} onClick={() => testDrum(drum.key)}
+                    className="p-1 bg-gray-700 hover:bg-gray-600 rounded text-xs truncate">
+                    {drum.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Effects */}
+      <button onClick={() => setShowEffects(!showEffects)}
+        className="w-full bg-red-900/50 rounded-lg p-3 text-left font-bold mb-2 flex justify-between items-center">
+        <span>🎛️ エフェクト</span>
+        <span>{showEffects ? '▼' : '▶'}</span>
+      </button>
+
+      {showEffects && (
+        <div className="bg-gray-800 rounded-lg p-4 space-y-4 mb-4">
+          <div>
+            <div className="text-sm font-bold text-yellow-400 mb-2">💀 Bitcrusher</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs">Bits: {effects.bitcrusher.bits}</label>
+                <input type="range" min="2" max="16" value={effects.bitcrusher.bits}
+                  onChange={(e) => setEffects({...effects, bitcrusher: {...effects.bitcrusher, bits: parseInt(e.target.value)}})} className="w-full" />
+              </div>
+              <div>
+                <label className="text-xs">Down: {effects.bitcrusher.downsample}x</label>
+                <input type="range" min="1" max="32" value={effects.bitcrusher.downsample}
+                  onChange={(e) => setEffects({...effects, bitcrusher: {...effects.bitcrusher, downsample: parseInt(e.target.value)}})} className="w-full" />
+              </div>
+            </div>
+          </div>
+          <div>
+            <div className="text-sm font-bold text-blue-400 mb-2">🌊 Reverb</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs">Decay: {effects.reverb.decay.toFixed(1)}s</label>
+                <input type="range" min="0.1" max="6" step="0.1" value={effects.reverb.decay}
+                  onChange={(e) => setEffects({...effects, reverb: {...effects.reverb, decay: parseFloat(e.target.value)}})} className="w-full" />
+              </div>
+              <div>
+                <label className="text-xs">Mix: {Math.round(effects.reverb.wetMix * 100)}%</label>
+                <input type="range" min="0" max="1" step="0.05" value={effects.reverb.wetMix}
+                  onChange={(e) => setEffects({...effects, reverb: {...effects.reverb, wetMix: parseFloat(e.target.value)}})} className="w-full" />
+              </div>
+            </div>
+          </div>
+          <div>
+            <div className="text-sm font-bold text-green-400 mb-2">⏱️ Delay</div>
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <label className="text-xs">Time</label>
+                <input type="range" min="0.05" max="1" step="0.05" value={effects.delay.time}
+                  onChange={(e) => setEffects({...effects, delay: {...effects.delay, time: parseFloat(e.target.value)}})} className="w-full" />
+              </div>
+              <div>
+                <label className="text-xs">FB</label>
+                <input type="range" min="0" max="0.9" step="0.05" value={effects.delay.feedback}
+                  onChange={(e) => setEffects({...effects, delay: {...effects.delay, feedback: parseFloat(e.target.value)}})} className="w-full" />
+              </div>
+              <div>
+                <label className="text-xs">Mix</label>
+                <input type="range" min="0" max="1" step="0.05" value={effects.delay.wetMix}
+                  onChange={(e) => setEffects({...effects, delay: {...effects.delay, wetMix: parseFloat(e.target.value)}})} className="w-full" />
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <div className="text-sm font-bold text-red-400 mb-2">🎸 Distortion: {effects.distortion.amount}</div>
+              <input type="range" min="0" max="100" value={effects.distortion.amount}
+                onChange={(e) => setEffects({...effects, distortion: {amount: parseInt(e.target.value)}})} className="w-full" />
+            </div>
+            <div>
+              <div className="text-sm font-bold text-cyan-400 mb-2">Filter Q: {effects.filter.Q}</div>
+              <input type="range" min="0.1" max="15" step="0.1" value={effects.filter.Q}
+                onChange={(e) => setEffects({...effects, filter: {...effects.filter, Q: parseFloat(e.target.value)}})} className="w-full" />
+            </div>
+          </div>
+          {/* リミッター */}
+          <div>
+            <div className="text-sm font-bold text-orange-400 mb-2">🔊 Limiter</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs">Threshold: {effects.limiter.threshold}dB</label>
+                <input type="range" min="-24" max="0" value={effects.limiter.threshold}
+                  onChange={(e) => setEffects({...effects, limiter: {...effects.limiter, threshold: parseInt(e.target.value)}})} className="w-full" />
+              </div>
+              <div>
+                <label className="text-xs">Ratio: {effects.limiter.ratio}:1</label>
+                <input type="range" min="1" max="20" value={effects.limiter.ratio}
+                  onChange={(e) => setEffects({...effects, limiter: {...effects.limiter, ratio: parseInt(e.target.value)}})} className="w-full" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Settings */}
+      <button onClick={() => setShowSettings(!showSettings)}
+        className="w-full bg-gray-800 rounded-lg p-3 text-left font-bold mb-2 flex justify-between items-center">
+        <span>⚙️ 設定</span>
+        <span>{showSettings ? '▼' : '▶'}</span>
+      </button>
+
+      {showSettings && (
+        <div className="bg-gray-800 rounded-lg p-4 space-y-3">
+          <div>
+            <label className="text-sm">BPM: {bpm}</label>
+            <input type="range" min="40" max="200" value={bpm} onChange={(e) => setBpm(Number(e.target.value))} className="w-full" />
+          </div>
+          <div>
+            <label className="text-sm">Density: {density}%</label>
+            <input type="range" min="10" max="100" value={density} onChange={(e) => setDensity(Number(e.target.value))} className="w-full" />
+          </div>
+          <div>
+            <label className="text-sm">Chaos: {chaos}%</label>
+            <input type="range" min="0" max="100" value={chaos} onChange={(e) => setChaos(Number(e.target.value))} className="w-full" />
+          </div>
+          <div>
+            <label className="text-sm">Swing: {swing}%</label>
+            <input type="range" min="0" max="50" value={swing} onChange={(e) => setSwing(Number(e.target.value))} className="w-full" />
+          </div>
+        </div>
+      )}
+
+      <div className="text-center text-gray-500 text-xs mt-6">Made with 💀 by Iceface</div>
+    </div>
+  );
+}
+
+    // Reactアプリをマウント
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<MegaRhythmGenerator />);
+  </script>
+</body>
+</html>
