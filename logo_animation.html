@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ロゴアニメーション</title>
+<style>
+    /* ページの基本設定 */
+    body {
+        margin: 0;
+        height: 100vh; /* 画面の高さいっぱいに */
+        background-color: #f0f4f8; /* 背景色（薄いグレー青） */
+        overflow: hidden; /* 画面外にはみ出た部分を隠す */
+        position: relative; /* ロゴの配置基準 */
+    }
+
+    /* ロゴ画像のスタイル設定 */
+    #movingLogo {
+        position: absolute; /* 自由に配置できるようにする */
+        width: 300px; /* ロゴの幅（お好みで調整してください） */
+        height: auto; /* 高さは自動調整 */
+        
+        /* アニメーションの滑らかさを設定 */
+        /* left, top, transformのプロパティが変化する際、4秒かけてゆっくり変化させる */
+        transition: left 4s ease-in-out, top 4s ease-in-out, transform 4s ease-in-out;
+        
+        /* 初期位置を画面中央あたりに設定（JavaScriptで上書きされます） */
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        
+        cursor: pointer; /* マウスカーソルを指の形に */
+    }
+</style>
+</head>
+<body>
+
+    <img src="https://iceface-microtonal.github.io/puppetwin_logo.png" id="movingLogo" alt="パペトゥラリング">
+
+<script>
+    // ロゴの要素を取得
+    const logo = document.getElementById('movingLogo');
+
+    // ロゴをランダムな位置と角度に動かす関数
+    function moveLogoRandomly() {
+        // 画面の幅と高さを取得
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        // ロゴ自身の幅と高さを取得
+        const logoWidth = logo.offsetWidth;
+        const logoHeight = logo.offsetHeight;
+
+        // ロゴが画面内に収まる移動範囲の最大値を計算
+        // (少し余裕を持たせるために -50 しています)
+        const maxX = windowWidth - logoWidth - 50;
+        const maxY = windowHeight - logoHeight - 50;
+
+        // ランダムな座標 (X, Y) を生成（最低でも50pxの位置から開始）
+        const randomX = 50 + Math.random() * maxX;
+        const randomY = 50 + Math.random() * maxY;
+
+        // ランダムな回転角度を生成 (-30度 ～ +30度の範囲)
+        const randomRotate = (Math.random() - 0.5) * 60;
+        // ランダムな拡大縮小率を生成 (0.8倍 ～ 1.1倍)
+        const randomScale = 0.8 + Math.random() * 0.3;
+
+        // 新しいスタイル（位置と変形）をロゴに適用
+        logo.style.left = `${randomX}px`;
+        logo.style.top = `${randomY}px`;
+        // 回転と拡大縮小を同時に適用
+        logo.style.transform = `rotate(${randomRotate}deg) scale(${randomScale})`;
+    }
+
+    // ページ読み込み時に一度実行して初期位置から動かす
+    // 少し遅延させることで、最初の滑らかな移動を見せる
+    setTimeout(moveLogoRandomly, 100);
+
+    // その後、4秒ごとに moveLogoRandomly 関数を繰り返し実行する
+    // (CSSのtransition時間と同じか少し長めに設定するとスムーズです)
+    setInterval(moveLogoRandomly, 4000);
+
+    // おまけ：クリックした時にもすぐに動くようにする
+    logo.addEventListener('click', moveLogoRandomly);
+
+</script>
+</body>
+</html>
