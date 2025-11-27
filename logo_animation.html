@@ -3,85 +3,173 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ロゴアニメーション</title>
+<title>カオスロゴアニメーション</title>
 <style>
-    /* ページの基本設定 */
-    body {
+    /* 画面全体の基本設定 */
+    body, html {
+        height: 100%;
         margin: 0;
-        height: 100vh; /* 画面の高さいっぱいに */
-        background-color: #f0f4f8; /* 背景色（薄いグレー青） */
-        overflow: hidden; /* 画面外にはみ出た部分を隠す */
-        position: relative; /* ロゴの配置基準 */
+        overflow: hidden; /* 画面外に出た要素を隠す */
+        background-color: #f0f4f8; /* 背景色 */
+    }
+    
+    /* アニメーションの舞台となるコンテナ */
+    #chaos-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        pointer-events: none; /* 文字がマウス操作の邪魔にならないように */
     }
 
-    /* ロゴ画像のスタイル設定 */
-    #movingLogo {
-        position: absolute; /* 自由に配置できるようにする */
-        width: 300px; /* ロゴの幅（お好みで調整してください） */
-        height: auto; /* 高さは自動調整 */
-        
-        /* アニメーションの滑らかさを設定 */
-        /* left, top, transformのプロパティが変化する際、4秒かけてゆっくり変化させる */
-        transition: left 4s ease-in-out, top 4s ease-in-out, transform 4s ease-in-out;
-        
-        /* 初期位置を画面中央あたりに設定（JavaScriptで上書きされます） */
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        
-        cursor: pointer; /* マウスカーソルを指の形に */
+    /* 個々の文字の共通スタイル */
+    .chaos-char {
+        position: absolute;
+        /* 元の画像を背景として設定 */
+        background-image: url('https://iceface-microtonal.github.io/puppetwin_logo.png');
+        background-repeat: no-repeat;
+        /* 画像全体のサイズを固定（ここから特定部分を表示させるため） */
+        background-size: 500px auto; 
+        /* パフォーマンス向上のためのヒント */
+        will-change: transform, opacity, left, top;
     }
+
+    /* --- 動きの定義 (CSSアニメーション) --- */
+    
+    /* ぐるぐる回転し続ける動き */
+    @keyframes spin-forever {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    /* 逆回転 */
+    @keyframes spin-reverse-forever {
+        from { transform: rotate(360deg); }
+        to { transform: rotate(0deg); }
+    }
+    /* ドクンドクンと拡大縮小する動き */
+    @keyframes pulse-forever {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.5); }
+    }
+
+    /* JavaScriptで付与するアニメーション用クラス */
+    .anim-spin { animation: spin-forever 3s linear infinite; }
+    .anim-spin-fast { animation: spin-forever 1s linear infinite; }
+    .anim-spin-rev { animation: spin-reverse-forever 4s linear infinite; }
+    .anim-pulse { animation: pulse-forever 0.8s ease-in-out infinite; }
+
 </style>
 </head>
 <body>
 
-    <img src="https://iceface-microtonal.github.io/puppetwin_logo.png" id="movingLogo" alt="パペトゥラリング">
+    <div id="chaos-container"></div>
 
 <script>
-    // ロゴの要素を取得
-    const logo = document.getElementById('movingLogo');
+    const container = document.getElementById('chaos-container');
 
-    // ロゴをランダムな位置と角度に動かす関数
-    function moveLogoRandomly() {
-        // 画面の幅と高さを取得
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
+    // 文字の切り出し定義
+    // 画像の中から「ここを表示する」という位置(bgPos)とサイズ(width, height)を指定
+    // ※おおよその位置を目分量で設定しています
+    const charDefinitions = [
+        { bgPos: '10px 10px', width: '70px', height: '110px' },   // パ
+        { bgPos: '-75px 30px', width: '60px', height: '80px' },    // ペ
+        { bgPos: '-140px 10px', width: '80px', height: '110px' },  // トゥ
+        { bgPos: '-240px 10px', width: '50px', height: '110px' },  // 棒（イ？）
+        { bgPos: '-310px 60px', width: '60px', height: '70px' },   // 小さいの（ン？）
+        { bgPos: '-370px 0px', width: '100px', height: '150px' }   // 最後のぐるぐる（グ？）
+    ];
 
-        // ロゴ自身の幅と高さを取得
-        const logoWidth = logo.offsetWidth;
-        const logoHeight = logo.offsetHeight;
+    // 付与するアニメーションクラスの候補
+    const animClasses = ['anim-spin', 'anim-spin-fast', 'anim-spin-rev', 'anim-pulse', ''];
 
-        // ロゴが画面内に収まる移動範囲の最大値を計算
-        // (少し余裕を持たせるために -50 しています)
-        const maxX = windowWidth - logoWidth - 50;
-        const maxY = windowHeight - logoHeight - 50;
+    // カオスな文字を1つ生成する関数
+    function createChaosChar() {
+        const charDiv = document.createElement('div');
+        charDiv.classList.add('chaos-char');
 
-        // ランダムな座標 (X, Y) を生成（最低でも50pxの位置から開始）
-        const randomX = 50 + Math.random() * maxX;
-        const randomY = 50 + Math.random() * maxY;
+        // 1. ランダムな文字（切り抜き）を選択して適用
+        const charDef = charDefinitions[Math.floor(Math.random() * charDefinitions.length)];
+        charDiv.style.backgroundPosition = charDef.bgPos;
+        charDiv.style.width = charDef.width;
+        charDiv.style.height = charDef.height;
 
-        // ランダムな回転角度を生成 (-30度 ～ +30度の範囲)
-        const randomRotate = (Math.random() - 0.5) * 60;
-        // ランダムな拡大縮小率を生成 (0.8倍 ～ 1.1倍)
-        const randomScale = 0.8 + Math.random() * 0.3;
+        // 2. 出現位置と移動目標位置をランダムに決定
+        const viewportW = window.innerWidth;
+        const viewportH = window.innerHeight;
+        const offset = 200; // 画面外の余白
 
-        // 新しいスタイル（位置と変形）をロゴに適用
-        logo.style.left = `${randomX}px`;
-        logo.style.top = `${randomY}px`;
-        // 回転と拡大縮小を同時に適用
-        logo.style.transform = `rotate(${randomRotate}deg) scale(${randomScale})`;
+        // 画面の4辺のどこかから出現させる
+        const startSide = Math.floor(Math.random() * 4); // 0:上, 1:右, 2:下, 3:左
+        let startX, startY, endX, endY;
+
+        switch(startSide) {
+            case 0: // 上から下へ
+                startX = Math.random() * viewportW; startY = -offset;
+                endX = Math.random() * viewportW; endY = viewportH + offset; break;
+            case 1: // 右から左へ
+                startX = viewportW + offset; startY = Math.random() * viewportH;
+                endX = -offset; endY = Math.random() * viewportH; break;
+            case 2: // 下から上へ
+                startX = Math.random() * viewportW; startY = viewportH + offset;
+                endX = Math.random() * viewportW; endY = -offset; break;
+            case 3: // 左から右へ
+                startX = -offset; startY = Math.random() * viewportH;
+                endX = viewportW + offset; endY = Math.random() * viewportH; break;
+        }
+
+        // 初期位置を設定
+        charDiv.style.left = `${startX}px`;
+        charDiv.style.top = `${startY}px`;
+
+        // 3. ランダムな動作パラメータを設定
+        const duration = 4 + Math.random() * 6; // 移動にかかる時間（4〜10秒）
+        const delay = Math.random() * 1; // 開始までの遅延（0〜1秒）
+        const randomScale = 0.5 + Math.random() * 2.0; // 最終的な大きさ（0.5倍〜2.5倍）
+        const randomRotate = Math.random() * 720 - 360; // 移動中の全体的な回転角度
+        
+        // ランダムな追加アニメーション（回転し続けるなど）を付与
+        const randomAnimClass = animClasses[Math.floor(Math.random() * animClasses.length)];
+        if (randomAnimClass) {
+            charDiv.classList.add(randomAnimClass);
+        }
+
+        // 移動のスタイル（transition）を設定
+        // left, top, transform, opacity が変化する際のアニメーション設定
+        charDiv.style.transition = `
+            left ${duration}s linear ${delay}s,
+            top ${duration}s linear ${delay}s,
+            transform ${duration}s ease-out ${delay}s,
+            opacity ${duration}s ease-in ${delay}s
+        `;
+        
+        // 初期状態の見た目（小さく、少し透明に）
+        // ※追加アニメーションと競合しないよう、transformのベースとなる値を設定
+        charDiv.style.transform = `scale(0.1) rotate(0deg)`;
+        charDiv.style.opacity = '0.5';
+
+        // 画面に追加
+        container.appendChild(charDiv);
+
+        // 4. アニメーション開始（少し時間をおいて目標値を設定することで動き出す）
+        // requestAnimationFrameを使うとブラウザの描画タイミングに合わせられてスムーズ
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                 charDiv.style.left = `${endX}px`;
+                 charDiv.style.top = `${endY}px`;
+                 // 目標の大きさと角度（ベースの変形＋追加アニメーションが合成される）
+                 charDiv.style.transform = `scale(${randomScale}) rotate(${randomRotate}deg)`;
+                 charDiv.style.opacity = '1';
+            });
+        });
+
+        // 5. お片付け：画面外に出たであろう時間後に要素を削除（メモリ節約）
+        setTimeout(() => {
+            charDiv.remove();
+        }, (duration + delay + 1) * 1000);
     }
 
-    // ページ読み込み時に一度実行して初期位置から動かす
-    // 少し遅延させることで、最初の滑らかな移動を見せる
-    setTimeout(moveLogoRandomly, 100);
-
-    // その後、4秒ごとに moveLogoRandomly 関数を繰り返し実行する
-    // (CSSのtransition時間と同じか少し長めに設定するとスムーズです)
-    setInterval(moveLogoRandomly, 4000);
-
-    // おまけ：クリックした時にもすぐに動くようにする
-    logo.addEventListener('click', moveLogoRandomly);
+    // --- 実行開始 ---
+    // 0.15秒ごとに新しい文字を生成し続ける
+    setInterval(createChaosChar, 150);
 
 </script>
 </body>
