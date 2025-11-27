@@ -85,6 +85,16 @@
       color: #999;
       font-size: 14px;
       text-align: center;
+      width: 90%;
+      max-width: 400px;
+      line-height: 1.5;
+    }
+    
+    @media (max-width: 480px) {
+      .instructions {
+        font-size: 12px;
+        bottom: 15px;
+      }
     }
   </style>
 </head>
@@ -93,7 +103,7 @@
     <!-- Background bubbles -->
   </div>
   <div class="instructions">
-    マウスを動かすと文字が逃げる！クリックで弾ける！ダブルクリックでリセット
+    指でなぞると文字が逃げる！タップで弾ける！ダブルタップでリセット
   </div>
 
   <script>
@@ -112,7 +122,7 @@
       pe: { w: 140, h: 150 },
       to: { w: 100, h: 150 },
       i: { w: 80, h: 120 },
-      n: { w: 110, h: 160 }
+      n: { w: 120, h: 120 }
     };
     
     let characters = [];
@@ -139,7 +149,12 @@
     function initCharacters() {
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 2;
-      const startX = centerX - 280;
+      
+      // レスポンシブスケール（スマホ対応）
+      const baseWidth = 600;
+      const scale = Math.min(1, (window.innerWidth - 40) / baseWidth);
+      const spacing = 120 * scale;
+      const startX = centerX - (spacing * 2);
       
       characters = [];
       
@@ -148,32 +163,35 @@
       
       charOrder.forEach((key, index) => {
         const size = charSizes[key];
-        let xOffset = index * 120;
-        if (key === 'pa') xOffset -= 30; // パを左にずらす
-        if (key === 'n') xOffset -= 30; // ンを左にずらす
+        let xOffset = index * spacing;
+        if (key === 'pa') xOffset -= 30 * scale; // パを左にずらす
+        if (key === 'n') xOffset -= 60 * scale; // ンを左にずらす
+        
+        const scaledW = size.w * scale;
+        const scaledH = size.h * scale;
         
         const char = {
           id: key,
           x: startX + xOffset,
-          y: centerY - size.h / 2,
+          y: centerY - scaledH / 2,
           homeX: startX + xOffset,
-          homeY: centerY - size.h / 2,
+          homeY: centerY - scaledH / 2,
           vx: 0,
           vy: 0,
           rotation: 0,
           rotationV: (Math.random() - 0.5) * 2,
-          width: size.w,
-          height: size.h,
+          width: scaledW,
+          height: scaledH,
           phase: Math.random() * Math.PI * 2,
-          floatAmp: 15 + Math.random() * 20,
+          floatAmp: (15 + Math.random() * 20) * scale,
           floatSpeed: 0.02 + Math.random() * 0.02
         };
         
         const el = document.createElement('div');
         el.className = 'char';
         el.id = 'char-' + key;
-        el.style.width = size.w + 'px';
-        el.style.height = size.h + 'px';
+        el.style.width = scaledW + 'px';
+        el.style.height = scaledH + 'px';
         
         const img = document.createElement('img');
         img.src = images[key];
@@ -181,6 +199,10 @@
         el.appendChild(img);
         
         el.addEventListener('click', () => bounceChar(key));
+        el.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          bounceChar(key);
+        }, { passive: false });
         
         container.appendChild(el);
         characters.push(char);
@@ -269,6 +291,18 @@
     container.addEventListener('mousemove', (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
+    });
+    
+    container.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) {
+        mouseX = e.touches[0].clientX;
+        mouseY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+    
+    container.addEventListener('touchend', () => {
+      mouseX = -1000;
+      mouseY = -1000;
     });
     
     container.addEventListener('mouseleave', () => {
