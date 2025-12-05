@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>🎹 XY Pad Synth</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { margin: 0; touch-action: none; user-select: none; overflow: hidden; }
+    input[type="range"] {
+      -webkit-appearance: none;
+      height: 6px;
+      background: #4a5568;
+      border-radius: 3px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #f472b6;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useRef, useEffect, useCallback } = React;
+
+    // プリセット定義
+    const PRESETS = {
+      dreamy: {
+        name: "🌙 Dreamy Pad",
+        description: "X: Pitch / Y: Filter",
+        xAxis: "pitch", yAxis: "filter",
+        pitchRange: { min: 48, max: 84 }, // C3 - C6
+        synth: {
+          osc1: { type: 'sine', gain: 0.4, detune: 0, octave: 0 },
+          osc2: { type: 'sine', gain: 0.3, detune: 7, octave: 0 },
+          osc3: { type: 'triangle', gain: 0.2, detune: -5, octave: -1 },
+          osc4: { type: 'sine', gain: 0.1, detune: 0, octave: 1 },
+        },
+        adsr: { attack: 0.15, decay: 0.3, sustain: 0.7, release: 0.8 },
+        filter: { type: 'lowpass', minFreq: 200, maxFreq: 8000, Q: 2.0 },
+        effects: {
+          reverb: { decay: 4.0, wetMix: 0.5 },
+          delay: { time: 0.4, feedback: 0.4, wetMix: 0.3 },
+          chorus: { rate: 0.8, depth: 0.4 },
+        },
+        colors: { bg: '#1a1a2e', pad: '#16213e', cursor: '#e94560', trail: '#0f3460' },
+      },
+      theremin: {
+        name: "👽 Theremin",
+        description: "X: Pitch / Y: Volume",
+        xAxis: "pitch", yAxis: "volume",
+        pitchRange: { min: 60, max: 96 }, // C4 - C7
+        synth: {
+          osc1: { type: 'sine', gain: 0.6, detune: 0, octave: 0 },
+          osc2: { type: 'sine', gain: 0.25, detune: 3, octave: 0 },
+          osc3: { type: 'triangle', gain: 0.1, detune: 0, octave: 1 },
+          osc4: { type: 'sine', gain: 0.05, detune: 0, octave: 2 },
+        },
+        adsr: { attack: 0.05, decay: 0.1, sustain: 0.9, release: 0.3 },
+        filter: { type: 'lowpass', minFreq: 2000, maxFreq: 12000, Q: 0.5 },
+        effects: {
+          reverb: { decay: 2.0, wetMix: 0.35 },
+          delay: { time: 0.25, feedback: 0.3, wetMix: 0.2 },
+          chorus: { rate: 5, depth: 0.15 },
+        },
+        colors: { bg: '#0a0a0a', pad: '#1a1a1a', cursor: '#00ff00', trail: '#003300' },
+      },
+      bass: {
+        name: "🎸 Deep Bass",
+        description: "X: Pitch / Y: Distortion",
+        xAxis: "pitch", yAxis: "distortion",
+        pitchRange: { min: 24, max: 60 }, // C1 - C4
+        synth: {
+          osc1: { type: 'sawtooth', gain: 0.4, detune: 0, octave: 0 },
+          osc2: { type: 'square', gain: 0.3, detune: -5, octave: 0 },
+          osc3: { type: 'sine', gain: 0.3, detune: 0, octave: -1 },
+          osc4: { type: 'sawtooth', gain: 0.1, detune: 7, octave: 0 },
+        },
+        adsr: { attack: 0.02, decay: 0.2, sustain: 0.6, release: 0.4 },
+        filter: { type: 'lowpass', minFreq: 100, maxFreq: 3000, Q: 3.0 },
+        effects: {
+          reverb: { decay: 1.0, wetMix: 0.2 },
+          delay: { time: 0.15, feedback: 0.2, wetMix: 0.1 },
+          chorus: { rate: 0, depth: 0 },
+        },
+        colors: { bg: '#1a0a0a', pad: '#2a1515', cursor: '#ff4444', trail: '#441111' },
+      },
+      alien: {
+        name: "🛸 Alien Signal",
+        description: "X: Pitch / Y: Bitcrush",
+        xAxis: "pitch", yAxis: "bitcrush",
+        pitchRange: { min: 48, max: 96 },
+        synth: {
+          osc1: { type: 'square', gain: 0.35, detune: 0, octave: 0 },
+          osc2: { type: 'sawtooth', gain: 0.25, detune: 15, octave: 0 },
+          osc3: { type: 'square', gain: 0.2, detune: -12, octave: 1 },
+          osc4: { type: 'sawtooth', gain: 0.15, detune: 7, octave: -1 },
+        },
+        adsr: { attack: 0.01, decay: 0.15, sustain: 0.5, release: 0.2 },
+        filter: { type: 'bandpass', minFreq: 500, maxFreq: 6000, Q: 5.0 },
+        effects: {
+          reverb: { decay: 2.5, wetMix: 0.4 },
+          delay: { time: 0.33, feedback: 0.5, wetMix: 0.35 },
+          chorus: { rate: 3, depth: 0.3 },
+        },
+        colors: { bg: '#0a1a0a', pad: '#0f2f0f', cursor: '#00ffff', trail: '#004444' },
+      },
+      strings: {
+        name: "🎻 Strings",
+        description: "X: Pitch / Y: Vibrato",
+        xAxis: "pitch", yAxis: "vibrato",
+        pitchRange: { min: 36, max: 84 }, // C2 - C6
+        synth: {
+          osc1: { type: 'sawtooth', gain: 0.25, detune: 5, octave: 0 },
+          osc2: { type: 'sawtooth', gain: 0.25, detune: -5, octave: 0 },
+          osc3: { type: 'sawtooth', gain: 0.2, detune: 3, octave: 1 },
+          osc4: { type: 'triangle', gain: 0.15, detune: 0, octave: 0 },
+        },
+        adsr: { attack: 0.2, decay: 0.3, sustain: 0.8, release: 0.5 },
+        filter: { type: 'lowpass', minFreq: 500, maxFreq: 6000, Q: 1.0 },
+        effects: {
+          reverb: { decay: 3.5, wetMix: 0.45 },
+          delay: { time: 0.3, feedback: 0.25, wetMix: 0.2 },
+          chorus: { rate: 0.5, depth: 0.5 },
+        },
+        colors: { bg: '#1a1510', pad: '#2a2015', cursor: '#ffaa44', trail: '#443311' },
+      },
+      crystal: {
+        name: "💎 Crystal Bell",
+        description: "X: Pitch / Y: Shimmer",
+        xAxis: "pitch", yAxis: "shimmer",
+        pitchRange: { min: 60, max: 108 }, // C4 - C8
+        synth: {
+          osc1: { type: 'sine', gain: 0.35, detune: 0, octave: 0 },
+          osc2: { type: 'sine', gain: 0.25, detune: 0, octave: 1 },
+          osc3: { type: 'sine', gain: 0.2, detune: 0, octave: 2 },
+          osc4: { type: 'triangle', gain: 0.15, detune: 5, octave: 0 },
+        },
+        adsr: { attack: 0.005, decay: 0.8, sustain: 0.2, release: 1.5 },
+        filter: { type: 'highpass', minFreq: 200, maxFreq: 2000, Q: 0.5 },
+        effects: {
+          reverb: { decay: 5.0, wetMix: 0.6 },
+          delay: { time: 0.2, feedback: 0.5, wetMix: 0.4 },
+          chorus: { rate: 2, depth: 0.3 },
+        },
+        colors: { bg: '#101020', pad: '#151530', cursor: '#aaddff', trail: '#224466' },
+      },
+      drone: {
+        name: "🌀 Drone",
+        description: "X: Detune / Y: Filter",
+        xAxis: "detune", yAxis: "filter",
+        pitchRange: { min: 36, max: 48 }, // 固定低音
+        synth: {
+          osc1: { type: 'sawtooth', gain: 0.3, detune: 0, octave: 0 },
+          osc2: { type: 'sawtooth', gain: 0.3, detune: 0, octave: 0 },
+          osc3: { type: 'square', gain: 0.2, detune: 0, octave: -1 },
+          osc4: { type: 'sine', gain: 0.2, detune: 0, octave: -2 },
+        },
+        adsr: { attack: 0.5, decay: 0.5, sustain: 1.0, release: 1.0 },
+        filter: { type: 'lowpass', minFreq: 100, maxFreq: 4000, Q: 4.0 },
+        effects: {
+          reverb: { decay: 6.0, wetMix: 0.6 },
+          delay: { time: 0.6, feedback: 0.5, wetMix: 0.4 },
+          chorus: { rate: 0.2, depth: 0.6 },
+        },
+        colors: { bg: '#0f0f1a', pad: '#15152a', cursor: '#ff66ff', trail: '#331133' },
+      },
+      pluck: {
+        name: "🪕 Pluck",
+        description: "X: Pitch / Y: Brightness",
+        xAxis: "pitch", yAxis: "filter",
+        pitchRange: { min: 48, max: 84 },
+        synth: {
+          osc1: { type: 'triangle', gain: 0.4, detune: 0, octave: 0 },
+          osc2: { type: 'square', gain: 0.2, detune: 0, octave: 0 },
+          osc3: { type: 'sawtooth', gain: 0.15, detune: 0, octave: 1 },
+          osc4: { type: 'sine', gain: 0.1, detune: 0, octave: -1 },
+        },
+        adsr: { attack: 0.001, decay: 0.4, sustain: 0.1, release: 0.3 },
+        filter: { type: 'lowpass', minFreq: 500, maxFreq: 10000, Q: 1.5 },
+        effects: {
+          reverb: { decay: 1.5, wetMix: 0.3 },
+          delay: { time: 0.18, feedback: 0.35, wetMix: 0.25 },
+          chorus: { rate: 1, depth: 0.2 },
+        },
+        colors: { bg: '#1a1a10', pad: '#252515', cursor: '#ffff44', trail: '#444400' },
+      },
+    };
+
+    // XYパッドシンセクラス
+    class XYPadSynth {
+      constructor() {
+        this.ctx = null;
+        this.masterGain = null;
+        this.oscillators = [];
+        this.gains = [];
+        this.envelope = null;
+        this.filter = null;
+        this.distortion = null;
+        this.bitcrusher = null;
+        this.reverb = null;
+        this.delay = null;
+        this.chorus = null;
+        this.lfo = null;
+        this.lfoGain = null;
+        this.isPlaying = false;
+        this.currentPreset = null;
+      }
+
+      init() {
+        if (this.ctx) return;
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.value = 0.6;
+        this.masterGain.connect(this.ctx.destination);
+      }
+
+      midiToFreq(midi) {
+        return 440 * Math.pow(2, (midi - 69) / 12);
+      }
+
+      createReverb(decay) {
+        const length = this.ctx.sampleRate * decay;
+        const impulse = this.ctx.createBuffer(2, length, this.ctx.sampleRate);
+        for (let ch = 0; ch < 2; ch++) {
+          const data = impulse.getChannelData(ch);
+          for (let i = 0; i < length; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (length / 4));
+          }
+        }
+        const convolver = this.ctx.createConvolver();
+        convolver.buffer = impulse;
+        return convolver;
+      }
+
+      makeDistortionCurve(amount) {
+        const samples = 44100;
+        const curve = new Float32Array(samples);
+        const deg = Math.PI / 180;
+        for (let i = 0; i < samples; i++) {
+          const x = (i * 2) / samples - 1;
+          curve[i] = ((3 + amount) * x * 20 * deg) / (Math.PI + amount * Math.abs(x));
+        }
+        return curve;
+      }
+
+      createBitcrusherCurve(bits) {
+        const samples = 65536;
+        const curve = new Float32Array(samples);
+        const steps = Math.pow(2, bits);
+        for (let i = 0; i < samples; i++) {
+          const x = (i * 2) / samples - 1;
+          curve[i] = Math.round(x * steps) / steps;
+        }
+        return curve;
+      }
+
+      start(preset, x, y) {
+        if (!this.ctx) this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        if (this.isPlaying) this.stop();
+
+        this.currentPreset = preset;
+        this.isPlaying = true;
+
+        const now = this.ctx.currentTime;
+        const synth = preset.synth;
+        const adsr = preset.adsr;
+        const effects = preset.effects;
+
+        // 音程計算
+        const midiNote = this.calculateMidi(preset, x);
+        const freq = this.midiToFreq(midiNote);
+
+        // オシレーター作成
+        this.oscillators = [];
+        this.gains = [];
+        const oscMix = this.ctx.createGain();
+
+        [synth.osc1, synth.osc2, synth.osc3, synth.osc4].forEach((oscConfig, i) => {
+          const osc = this.ctx.createOscillator();
+          osc.type = oscConfig.type;
+          osc.frequency.value = freq * Math.pow(2, oscConfig.octave);
+          osc.detune.value = oscConfig.detune;
+
+          const gain = this.ctx.createGain();
+          gain.gain.value = oscConfig.gain;
+
+          osc.connect(gain);
+          gain.connect(oscMix);
+
+          this.oscillators.push(osc);
+          this.gains.push(gain);
+        });
+
+        // ビブラート用LFO
+        this.lfo = this.ctx.createOscillator();
+        this.lfo.type = 'sine';
+        this.lfo.frequency.value = 5;
+        this.lfoGain = this.ctx.createGain();
+        this.lfoGain.gain.value = 0;
+        this.lfo.connect(this.lfoGain);
+        this.oscillators.forEach(osc => {
+          this.lfoGain.connect(osc.frequency);
+        });
+
+        // フィルター
+        this.filter = this.ctx.createBiquadFilter();
+        this.filter.type = preset.filter.type;
+        this.filter.Q.value = preset.filter.Q;
+        this.updateFilter(y);
+
+        // ディストーション
+        this.distortion = this.ctx.createWaveShaper();
+        this.distortion.oversample = '4x';
+
+        // ビットクラッシャー
+        this.bitcrusher = this.ctx.createWaveShaper();
+
+        // エンベロープ
+        this.envelope = this.ctx.createGain();
+        this.envelope.gain.setValueAtTime(0, now);
+        this.envelope.gain.linearRampToValueAtTime(1, now + adsr.attack);
+        this.envelope.gain.linearRampToValueAtTime(adsr.sustain, now + adsr.attack + adsr.decay);
+
+        // エフェクトチェーン
+        // リバーブ
+        this.reverb = this.createReverb(effects.reverb.decay);
+        const reverbWet = this.ctx.createGain();
+        reverbWet.gain.value = effects.reverb.wetMix;
+        const reverbDry = this.ctx.createGain();
+        reverbDry.gain.value = 1 - effects.reverb.wetMix * 0.5;
+
+        // ディレイ
+        this.delay = this.ctx.createDelay(2.0);
+        this.delay.delayTime.value = effects.delay.time;
+        const delayFeedback = this.ctx.createGain();
+        delayFeedback.gain.value = effects.delay.feedback;
+        const delayWet = this.ctx.createGain();
+        delayWet.gain.value = effects.delay.wetMix;
+
+        // コーラス
+        this.chorus = this.ctx.createDelay(0.05);
+        this.chorus.delayTime.value = 0.025;
+        const chorusLFO = this.ctx.createOscillator();
+        chorusLFO.frequency.value = effects.chorus.rate;
+        const chorusDepth = this.ctx.createGain();
+        chorusDepth.gain.value = effects.chorus.depth * 0.01;
+        const chorusWet = this.ctx.createGain();
+        chorusWet.gain.value = effects.chorus.depth > 0 ? 0.4 : 0;
+        chorusLFO.connect(chorusDepth);
+        chorusDepth.connect(this.chorus.delayTime);
+        chorusLFO.start();
+        this.chorusLFO = chorusLFO;
+
+        // 接続
+        oscMix.connect(this.filter);
+        this.filter.connect(this.distortion);
+        this.distortion.connect(this.bitcrusher);
+        this.bitcrusher.connect(this.envelope);
+
+        this.envelope.connect(reverbDry);
+        this.envelope.connect(this.delay);
+        this.envelope.connect(this.reverb);
+        this.envelope.connect(this.chorus);
+
+        this.delay.connect(delayFeedback);
+        delayFeedback.connect(this.delay);
+        this.delay.connect(delayWet);
+
+        reverbDry.connect(this.masterGain);
+        delayWet.connect(this.masterGain);
+        this.reverb.connect(reverbWet);
+        reverbWet.connect(this.masterGain);
+        this.chorus.connect(chorusWet);
+        chorusWet.connect(this.masterGain);
+
+        // 開始
+        this.oscillators.forEach(osc => osc.start(now));
+        this.lfo.start(now);
+
+        // Y軸パラメータ初期化
+        this.updateY(y);
+      }
+
+      calculateMidi(preset, x) {
+        const range = preset.pitchRange;
+        return range.min + x * (range.max - range.min);
+      }
+
+      updateFilter(y) {
+        if (!this.filter || !this.currentPreset) return;
+        const f = this.currentPreset.filter;
+        const freq = f.minFreq + y * (f.maxFreq - f.minFreq);
+        this.filter.frequency.value = freq;
+      }
+
+      updateX(x) {
+        if (!this.isPlaying || !this.currentPreset) return;
+        const preset = this.currentPreset;
+
+        if (preset.xAxis === 'pitch') {
+          const midiNote = this.calculateMidi(preset, x);
+          const freq = this.midiToFreq(midiNote);
+          this.oscillators.forEach((osc, i) => {
+            const config = [preset.synth.osc1, preset.synth.osc2, preset.synth.osc3, preset.synth.osc4][i];
+            osc.frequency.value = freq * Math.pow(2, config.octave);
+          });
+        } else if (preset.xAxis === 'detune') {
+          const detune = (x - 0.5) * 100; // -50 to +50 cents
+          this.oscillators.forEach((osc, i) => {
+            const config = [preset.synth.osc1, preset.synth.osc2, preset.synth.osc3, preset.synth.osc4][i];
+            osc.detune.value = config.detune + detune * (i + 1);
+          });
+        }
+      }
+
+      updateY(y) {
+        if (!this.isPlaying || !this.currentPreset) return;
+        const preset = this.currentPreset;
+
+        switch (preset.yAxis) {
+          case 'filter':
+            this.updateFilter(y);
+            break;
+          case 'volume':
+            this.envelope.gain.value = y * preset.adsr.sustain;
+            break;
+          case 'distortion':
+            if (y > 0.1) {
+              this.distortion.curve = this.makeDistortionCurve(y * 50);
+            } else {
+              this.distortion.curve = null;
+            }
+            break;
+          case 'bitcrush':
+            const bits = 16 - y * 12; // 16 to 4 bits
+            if (bits < 15) {
+              this.bitcrusher.curve = this.createBitcrusherCurve(bits);
+            } else {
+              this.bitcrusher.curve = null;
+            }
+            break;
+          case 'vibrato':
+            this.lfoGain.gain.value = y * 30; // 0 to 30 cents
+            this.lfo.frequency.value = 4 + y * 4; // 4 to 8 Hz
+            break;
+          case 'shimmer':
+            // シマー = 高音ハーモニクスの量
+            if (this.gains[2]) this.gains[2].gain.value = preset.synth.osc3.gain * (1 + y * 2);
+            if (this.gains[3]) this.gains[3].gain.value = preset.synth.osc4.gain * (1 + y * 3);
+            this.updateFilter(y);
+            break;
+        }
+      }
+
+      stop() {
+        if (!this.isPlaying) return;
+        
+        const now = this.ctx.currentTime;
+        const release = this.currentPreset?.adsr.release || 0.3;
+
+        if (this.envelope) {
+          this.envelope.gain.cancelScheduledValues(now);
+          this.envelope.gain.setValueAtTime(this.envelope.gain.value, now);
+          this.envelope.gain.linearRampToValueAtTime(0, now + release);
+        }
+
+        setTimeout(() => {
+          this.oscillators.forEach(osc => {
+            try { osc.stop(); } catch(e) {}
+          });
+          try { this.lfo?.stop(); } catch(e) {}
+          try { this.chorusLFO?.stop(); } catch(e) {}
+          this.oscillators = [];
+          this.gains = [];
+        }, release * 1000 + 100);
+
+        this.isPlaying = false;
+      }
+    }
+
+    // メインコンポーネント
+    function XYPadApp() {
+      const [currentPreset, setCurrentPreset] = useState('dreamy');
+      const [isPlaying, setIsPlaying] = useState(false);
+      const [position, setPosition] = useState({ x: 0.5, y: 0.5 });
+      const [trail, setTrail] = useState([]);
+      const [showPresets, setShowPresets] = useState(false);
+
+      const synthRef = useRef(null);
+      const padRef = useRef(null);
+      const isPlayingRef = useRef(false);
+
+      useEffect(() => {
+        synthRef.current = new XYPadSynth();
+        return () => {
+          synthRef.current?.stop();
+        };
+      }, []);
+
+      const getPosition = useCallback((e) => {
+        const pad = padRef.current;
+        if (!pad) return { x: 0.5, y: 0.5 };
+
+        const rect = pad.getBoundingClientRect();
+        let clientX, clientY;
+
+        if (e.touches) {
+          clientX = e.touches[0].clientX;
+          clientY = e.touches[0].clientY;
+        } else {
+          clientX = e.clientX;
+          clientY = e.clientY;
+        }
+
+        const x = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        const y = Math.max(0, Math.min(1, 1 - (clientY - rect.top) / rect.height)); // 反転
+
+        return { x, y };
+      }, []);
+
+      const handleStart = useCallback((e) => {
+        e.preventDefault();
+        const pos = getPosition(e);
+        setPosition(pos);
+        setIsPlaying(true);
+        isPlayingRef.current = true;
+        setTrail([pos]);
+        
+        const preset = PRESETS[currentPreset];
+        synthRef.current?.start(preset, pos.x, pos.y);
+      }, [currentPreset, getPosition]);
+
+      const handleMove = useCallback((e) => {
+        if (!isPlayingRef.current) return;
+        e.preventDefault();
+        
+        const pos = getPosition(e);
+        setPosition(pos);
+        setTrail(prev => [...prev.slice(-30), pos]);
+        
+        synthRef.current?.updateX(pos.x);
+        synthRef.current?.updateY(pos.y);
+      }, [getPosition]);
+
+      const handleEnd = useCallback((e) => {
+        e.preventDefault();
+        setIsPlaying(false);
+        isPlayingRef.current = false;
+        synthRef.current?.stop();
+        
+        setTimeout(() => setTrail([]), 500);
+      }, []);
+
+      const preset = PRESETS[currentPreset];
+
+      return (
+        <div className="min-h-screen flex flex-col" style={{ backgroundColor: preset.colors.bg }}>
+          {/* ヘッダー */}
+          <div className="p-3 text-center">
+            <h1 className="text-xl font-bold text-white">🎹 XY Pad Synth</h1>
+            <button
+              onClick={() => setShowPresets(!showPresets)}
+              className="mt-2 px-4 py-2 rounded-lg text-white font-bold transition-all"
+              style={{ backgroundColor: preset.colors.cursor }}
+            >
+              {preset.name} ▼
+            </button>
+            <p className="text-gray-400 text-sm mt-1">{preset.description}</p>
+          </div>
+
+          {/* プリセット選択 */}
+          {showPresets && (
+            <div className="px-3 pb-3">
+              <div className="grid grid-cols-4 gap-2">
+                {Object.entries(PRESETS).map(([key, p]) => (
+                  <button
+                    key={key}
+                    onClick={() => { setCurrentPreset(key); setShowPresets(false); }}
+                    className={`p-2 rounded-lg text-xs font-bold transition-all ${
+                      currentPreset === key ? 'ring-2 ring-white' : ''
+                    }`}
+                    style={{ 
+                      backgroundColor: p.colors.pad,
+                      color: p.colors.cursor 
+                    }}
+                  >
+                    {p.name.split(' ')[0]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* XYパッド */}
+          <div className="flex-1 p-3">
+            <div
+              ref={padRef}
+              className="w-full h-full rounded-2xl relative overflow-hidden cursor-crosshair"
+              style={{ 
+                backgroundColor: preset.colors.pad,
+                boxShadow: `inset 0 0 50px ${preset.colors.trail}`,
+                minHeight: '400px'
+              }}
+              onMouseDown={handleStart}
+              onMouseMove={handleMove}
+              onMouseUp={handleEnd}
+              onMouseLeave={handleEnd}
+              onTouchStart={handleStart}
+              onTouchMove={handleMove}
+              onTouchEnd={handleEnd}
+            >
+              {/* グリッド */}
+              <svg className="absolute inset-0 w-full h-full opacity-20">
+                {[...Array(9)].map((_, i) => (
+                  <React.Fragment key={i}>
+                    <line
+                      x1={`${(i + 1) * 10}%`} y1="0"
+                      x2={`${(i + 1) * 10}%`} y2="100%"
+                      stroke={preset.colors.cursor}
+                      strokeWidth="1"
+                    />
+                    <line
+                      x1="0" y1={`${(i + 1) * 10}%`}
+                      x2="100%" y2={`${(i + 1) * 10}%`}
+                      stroke={preset.colors.cursor}
+                      strokeWidth="1"
+                    />
+                  </React.Fragment>
+                ))}
+              </svg>
+
+              {/* 軸ラベル */}
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs opacity-50"
+                   style={{ color: preset.colors.cursor }}>
+                {preset.xAxis === 'pitch' ? '← Low ─── High →' : '← - ─── + →'}
+              </div>
+              <div className="absolute left-2 top-1/2 -translate-y-1/2 -rotate-90 text-xs opacity-50"
+                   style={{ color: preset.colors.cursor }}>
+                {preset.yAxis === 'filter' ? 'Dark ─── Bright' : 
+                 preset.yAxis === 'volume' ? 'Quiet ─── Loud' :
+                 preset.yAxis === 'vibrato' ? 'None ─── Deep' : 'Low ─── High'}
+              </div>
+
+              {/* トレイル */}
+              {trail.length > 1 && (
+                <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                  <path
+                    d={trail.map((p, i) => 
+                      `${i === 0 ? 'M' : 'L'} ${p.x * 100}% ${(1 - p.y) * 100}%`
+                    ).join(' ')}
+                    fill="none"
+                    stroke={preset.colors.trail}
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    opacity="0.6"
+                  />
+                </svg>
+              )}
+
+              {/* カーソル */}
+              {isPlaying && (
+                <div
+                  className="absolute w-12 h-12 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                  style={{
+                    left: `${position.x * 100}%`,
+                    top: `${(1 - position.y) * 100}%`,
+                    backgroundColor: preset.colors.cursor,
+                    boxShadow: `0 0 30px ${preset.colors.cursor}, 0 0 60px ${preset.colors.cursor}`,
+                    opacity: 0.9
+                  }}
+                />
+              )}
+
+              {/* 中央のヒント */}
+              {!isPlaying && trail.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center opacity-40" style={{ color: preset.colors.cursor }}>
+                    <div className="text-4xl mb-2">👆</div>
+                    <div className="text-sm">Touch to play</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 情報表示 */}
+          <div className="p-3">
+            <div className="rounded-lg p-3" style={{ backgroundColor: preset.colors.pad }}>
+              <div className="flex justify-between text-sm" style={{ color: preset.colors.cursor }}>
+                <span>X: {(position.x * 100).toFixed(0)}%</span>
+                <span>Y: {(position.y * 100).toFixed(0)}%</span>
+                <span>{isPlaying ? '🔊 Playing' : '🔇 Ready'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* フッター */}
+          <div className="p-2 text-center text-gray-500 text-xs">
+            Made with 💜 by Iceface
+          </div>
+        </div>
+      );
+    }
+
+    // Reactアプリをマウント
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<XYPadApp />);
+  </script>
+</body>
+</html>
