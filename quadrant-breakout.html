@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>4-Color Quadrant Breakout</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a0a12 0%, #1a1a2e 50%, #0f0f1a 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            padding: 10px;
+        }
+        
+        .container {
+            position: relative;
+            width: min(98vw, 177.78vh);
+            height: min(55.125vw, 98vh);
+            max-width: 1280px;
+            max-height: 720px;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            box-shadow: 
+                0 0 60px rgba(100, 160, 210, 0.15),
+                0 0 120px rgba(245, 170, 200, 0.1),
+                inset 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .score-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-around;
+            gap: 8px;
+            pointer-events: none;
+        }
+        
+        .score-item {
+            font-size: clamp(10px, 2.5vw, 14px);
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            letter-spacing: 0.5px;
+        }
+        
+        .score-blue { color: #64a0d2; border: 1px solid rgba(100, 160, 210, 0.4); }
+        .score-pink { color: #f5aac8; border: 1px solid rgba(245, 170, 200, 0.4); }
+        .score-gray { color: #b4c8d2; border: 1px solid rgba(180, 200, 210, 0.4); }
+        .score-white { color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.4); }
+        
+        .controls {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(11px, 2vw, 13px);
+            font-weight: 300;
+            padding: 6px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            background: rgba(30, 30, 50, 0.7);
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .btn:hover, .btn:active, .btn.active {
+            background: rgba(100, 160, 210, 0.3);
+            border-color: rgba(100, 160, 210, 0.5);
+            color: #fff;
+        }
+        
+        .start-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 10, 18, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            z-index: 10;
+            cursor: pointer;
+        }
+        
+        .start-overlay h1 {
+            font-size: clamp(20px, 5vw, 32px);
+            font-weight: 300;
+            color: #fff;
+            margin-bottom: 20px;
+            letter-spacing: 4px;
+        }
+        
+        .start-overlay p {
+            font-size: clamp(12px, 3vw, 16px);
+            color: rgba(255, 255, 255, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div class="score-panel">
+            <div class="score-item score-blue">Blue: <span id="scoreBlue">0</span></div>
+            <div class="score-item score-pink">Pink: <span id="scorePink">0</span></div>
+            <div class="score-item score-gray">Gray: <span id="scoreGray">0</span></div>
+            <div class="score-item score-white">White: <span id="scoreWhite">0</span></div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" id="btnReset">Reset</button>
+            <button class="btn active" id="btn1">1x</button>
+            <button class="btn" id="btn2">2x</button>
+            <button class="btn" id="btn3">3x</button>
+            <button class="btn" id="btn4">5x</button>
+        </div>
+        
+        <div class="start-overlay" id="startOverlay">
+            <h1>QUADRANT BREAKOUT</h1>
+            <p>Tap to Start</p>
+        </div>
+    </div>
+
+    <script>
+        // Canvas設定
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 論理サイズ（横長 16:9）
+        const GAME_WIDTH = 1280;
+        const GAME_HEIGHT = 720;
+        canvas.width = GAME_WIDTH;
+        canvas.height = GAME_HEIGHT;
+        
+        const BLOCK_SIZE = 20;
+        const BALL_RADIUS = 12;
+        const CENTER_X = GAME_WIDTH / 2;
+        const CENTER_Y = GAME_HEIGHT / 2;
+        const COLS = GAME_WIDTH / BLOCK_SIZE;
+        const ROWS = GAME_HEIGHT / BLOCK_SIZE;
+        
+        // 色定義
+        const COLORS = {
+            blue:      { r: 100, g: 160, b: 210 },
+            pink:      { r: 245, g: 170, b: 200 },
+            gray_blue: { r: 180, g: 200, b: 210 },
+            white:     { r: 255, g: 255, b: 255 }
+        };
+        
+        // MIDI設定（周波数計算用）
+        const MIDI_SETTINGS = {
+            blue:      { base: 48, scale: [0, 3, 7, 10] },      // C3 マイナー7th
+            pink:      { base: 72, scale: [0, 4, 7, 11] },      // C5 メジャー7th
+            gray_blue: { base: 60, scale: [0, 2, 4, 5, 7] },    // C4 ペンタトニック
+            white:     { base: 84, scale: [0, 2, 4, 7, 9] }     // C6 ペンタトニック高音
+        };
+        
+        // Web Audio API
+        let audioCtx = null;
+        
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+        
+        // MIDIノート番号から周波数へ変換
+        function midiToFreq(midi) {
+            return 440 * Math.pow(2, (midi - 69) / 12);
+        }
+        
+        // サイン波のみの減衰音
+        function playNote(colorName, col, row) {
+            if (!audioCtx) return;
+            
+            const settings = MIDI_SETTINGS[colorName];
+            const noteInScale = settings.scale[(col + row) % settings.scale.length];
+            const midiNote = Math.max(24, Math.min(108, settings.base + noteInScale));
+            const freq = midiToFreq(midiNote);
+            
+            const now = audioCtx.currentTime;
+            
+            // オシレーター（純粋なサイン波のみ）
+            const osc = audioCtx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now);
+            
+            // ゲイン（エンベロープ）
+            const gain = audioCtx.createGain();
+            
+            // シンプルな減衰エンベロープ
+            const attackTime = 0.003;
+            const decayTime = 1.2;
+            
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.3, now + attackTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + decayTime);
+            
+            // 接続
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            // 再生
+            osc.start(now);
+            osc.stop(now + decayTime + 0.1);
+        }
+        
+        // ゲーム状態
+        let blocks = [];
+        let balls = [];
+        let scores = { blue: 0, pink: 0, gray_blue: 0, white: 0 };
+        let speedMultiplier = 1;
+        let gameStarted = false;
+        
+        // ブロッククラス
+        class Block {
+            constructor(x, y, colorName) {
+                this.x = x;
+                this.y = y;
+                this.colorName = colorName;
+                this.alive = true;
+            }
+            
+            draw() {
+                if (!this.alive) return;
+                const c = COLORS[this.colorName];
+                ctx.fillStyle = `rgb(${c.r}, ${c.g}, ${c.b})`;
+                ctx.fillRect(this.x, this.y, BLOCK_SIZE, BLOCK_SIZE);
+            }
+        }
+        
+        // ボールクラス
+        class Ball {
+            constructor(x, y, colorName) {
+                this.x = x;
+                this.y = y;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 3.0;
+                this.dx = Math.cos(angle) * speed;
+                this.dy = Math.sin(angle) * speed;
+                this.colorName = colorName;
+            }
+            
+            move() {
+                this.x += this.dx;
+                this.y += this.dy;
+            }
+            
+            draw() {
+                const c = COLORS[this.colorName];
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, BALL_RADIUS, 0, Math.PI * 2);
+                ctx.fillStyle = `rgb(${c.r}, ${c.g}, ${c.b})`;
+                ctx.fill();
+            }
+        }
+        
+        // 座標から象限の色を取得
+        function getQuadrantColor(x, y) {
+            if (x < CENTER_X && y < CENTER_Y) return 'blue';
+            if (x >= CENTER_X && y < CENTER_Y) return 'pink';
+            if (x < CENTER_X && y >= CENTER_Y) return 'gray_blue';
+            return 'white';
+        }
+        
+        // ゲーム初期化
+        function initGame() {
+            blocks = [];
+            balls = [];
+            scores = { blue: 0, pink: 0, gray_blue: 0, white: 0 };
+            
+            // ブロック配置
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    const x = col * BLOCK_SIZE;
+                    const y = row * BLOCK_SIZE;
+                    const colorName = getQuadrantColor(x, y);
+                    blocks.push(new Block(x, y, colorName));
+                }
+            }
+            
+            // ボール配置（敵陣に）
+            const ballConfigs = [
+                { color: 'white',     x: CENTER_X / 2,           y: CENTER_Y / 2 },
+                { color: 'gray_blue', x: CENTER_X + CENTER_X / 2, y: CENTER_Y / 2 },
+                { color: 'pink',      x: CENTER_X / 2,           y: CENTER_Y + CENTER_Y / 2 },
+                { color: 'blue',      x: CENTER_X + CENTER_X / 2, y: CENTER_Y + CENTER_Y / 2 }
+            ];
+            
+            for (const config of ballConfigs) {
+                balls.push(new Ball(config.x, config.y, config.color));
+            }
+            
+            updateScoreDisplay();
+        }
+        
+        // ボール更新
+        function updateBall(ball) {
+            ball.move();
+            
+            // 壁との衝突
+            if (ball.x - BALL_RADIUS <= 0) ball.dx = Math.abs(ball.dx);
+            if (ball.x + BALL_RADIUS >= GAME_WIDTH) ball.dx = -Math.abs(ball.dx);
+            if (ball.y - BALL_RADIUS <= 0) ball.dy = Math.abs(ball.dy);
+            if (ball.y + BALL_RADIUS >= GAME_HEIGHT) ball.dy = -Math.abs(ball.dy);
+            
+            // ブロックとの衝突
+            for (const block of blocks) {
+                if (!block.alive) continue;
+                if (block.colorName !== ball.colorName) continue;
+                
+                // 衝突判定
+                const bx = block.x;
+                const by = block.y;
+                const bw = BLOCK_SIZE;
+                const bh = BLOCK_SIZE;
+                
+                if (ball.x + BALL_RADIUS > bx && ball.x - BALL_RADIUS < bx + bw &&
+                    ball.y + BALL_RADIUS > by && ball.y - BALL_RADIUS < by + bh) {
+                    
+                    block.alive = false;
+                    scores[ball.colorName]++;
+                    
+                    // 音を鳴らす
+                    const col = Math.floor(block.x / BLOCK_SIZE);
+                    const row = Math.floor(block.y / BLOCK_SIZE);
+                    playNote(ball.colorName, col, row);
+                    
+                    // 跳ね返り計算
+                    const dx = ball.x - (bx + bw / 2);
+                    const dy = ball.y - (by + bh / 2);
+                    
+                    if (Math.abs(dx / bw) > Math.abs(dy / bh)) {
+                        ball.dx = -ball.dx;
+                    } else {
+                        ball.dy = -ball.dy;
+                    }
+                    
+                    break;
+                }
+            }
+        }
+        
+        // ブロック再生成チェック
+        function checkRegenerate() {
+            const aliveCounts = { blue: 0, pink: 0, gray_blue: 0, white: 0 };
+            
+            for (const block of blocks) {
+                if (block.alive) {
+                    aliveCounts[block.colorName]++;
+                }
+            }
+            
+            for (const colorName of Object.keys(aliveCounts)) {
+                if (aliveCounts[colorName] === 0) {
+                    for (const block of blocks) {
+                        if (block.colorName === colorName) {
+                            block.alive = true;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // スコア表示更新
+        function updateScoreDisplay() {
+            document.getElementById('scoreBlue').textContent = scores.blue;
+            document.getElementById('scorePink').textContent = scores.pink;
+            document.getElementById('scoreGray').textContent = scores.gray_blue;
+            document.getElementById('scoreWhite').textContent = scores.white;
+        }
+        
+        // 描画
+        function draw() {
+            // 背景
+            ctx.fillStyle = '#14141e';
+            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+            
+            // 象限の境界線（薄く）
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(CENTER_X, 0);
+            ctx.lineTo(CENTER_X, GAME_HEIGHT);
+            ctx.moveTo(0, CENTER_Y);
+            ctx.lineTo(GAME_WIDTH, CENTER_Y);
+            ctx.stroke();
+            
+            // ブロック描画
+            for (const block of blocks) {
+                block.draw();
+            }
+            
+            // ボール描画
+            for (const ball of balls) {
+                ball.draw();
+            }
+        }
+        
+        // ゲームループ
+        function gameLoop() {
+            if (gameStarted) {
+                for (let i = 0; i < speedMultiplier; i++) {
+                    for (const ball of balls) {
+                        updateBall(ball);
+                    }
+                    checkRegenerate();
+                }
+                updateScoreDisplay();
+            }
+            
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // イベントリスナー
+        const startOverlay = document.getElementById('startOverlay');
+        startOverlay.addEventListener('click', () => {
+            initAudio();
+            gameStarted = true;
+            startOverlay.classList.add('hidden');
+        });
+        
+        document.getElementById('btnReset').addEventListener('click', () => {
+            initGame();
+        });
+        
+        const speedButtons = [
+            { id: 'btn1', speed: 1 },
+            { id: 'btn2', speed: 2 },
+            { id: 'btn3', speed: 3 },
+            { id: 'btn4', speed: 5 }
+        ];
+        
+        speedButtons.forEach(({ id, speed }) => {
+            document.getElementById(id).addEventListener('click', (e) => {
+                speedMultiplier = speed;
+                speedButtons.forEach(b => document.getElementById(b.id).classList.remove('active'));
+                e.target.classList.add('active');
+            });
+        });
+        
+        // 初期化
+        initGame();
+        gameLoop();
+    </script>
+</body>
+</html>
