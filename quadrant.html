@@ -198,23 +198,41 @@
         let audioUnlocked = false;
         
         function initAudio() {
+            // AudioContext作成
             if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                console.log('AudioContext created, state:', audioCtx.state);
             }
             
-            // iOS用のアンロック処理
+            // resume を試みる
             if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
+                audioCtx.resume().then(() => {
+                    console.log('AudioContext resumed, state:', audioCtx.state);
+                });
             }
             
-            // 無音バッファを再生してiOSのオーディオをアンロック
+            // iPad用：実際に音を鳴らしてアンロック
             if (!audioUnlocked) {
+                // 無音バッファ
                 const buffer = audioCtx.createBuffer(1, 1, 22050);
                 const source = audioCtx.createBufferSource();
                 source.buffer = buffer;
                 source.connect(audioCtx.destination);
                 source.start(0);
+                
+                // 超短い実音も鳴らす（聞こえないくらい短い）
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.01);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.01);
+                
                 audioUnlocked = true;
+                console.log('Audio unlocked');
             }
         }
         
@@ -225,11 +243,20 @@
         
         // サイン波のみの減衰音
         function playNote(colorName, col, row) {
-            if (!audioCtx) return;
+            if (!audioCtx) {
+                console.log('No audioCtx');
+                return;
+            }
             
-            // iOSでsuspendedの場合はresumeを試みる
+            // suspended状態なら再開を試みる
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
+            }
+            
+            // running状態でなければスキップ
+            if (audioCtx.state !== 'running') {
+                console.log('AudioContext not running:', audioCtx.state);
+                return;
             }
             
             const settings = MIDI_SETTINGS[colorName];
@@ -252,7 +279,7 @@
             const decayTime = 1.2;
             
             gain.gain.setValueAtTime(0, now);
-            gain.gain.linearRampToValueAtTime(0.3, now + attackTime);
+            gain.gain.linearRampToValueAtTime(0.5, now + attackTime);
             gain.gain.exponentialRampToValueAtTime(0.001, now + decayTime);
             
             // 接続
@@ -474,18 +501,20 @@
         
         // イベントリスナー
         const startOverlay = document.getElementById('startOverlay');
+        let startHandled = false;
         
-        function startGame() {
+        function startGame(e) {
+            if (startHandled) return;
+            startHandled = true;
+            if (e) e.preventDefault();
             initAudio();
             gameStarted = true;
             startOverlay.classList.add('hidden');
         }
         
         startOverlay.addEventListener('click', startGame);
-        startOverlay.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            startGame();
-        });
+        startOverlay.addEventListener('touchstart', startGame, { passive: false });
+        startOverlay.addEventListener('touchend', startGame, { passive: false });
         
         document.getElementById('btnReset').addEventListener('click', () => {
             initGame();
