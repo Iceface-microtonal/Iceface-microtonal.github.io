@@ -195,13 +195,26 @@
         
         // Web Audio API
         let audioCtx = null;
+        let audioUnlocked = false;
         
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
+            
+            // iOS用のアンロック処理
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
+            }
+            
+            // 無音バッファを再生してiOSのオーディオをアンロック
+            if (!audioUnlocked) {
+                const buffer = audioCtx.createBuffer(1, 1, 22050);
+                const source = audioCtx.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioCtx.destination);
+                source.start(0);
+                audioUnlocked = true;
             }
         }
         
@@ -213,6 +226,11 @@
         // サイン波のみの減衰音
         function playNote(colorName, col, row) {
             if (!audioCtx) return;
+            
+            // iOSでsuspendedの場合はresumeを試みる
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
             
             const settings = MIDI_SETTINGS[colorName];
             const noteInScale = settings.scale[(col + row) % settings.scale.length];
@@ -456,10 +474,17 @@
         
         // イベントリスナー
         const startOverlay = document.getElementById('startOverlay');
-        startOverlay.addEventListener('click', () => {
+        
+        function startGame() {
             initAudio();
             gameStarted = true;
             startOverlay.classList.add('hidden');
+        }
+        
+        startOverlay.addEventListener('click', startGame);
+        startOverlay.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            startGame();
         });
         
         document.getElementById('btnReset').addEventListener('click', () => {
