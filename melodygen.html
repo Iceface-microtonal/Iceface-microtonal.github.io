@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>🎵 Iceface らんだむ Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Nunito', 'Hiragino Kaku Gothic ProN', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 16px;
+      padding-bottom: 40px;
+      overflow-x: hidden;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 16px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+    }
+    .header h1 {
+      font-size: 26px;
+      font-weight: 900;
+      background: linear-gradient(90deg, #00ffff, #ff00ff, #ffff00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 30px rgba(0,255,255,0.3);
+    }
+    .header p { margin-top: 8px; font-size: 12px; color: #888; }
+    
+    .visualizer {
+      background: #0a0a1a;
+      border-radius: 16px;
+      border: 2px solid #333366;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .vis-header {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      background: linear-gradient(90deg, #0a0a1a, #1a1a3a);
+      gap: 12px;
+    }
+    .vis-emoji { font-size: 40px; }
+    .vis-info { flex: 1; }
+    .vis-label { color: #00ffff; font-size: 12px; font-weight: bold; }
+    .vis-note { font-size: 20px; font-weight: bold; color: #666; transition: color 0.1s; }
+    .vis-status {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      background: #666;
+      color: #000;
+      transition: background 0.2s;
+    }
+    .vis-status.playing { background: #00ff88; }
+    .vis-status.endless { background: #ff00ff; }
+    .vis-status.loop { background: #00ff88; }
+    
+    .piano-roll {
+      height: 180px;
+      position: relative;
+      background: linear-gradient(180deg, #0a0a1a 0%, #151530 100%);
+      overflow: hidden;
+    }
+    .grid-line {
+      position: absolute;
+      left: 0; right: 0;
+      height: 1px;
+      background: #333355;
+    }
+    .playhead {
+      position: absolute;
+      left: 85%;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: #ff4444;
+      box-shadow: 0 0 10px #ff4444;
+    }
+    .note-bar {
+      position: absolute;
+      border-radius: 3px;
+      transition: none;
+    }
+    
+    .mode-section {
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .mode-section h3 { font-size: 14px; font-weight: bold; margin-bottom: 12px; }
+    .mode-buttons { display: flex; gap: 8px; margin-bottom: 8px; }
+    .mode-btn {
+      flex: 1;
+      padding: 12px 8px;
+      border-radius: 12px;
+      border: none;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mode-btn.active {
+      background: linear-gradient(135deg, #00ffff, #ff00ff);
+      color: #000;
+    }
+    .mode-desc { font-size: 12px; color: #888; text-align: center; }
+    
+    .controls { display: flex; gap: 12px; margin-bottom: 16px; }
+    .ctrl-btn {
+      flex: 1;
+      padding: 18px;
+      border-radius: 16px;
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ctrl-btn.play { background: linear-gradient(135deg, #66BB6A, #43A047); box-shadow: 0 4px 20px rgba(102,187,106,0.4); }
+    .ctrl-btn.play:disabled { background: #444; box-shadow: none; cursor: not-allowed; }
+    .ctrl-btn.stop { background: linear-gradient(135deg, #EF5350, #E53935); box-shadow: 0 4px 20px rgba(239,83,80,0.4); }
+    .ctrl-btn.stop:disabled { background: #444; box-shadow: none; cursor: not-allowed; }
+    
+    .current-preset {
+      background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      text-align: center;
+      color: #1a1a2e;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    
+    .presets-title { font-size: 18px; margin-bottom: 12px; }
+    .presets-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .preset-btn {
+      padding: 12px 8px;
+      border-radius: 16px;
+      border: 1px solid #333;
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .preset-btn.active {
+      border: 3px solid #43A047;
+      background: linear-gradient(135deg, #C8E6C9, #A5D6A7);
+      color: #1a1a2e;
+    }
+    .preset-btn .emoji { font-size: 32px; }
+    .preset-btn .title { font-size: 11px; font-weight: bold; }
+    .preset-btn .bpm { font-size: 10px; opacity: 0.7; }
+    
+    .settings-toggle {
+      width: 100%;
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid #333;
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .settings-panel {
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 12px;
+      display: none;
+    }
+    .settings-panel.show { display: block; }
+    .settings-section { margin-bottom: 16px; }
+    .settings-section h4 { font-size: 14px; font-weight: bold; margin-bottom: 8px; }
+    .settings-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    
+    input[type="number"], select {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      font-size: 14px;
+      width: 70px;
+    }
+    select { width: auto; }
+    label.inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .label-text { display: block; font-size: 11px; color: #888; margin-bottom: 4px; }
+    .oct-check {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.1);
+      cursor: pointer;
+    }
+    .oct-check.checked { background: rgba(0,255,255,0.2); }
+    
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      padding: 16px;
+      color: #666;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🎵 Iceface らんだむ Generator</h1>
+    <p>iPad Web Audio Edition</p>
+  </div>
+
+  <div class="visualizer">
+    <div class="vis-header">
+      <span class="vis-emoji" id="visEmoji">🎵</span>
+      <div class="vis-info">
+        <div class="vis-label">🎹 MIDI VISUALIZER</div>
+        <div class="vis-note" id="visNote">--</div>
+      </div>
+      <div class="vis-status" id="visStatus">⏸ STOPPED</div>
+    </div>
+    <div class="piano-roll" id="pianoRoll">
+      <div class="grid-line" style="top: 20%"></div>
+      <div class="grid-line" style="top: 40%"></div>
+      <div class="grid-line" style="top: 60%"></div>
+      <div class="grid-line" style="top: 80%"></div>
+      <div class="playhead"></div>
+    </div>
+  </div>
+
+  <div class="mode-section">
+    <h3>再生モード</h3>
+    <div class="mode-buttons">
+      <button class="mode-btn active" data-mode="oneshot">🎵 1回</button>
+      <button class="mode-btn" data-mode="loop">🔁 ループ</button>
+      <button class="mode-btn" data-mode="endless">♾️ 永遠</button>
+    </div>
+    <div class="mode-desc" id="modeDesc">🎵 1回再生して停止</div>
+  </div>
+
+  <div class="controls">
+    <button class="ctrl-btn play" id="btnPlay">▶ PLAY</button>
+    <button class="ctrl-btn stop" id="btnStop" disabled>⏹ STOP</button>
+  </div>
+
+  <div class="current-preset" id="currentPreset">🎭 プリセットを選んでね ↓</div>
+
+  <h2 class="presets-title">🦁 Animal Presets</h2>
+  <div class="presets-grid" id="presetsGrid"></div>
+
+  <button class="settings-toggle" id="settingsToggle">⚙️ 詳細設定 ▼</button>
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-section">
+      <h4>🎹 Basic</h4>
+      <div class="settings-row">
+        <div>
+          <span class="label-text">Root</span>
+          <select id="setRoot"></select>
+        </div>
+        <div>
+          <span class="label-text">Oct</span>
+          <input type="number" id="setOctave" value="4" min="1" max="7">
+        </div>
+        <div>
+          <span class="label-text">Scale</span>
+          <select id="setScale"></select>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div>
+          <span class="label-text">BPM</span>
+          <input type="number" id="setBpm" value="120" min="20" max="300">
+        </div>
+        <div>
+          <span class="label-text">Notes</span>
+          <input type="number" id="setNotes" value="16" min="1" max="64">
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h4>🎚️ Velocity</h4>
+      <div class="settings-row">
+        <div>
+          <span class="label-text">Min</span>
+          <input type="number" id="setVelMin" value="60" min="1" max="127">
+        </div>
+        <div>
+          <span class="label-text">Max</span>
+          <input type="number" id="setVelMax" value="100" min="1" max="127">
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h4>🔀 Octave Shift</h4>
+      <div class="settings-row" id="octShifts"></div>
+    </div>
+
+    <div class="settings-section">
+      <h4>⏱️ Duration %</h4>
+      <div class="settings-row">
+        <div><span class="label-text">1/16</span><input type="number" id="setD16" value="20" min="0" max="100" style="width:55px"></div>
+        <div><span class="label-text">1/8</span><input type="number" id="setD8" value="40" min="0" max="100" style="width:55px"></div>
+        <div><span class="label-text">1/4</span><input type="number" id="setD4" value="30" min="0" max="100" style="width:55px"></div>
+        <div><span class="label-text">1/2</span><input type="number" id="setD2" value="10" min="0" max="100" style="width:55px"></div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <label class="inline">
+        <input type="checkbox" id="setRest">
+        <span>Rests</span>
+        <input type="number" id="setRestProb" value="20" min="0" max="100" style="width:50px">
+        <span>%</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="footer">Web Audio API • Pure Sine Wave + Piano ADSR</div>
+
+<script>
+const ANIMAL_PRESETS = {
+  snail: { emoji: "🐌", title: "カタツムリの昼寝", bpm: 50, scale: "Major", root: "C", octave: 4, velMin: 40, velMax: 70, octShifts: [0], durations: { d16: 0, d8: 10, d4: 50, d2: 40 }, rest: true, restProb: 30, colors: ["#8B4513", "#A0522D", "#D2691E", "#CD853F"] },
+  cat: { emoji: "🐱", title: "気まぐれねこ", bpm: 100, scale: "Blues", root: "A", octave: 4, velMin: 50, velMax: 95, octShifts: [-12, 0, 12], durations: { d16: 25, d8: 35, d4: 30, d2: 10 }, rest: true, restProb: 25, colors: ["#FF69B4", "#FFB6C1", "#FFC0CB", "#FF1493"] },
+  bee: { emoji: "🐝", title: "ミツバチ大忙し！", bpm: 180, scale: "Major", root: "C", octave: 6, velMin: 60, velMax: 90, octShifts: [0], durations: { d16: 70, d8: 25, d4: 5, d2: 0 }, rest: false, restProb: 5, colors: ["#FFD700", "#FFA500", "#F0E68C", "#FFFF00"] },
+  whale: { emoji: "🐋", title: "深海クジラ", bpm: 45, scale: "Minor", root: "D", octave: 2, velMin: 50, velMax: 90, octShifts: [-24, -12, 0], durations: { d16: 0, d8: 5, d4: 35, d2: 60 }, rest: true, restProb: 25, colors: ["#1E90FF", "#4169E1", "#0000CD", "#00BFFF"] },
+  dolphin: { emoji: "🐬", title: "イルカのジャンプ", bpm: 140, scale: "Pentatonic", root: "G", octave: 5, velMin: 70, velMax: 110, octShifts: [0, 12], durations: { d16: 40, d8: 40, d4: 20, d2: 0 }, rest: false, restProb: 10, colors: ["#00CED1", "#40E0D0", "#48D1CC", "#00FFFF"] },
+  bird: { emoji: "🐦", title: "朝の小鳥", bpm: 160, scale: "Major", root: "E", octave: 6, velMin: 60, velMax: 100, octShifts: [0, 12], durations: { d16: 50, d8: 35, d4: 15, d2: 0 }, rest: true, restProb: 15, colors: ["#32CD32", "#98FB98", "#00FA9A", "#7CFC00"] },
+  rabbit: { emoji: "🐰", title: "ウサギのかけっこ", bpm: 150, scale: "Pentatonic", root: "A", octave: 5, velMin: 70, velMax: 100, octShifts: [0, 12], durations: { d16: 30, d8: 50, d4: 20, d2: 0 }, rest: true, restProb: 20, colors: ["#FFB6C1", "#FFC0CB", "#FF69B4", "#FFFFFF"] },
+  owl: { emoji: "🦉", title: "夜更かしフクロウ", bpm: 55, scale: "Japanese", root: "B", octave: 3, velMin: 40, velMax: 80, octShifts: [-12, 0, 12], durations: { d16: 5, d8: 25, d4: 40, d2: 30 }, rest: true, restProb: 35, colors: ["#9370DB", "#8B008B", "#9932CC", "#BA55D3"] },
+  turtle: { emoji: "🐢", title: "カメのんびり", bpm: 40, scale: "Pentatonic", root: "G", octave: 3, velMin: 50, velMax: 75, octShifts: [0], durations: { d16: 0, d8: 5, d4: 35, d2: 60 }, rest: true, restProb: 40, colors: ["#228B22", "#2E8B57", "#3CB371", "#90EE90"] },
+  fish: { emoji: "🐠", title: "キラキラ熱帯魚", bpm: 120, scale: "Major", root: "F", octave: 5, velMin: 50, velMax: 85, octShifts: [0, 12], durations: { d16: 35, d8: 45, d4: 20, d2: 0 }, rest: true, restProb: 15, colors: ["#FF6347", "#FF4500", "#FF7F50", "#FFA07A"] },
+  butterfly: { emoji: "🦋", title: "蝶々のダンス", bpm: 95, scale: "Major", root: "E", octave: 5, velMin: 45, velMax: 75, octShifts: [0, 12], durations: { d16: 25, d8: 45, d4: 30, d2: 0 }, rest: true, restProb: 25, colors: ["#FF00FF", "#EE82EE", "#DA70D6", "#FF69B4"] },
+  dragon: { emoji: "🐉", title: "龍の目覚め", bpm: 70, scale: "Japanese", root: "D", octave: 3, velMin: 70, velMax: 127, octShifts: [-24, -12, 0, 12, 24], durations: { d16: 10, d8: 20, d4: 40, d2: 30 }, rest: true, restProb: 20, colors: ["#FF0000", "#FF4500", "#FF6600", "#FFD700"] },
+};
+
+const SCALES = {
+  Major: [0, 2, 4, 5, 7, 9, 11],
+  Minor: [0, 2, 3, 5, 7, 8, 10],
+  Pentatonic: [0, 2, 4, 7, 9],
+  Blues: [0, 3, 5, 6, 7, 10],
+  Dorian: [0, 2, 3, 5, 7, 9, 10],
+  Japanese: [0, 2, 5, 7, 9],
+};
+
+const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+let audioCtx = null;
+let isPlaying = false;
+let presetChanged = false;
+let currentAnimal = null;
+let playMode = 'oneshot';
+let noteCount = 0;
+let scrollingNotes = [];
+let settings = {
+  root: 'C', octave: 4, scale: 'Pentatonic', bpm: 120, notes: 16,
+  velMin: 60, velMax: 100,
+  octShifts: { m2: false, m1: true, zero: true, p1: true, p2: false },
+  durations: { d16: 20, d8: 40, d4: 30, d2: 10 },
+  rest: false, restProb: 20,
+  colors: ['#00ffff', '#ff00ff', '#ffff00', '#00ff00']
+};
+
+// DOM elements
+const els = {};
+
+function $(id) { return document.getElementById(id); }
+
+function midiToFreq(midi) { return 440 * Math.pow(2, (midi - 69) / 12); }
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playNote(midiNote, velocity, duration) {
+  const ctx = initAudio();
+  const now = ctx.currentTime;
+  const freq = midiToFreq(midiNote);
+  const vol = (velocity / 127) * 0.4;
+  
+  // 純粋なサイン波
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, now);
+  
+  const gain = ctx.createGain();
+  
+  // ピアノ的ADSR
+  const attack = 0.003;
+  const decay = duration * 0.4;
+  const sustainLevel = 0.25;
+  const release = duration * 0.6;
+  
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(vol, now + attack);
+  gain.gain.exponentialRampToValueAtTime(Math.max(0.001, vol * sustainLevel), now + attack + decay);
+  gain.gain.setValueAtTime(Math.max(0.001, vol * sustainLevel), now + duration * 0.9);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration + release);
+  
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  
+  osc.start(now);
+  osc.stop(now + duration + release + 0.1);
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function pickWeighted(items, weights) {
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < items.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return items[i];
+  }
+  return items[items.length - 1];
+}
+
+function getNoteInfo(midi) {
+  const name = NOTE_NAMES[midi % 12];
+  const oct = Math.floor(midi / 12) - 1;
+  return `${name}${oct}`;
+}
+
+function updateUI() {
+  $('btnPlay').disabled = isPlaying;
+  $('btnStop').disabled = !isPlaying;
+  
+  const status = $('visStatus');
+  if (isPlaying) {
+    status.textContent = playMode === 'endless' ? '♾️ ENDLESS' : playMode === 'loop' ? '🔁 LOOP' : '▶ PLAYING';
+    status.className = 'vis-status ' + (playMode === 'endless' ? 'endless' : 'playing');
+  } else {
+    status.textContent = '⏸ STOPPED';
+    status.className = 'vis-status';
+  }
+}
+
+function updateNoteDisplay(midi, velocity) {
+  const el = $('visNote');
+  if (midi !== null) {
+    el.textContent = playMode === 'endless' ? `♪ ${getNoteInfo(midi)} #${noteCount}` : `♪ ${getNoteInfo(midi)} (vel:${velocity})`;
+    el.style.color = settings.colors[0];
+  } else {
+    el.textContent = '--';
+    el.style.color = '#666';
+  }
+}
+
+function addScrollingNote(note, velocity, duration) {
+  const color = settings.colors[Math.floor(Math.random() * settings.colors.length)];
+  const bar = document.createElement('div');
+  bar.className = 'note-bar';
+  bar.style.cssText = `
+    left: 85%;
+    width: ${Math.max(15, Math.min(100, duration * 50))}px;
+    height: 8px;
+    background: ${color};
+    box-shadow: 0 0 8px ${color};
+    opacity: ${0.6 + (velocity / 127) * 0.4};
+  `;
+  
+  const viewStart = Math.max(24, 12 + settings.octave * 12 - 18);
+  const viewEnd = viewStart + 36;
+  const relNote = note - viewStart;
+  const y = (1 - (relNote + 0.5) / 36) * 100;
+  bar.style.top = y + '%';
+  bar.style.transform = 'translateY(-50%)';
+  
+  $('pianoRoll').appendChild(bar);
+  scrollingNotes.push({ el: bar, x: 85 });
+}
+
+function animateNotes() {
+  const speed = settings.bpm / 25 * 0.5;
+  scrollingNotes = scrollingNotes.filter(n => {
+    n.x -= speed;
+    n.el.style.left = n.x + '%';
+    if (n.x < -10) {
+      n.el.remove();
+      return false;
+    }
+    return true;
+  });
+  requestAnimationFrame(animateNotes);
+}
+
+async function generateMelody() {
+  const rootIdx = NOTE_NAMES.indexOf(settings.root);
+  const rootNote = 12 + (settings.octave * 12) + rootIdx;
+  const intervals = SCALES[settings.scale];
+  const beat = 60 / settings.bpm;
+  
+  const shifts = [];
+  if (settings.octShifts.m2) shifts.push(-24);
+  if (settings.octShifts.m1) shifts.push(-12);
+  if (settings.octShifts.zero) shifts.push(0);
+  if (settings.octShifts.p1) shifts.push(12);
+  if (settings.octShifts.p2) shifts.push(24);
+  if (shifts.length === 0) shifts.push(0);
+  
+  const durs = [], weights = [];
+  const durMap = { d16: 0.25, d8: 0.5, d4: 1.0, d2: 2.0 };
+  Object.entries(settings.durations).forEach(([k, w]) => {
+    if (w > 0) { durs.push(durMap[k]); weights.push(w); }
+  });
+  if (durs.length === 0) { durs.push(1.0); weights.push(1); }
+  
+  const playSingle = async () => {
+    const dur = pickWeighted(durs, weights);
+    
+    if (settings.rest && Math.random() < settings.restProb / 100) {
+      await sleep(beat * dur * 1000);
+      return;
+    }
+    
+    const interval = intervals[Math.floor(Math.random() * intervals.length)];
+    const shift = shifts[Math.floor(Math.random() * shifts.length)];
+    const note = Math.max(0, Math.min(127, rootNote + interval + shift));
+    const vel = Math.floor(Math.random() * (settings.velMax - settings.velMin + 1)) + settings.velMin;
+    
+    noteCount++;
+    updateNoteDisplay(note, vel);
+    addScrollingNote(note, vel, dur);
+    playNote(note, vel, beat * dur);
+    
+    await sleep(beat * dur * 1000);
+  };
+  
+  while (isPlaying) {
+    presetChanged = false;
+    
+    if (playMode === 'endless') {
+      while (isPlaying && !presetChanged) await playSingle();
+    } else {
+      for (let i = 0; i < settings.notes; i++) {
+        if (!isPlaying || presetChanged) break;
+        await playSingle();
+      }
+    }
+    
+    if (playMode !== 'loop' && !presetChanged) break;
+  }
+  
+  isPlaying = false;
+  updateUI();
+  updateNoteDisplay(null, 0);
+}
+
+function applyPreset(key) {
+  const p = ANIMAL_PRESETS[key];
+  currentAnimal = key;
+  presetChanged = true;
+  
+  settings.root = p.root;
+  settings.octave = p.octave;
+  settings.scale = p.scale;
+  settings.bpm = p.bpm;
+  settings.velMin = p.velMin;
+  settings.velMax = Math.min(p.velMax, 127);
+  settings.octShifts = {
+    m2: p.octShifts.includes(-24),
+    m1: p.octShifts.includes(-12),
+    zero: p.octShifts.includes(0),
+    p1: p.octShifts.includes(12),
+    p2: p.octShifts.includes(24),
+  };
+  settings.durations = { ...p.durations };
+  settings.rest = p.rest;
+  settings.restProb = p.restProb;
+  settings.colors = p.colors;
+  
+  // Update UI
+  $('setRoot').value = p.root;
+  $('setOctave').value = p.octave;
+  $('setScale').value = p.scale;
+  $('setBpm').value = p.bpm;
+  $('setVelMin').value = p.velMin;
+  $('setVelMax').value = Math.min(p.velMax, 127);
+  $('setD16').value = p.durations.d16;
+  $('setD8').value = p.durations.d8;
+  $('setD4').value = p.durations.d4;
+  $('setD2').value = p.durations.d2;
+  $('setRest').checked = p.rest;
+  $('setRestProb').value = p.restProb;
+  
+  updateOctShiftUI();
+  
+  $('visEmoji').textContent = p.emoji;
+  $('currentPreset').textContent = `${p.emoji} ${p.title} (${p.bpm} BPM)`;
+  
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.key === key);
+  });
+}
+
+function updateOctShiftUI() {
+  document.querySelectorAll('.oct-check').forEach(el => {
+    const key = el.dataset.key;
+    el.classList.toggle('checked', settings.octShifts[key]);
+    el.querySelector('input').checked = settings.octShifts[key];
+  });
+}
+
+function init() {
+  // Populate dropdowns
+  NOTE_NAMES.forEach(n => {
+    const opt = document.createElement('option');
+    opt.value = opt.textContent = n;
+    $('setRoot').appendChild(opt);
+  });
+  
+  Object.keys(SCALES).forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = opt.textContent = s;
+    $('setScale').appendChild(opt);
+  });
+  
+  // Octave shift checkboxes
+  const octContainer = $('octShifts');
+  [{ key: 'm2', label: '-2' }, { key: 'm1', label: '-1' }, { key: 'zero', label: '0' }, { key: 'p1', label: '+1' }, { key: 'p2', label: '+2' }].forEach(o => {
+    const label = document.createElement('label');
+    label.className = 'oct-check' + (settings.octShifts[o.key] ? ' checked' : '');
+    label.dataset.key = o.key;
+    label.innerHTML = `<input type="checkbox" ${settings.octShifts[o.key] ? 'checked' : ''}> ${o.label}`;
+    label.addEventListener('click', e => {
+      if (e.target.tagName !== 'INPUT') return;
+      settings.octShifts[o.key] = e.target.checked;
+      label.classList.toggle('checked', e.target.checked);
+    });
+    octContainer.appendChild(label);
+  });
+  
+  // Preset buttons
+  const grid = $('presetsGrid');
+  Object.entries(ANIMAL_PRESETS).forEach(([key, p]) => {
+    const btn = document.createElement('button');
+    btn.className = 'preset-btn';
+    btn.dataset.key = key;
+    btn.innerHTML = `<span class="emoji">${p.emoji}</span><span class="title">${p.title}</span><span class="bpm">${p.bpm} BPM</span>`;
+    btn.addEventListener('click', () => applyPreset(key));
+    grid.appendChild(btn);
+  });
+  
+  // Mode buttons
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playMode = btn.dataset.mode;
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      $('modeDesc').textContent = playMode === 'oneshot' ? '🎵 1回再生して停止' : 
+                                   playMode === 'loop' ? '🔁 同じパターンをループ' : 
+                                   '♾️ 永遠に新しい音を生成';
+    });
+  });
+  
+  // Play/Stop
+  $('btnPlay').addEventListener('click', () => {
+    initAudio();
+    isPlaying = true;
+    noteCount = 0;
+    updateUI();
+    generateMelody();
+  });
+  
+  $('btnStop').addEventListener('click', () => {
+    isPlaying = false;
+    updateUI();
+    updateNoteDisplay(null, 0);
+  });
+  
+  // Settings toggle
+  $('settingsToggle').addEventListener('click', () => {
+    const panel = $('settingsPanel');
+    const showing = panel.classList.toggle('show');
+    $('settingsToggle').textContent = `⚙️ 詳細設定 ${showing ? '▲' : '▼'}`;
+  });
+  
+  // Settings inputs
+  $('setRoot').addEventListener('change', e => settings.root = e.target.value);
+  $('setOctave').addEventListener('change', e => settings.octave = parseInt(e.target.value) || 4);
+  $('setScale').addEventListener('change', e => settings.scale = e.target.value);
+  $('setBpm').addEventListener('change', e => settings.bpm = parseInt(e.target.value) || 120);
+  $('setNotes').addEventListener('change', e => settings.notes = parseInt(e.target.value) || 16);
+  $('setVelMin').addEventListener('change', e => settings.velMin = parseInt(e.target.value) || 60);
+  $('setVelMax').addEventListener('change', e => settings.velMax = parseInt(e.target.value) || 100);
+  $('setD16').addEventListener('change', e => settings.durations.d16 = parseInt(e.target.value) || 0);
+  $('setD8').addEventListener('change', e => settings.durations.d8 = parseInt(e.target.value) || 0);
+  $('setD4').addEventListener('change', e => settings.durations.d4 = parseInt(e.target.value) || 0);
+  $('setD2').addEventListener('change', e => settings.durations.d2 = parseInt(e.target.value) || 0);
+  $('setRest').addEventListener('change', e => settings.rest = e.target.checked);
+  $('setRestProb').addEventListener('change', e => settings.restProb = parseInt(e.target.value) || 20);
+  
+  // Start animation loop
+  animateNotes();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
