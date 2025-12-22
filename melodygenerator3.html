@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>🎵 Iceface らんだむ Generator ✨</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
+    @keyframes soft-gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-3px); }
+    }
+    
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; transform: scale(0.8); }
+      50% { opacity: 0.6; transform: scale(1.1); }
+    }
+    
+    body {
+      font-family: 'Nunito', 'Hiragino Kaku Gothic ProN', sans-serif;
+      background: linear-gradient(180deg, 
+        rgba(255,240,245,1) 0%, 
+        rgba(255,255,255,1) 30%,
+        rgba(255,255,255,1) 50%,
+        rgba(240,255,255,1) 70%,
+        rgba(255,250,240,1) 100%);
+      background-size: 100% 200%;
+      animation: soft-gradient 20s ease infinite;
+      min-height: 100vh;
+      color: #333;
+      padding: 16px;
+      padding-bottom: 40px;
+      overflow-x: hidden;
+      position: relative;
+    }
+    
+    /* Sparkle stars background */
+    .sparkle-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .star {
+      position: absolute;
+      font-size: 14px;
+      animation: twinkle 3s ease-in-out infinite;
+      opacity: 0.3;
+    }
+    
+    .content { position: relative; z-index: 1; }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(255,182,193,0.15), rgba(173,216,230,0.15));
+      border-radius: 24px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,182,193,0.3);
+      box-shadow: 0 4px 20px rgba(255,182,193,0.15);
+    }
+    .header h1 {
+      font-size: 26px;
+      font-weight: 900;
+      background: linear-gradient(90deg, #ff6b9d, #ffb6c1, #87ceeb, #ff6b9d);
+      background-size: 300% 300%;
+      animation: soft-gradient 4s ease infinite;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header p { margin-top: 8px; font-size: 12px; color: #ff6b9d; opacity: 0.8; }
+    
+    .visualizer {
+      background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,240,245,0.9));
+      border-radius: 20px;
+      border: 1px solid rgba(255,182,193,0.3);
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 20px rgba(255,182,193,0.15);
+    }
+    .vis-header {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      background: linear-gradient(90deg, rgba(255,182,193,0.2), rgba(173,216,230,0.2));
+      gap: 12px;
+      border-bottom: 1px solid rgba(255,182,193,0.2);
+    }
+    .vis-emoji { 
+      font-size: 40px; 
+      animation: float 2s ease-in-out infinite;
+      filter: drop-shadow(0 2px 4px rgba(255,107,157,0.2));
+    }
+    .vis-info { flex: 1; }
+    .vis-label { color: #ff6b9d; font-size: 12px; font-weight: bold; }
+    .vis-note { font-size: 20px; font-weight: bold; color: #ffb6c1; transition: color 0.1s; }
+    .vis-status {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #e0e0e0, #d0d0d0);
+      color: #666;
+      transition: all 0.3s;
+    }
+    .vis-status.playing { 
+      background: linear-gradient(135deg, #98fb98, #90ee90); 
+      color: #2e8b57;
+    }
+    .vis-status.endless { 
+      background: linear-gradient(135deg, #ffb6c1, #ff69b4); 
+      color: #fff;
+    }
+    .vis-status.loop { 
+      background: linear-gradient(135deg, #ffd700, #ffec8b); 
+      color: #8b6914;
+    }
+    
+    .piano-roll {
+      height: 180px;
+      position: relative;
+      background: linear-gradient(180deg, rgba(255,240,245,0.95) 0%, rgba(240,248,255,0.95) 100%);
+      overflow: hidden;
+    }
+    .grid-line {
+      position: absolute;
+      left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,182,193,0.3), transparent);
+    }
+    .playhead {
+      position: absolute;
+      left: 85%;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, #ff6b9d, #ffb6c1, #87ceeb);
+      box-shadow: 0 0 8px rgba(255,107,157,0.5);
+      border-radius: 2px;
+    }
+    .note-bar {
+      position: absolute;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px currentColor;
+      transition: top 0.15s ease-out, opacity 0.2s;
+    }
+    
+    .mode-section {
+      background: linear-gradient(135deg, rgba(255,182,193,0.1), rgba(173,216,230,0.1));
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255,182,193,0.25);
+    }
+    .mode-section h3 { 
+      font-size: 14px; 
+      font-weight: bold; 
+      margin-bottom: 12px; 
+      color: #ff6b9d;
+    }
+    .mode-buttons { display: flex; gap: 8px; margin-bottom: 8px; }
+    .mode-btn {
+      flex: 1;
+      padding: 12px 8px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,182,193,0.3);
+      background: rgba(255,255,255,0.8);
+      color: #888;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .mode-btn:hover {
+      background: rgba(255,182,193,0.15);
+      border-color: rgba(255,107,157,0.4);
+    }
+    .mode-btn.active {
+      background: linear-gradient(135deg, #ff6b9d, #ffb6c1);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 4px 15px rgba(255,107,157,0.3);
+    }
+    .mode-desc { font-size: 12px; color: #ff6b9d; text-align: center; opacity: 0.7; }
+    
+    .controls { display: flex; gap: 12px; margin-bottom: 16px; }
+    .ctrl-btn {
+      flex: 1;
+      padding: 18px;
+      border-radius: 18px;
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .ctrl-btn.play { 
+      background: linear-gradient(135deg, #90ee90, #98fb98); 
+      color: #2e8b57;
+      box-shadow: 0 4px 15px rgba(144,238,144,0.4);
+    }
+    .ctrl-btn.play:hover:not(:disabled) { 
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(144,238,144,0.5);
+    }
+    .ctrl-btn.play:disabled { background: linear-gradient(135deg, #e0e0e0, #d0d0d0); color: #999; box-shadow: none; cursor: not-allowed; }
+    .ctrl-btn.stop { 
+      background: linear-gradient(135deg, #ff6b9d, #ffb6c1); 
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(255,107,157,0.3);
+    }
+    .ctrl-btn.stop:hover:not(:disabled) { 
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255,107,157,0.4);
+    }
+    .ctrl-btn.stop:disabled { background: linear-gradient(135deg, #e0e0e0, #d0d0d0); color: #999; box-shadow: none; cursor: not-allowed; }
+    
+    .current-preset {
+      background: linear-gradient(135deg, rgba(255,182,193,0.3), rgba(173,216,230,0.3));
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 16px;
+      text-align: center;
+      color: #ff6b9d;
+      font-size: 16px;
+      font-weight: bold;
+      border: 1px solid rgba(255,182,193,0.3);
+    }
+    
+    .presets-title { 
+      font-size: 18px; 
+      margin-bottom: 12px; 
+      color: #ff6b9d;
+    }
+    .presets-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .preset-btn {
+      padding: 12px 8px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,182,193,0.25);
+      background: rgba(255,255,255,0.8);
+      color: #666;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .preset-btn:hover {
+      border-color: rgba(255,107,157,0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(255,107,157,0.15);
+    }
+    .preset-btn.active {
+      border: 2px solid #ff6b9d;
+      background: linear-gradient(135deg, rgba(255,182,193,0.2), rgba(173,216,230,0.2));
+      color: #ff6b9d;
+      box-shadow: 0 4px 15px rgba(255,107,157,0.2);
+    }
+    .preset-btn .emoji { font-size: 32px; }
+    .preset-btn .title { font-size: 11px; font-weight: bold; }
+    .preset-btn .bpm { font-size: 10px; opacity: 0.6; }
+    
+    .settings-toggle {
+      width: 100%;
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,182,193,0.25);
+      background: rgba(255,255,255,0.8);
+      color: #ff6b9d;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 12px;
+      transition: all 0.3s;
+    }
+    .settings-toggle:hover {
+      border-color: rgba(255,107,157,0.4);
+      box-shadow: 0 4px 15px rgba(255,107,157,0.1);
+    }
+    .settings-panel {
+      background: rgba(255,255,255,0.9);
+      border-radius: 18px;
+      padding: 16px;
+      margin-top: -8px;
+      margin-bottom: 12px;
+      display: none;
+      border: 1px solid rgba(255,182,193,0.2);
+    }
+    .settings-panel.show { display: block; }
+    .settings-section { margin-bottom: 16px; }
+    .settings-section h4 { 
+      font-size: 14px; 
+      font-weight: bold; 
+      margin-bottom: 8px; 
+      color: #ff6b9d;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .settings-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    
+    input[type="number"], select {
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,182,193,0.3);
+      background: rgba(255,255,255,0.9);
+      color: #666;
+      font-size: 14px;
+      width: 70px;
+    }
+    input[type="number"]:focus, select:focus {
+      outline: none;
+      border-color: #ff6b9d;
+      box-shadow: 0 0 8px rgba(255,107,157,0.2);
+    }
+    select { width: auto; }
+    label.inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #666;
+    }
+    .label-text { display: block; font-size: 11px; color: #ff6b9d; margin-bottom: 4px; }
+    .oct-check {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.8);
+      cursor: pointer;
+      border: 1px solid rgba(255,182,193,0.2);
+      color: #888;
+      transition: all 0.2s;
+    }
+    .oct-check.checked { 
+      background: linear-gradient(135deg, rgba(255,182,193,0.3), rgba(173,216,230,0.3));
+      border-color: rgba(255,107,157,0.4);
+      color: #ff6b9d;
+    }
+    
+    .slider {
+      width: 120px;
+      height: 6px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: linear-gradient(90deg, rgba(255,182,193,0.4), rgba(173,216,230,0.4));
+      border-radius: 3px;
+      outline: none;
+      vertical-align: middle;
+    }
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      background: linear-gradient(135deg, #ff6b9d, #ffb6c1);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(255,107,157,0.3);
+    }
+    .slider-val {
+      display: inline-block;
+      width: 40px;
+      text-align: right;
+      font-size: 12px;
+      color: #ff6b9d;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      padding: 16px;
+      color: #ffb6c1;
+      font-size: 12px;
+    }
+
+    input[type="checkbox"] {
+      accent-color: #ff6b9d;
+    }
+  </style>
+</head>
+<body>
+  <div class="sparkle-bg" id="sparkleBg"></div>
+  
+  <div class="content">
+    <div class="header">
+      <h1>✨ Iceface らんだむ Generator ✨</h1>
+      <p>iPad Web Audio Edition - Sparkle Mode</p>
+    </div>
+
+    <div class="visualizer">
+      <div class="vis-header">
+        <span class="vis-emoji" id="visEmoji">🎵</span>
+        <div class="vis-info">
+          <div class="vis-label">🎹 MIDI VISUALIZER <span id="rangeDisplay" style="font-size:10px; opacity:0.7; margin-left:8px;">C3 - C6</span></div>
+          <div class="vis-note" id="visNote">--</div>
+        </div>
+        <div class="vis-status" id="visStatus">⏸ STOPPED</div>
+      </div>
+      <div class="piano-roll" id="pianoRoll">
+        <div class="grid-line" style="top: 20%"></div>
+        <div class="grid-line" style="top: 40%"></div>
+        <div class="grid-line" style="top: 60%"></div>
+        <div class="grid-line" style="top: 80%"></div>
+        <div class="playhead"></div>
+      </div>
+    </div>
+
+    <div class="mode-section">
+      <h3>✨ 再生モード</h3>
+      <div class="mode-buttons">
+        <button class="mode-btn active" data-mode="oneshot">🎵 1回</button>
+        <button class="mode-btn" data-mode="loop">🔁 ループ</button>
+        <button class="mode-btn" data-mode="endless">♾️ 永遠</button>
+      </div>
+      <div class="mode-desc" id="modeDesc">🎵 1回再生して停止</div>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl-btn play" id="btnPlay">▶ PLAY</button>
+      <button class="ctrl-btn stop" id="btnStop" disabled>⏹ STOP</button>
+    </div>
+
+    <div class="current-preset" id="currentPreset">🎭 プリセットを選んでね ↓</div>
+
+    <h2 class="presets-title">🦁 Animal Presets</h2>
+    <div class="presets-grid" id="presetsGrid"></div>
+
+    <button class="settings-toggle" id="effectsToggle">🎛️ エフェクト ▼</button>
+    <div class="settings-panel" id="effectsPanel">
+      <div class="settings-section">
+        <h4>🔊 ディレイ</h4>
+        <div class="settings-row">
+          <label class="inline">
+            <input type="checkbox" id="delayOn">
+            <span>ON</span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div>
+            <span class="label-text">Time (s)</span>
+            <input type="range" id="delayTime" min="0.05" max="1.0" step="0.05" value="0.3" class="slider">
+            <span class="slider-val" id="delayTimeVal">0.3</span>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div>
+            <span class="label-text">Feedback</span>
+            <input type="range" id="delayFeedback" min="0" max="0.9" step="0.05" value="0.4" class="slider">
+            <span class="slider-val" id="delayFeedbackVal">0.4</span>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div>
+            <span class="label-text">Wet</span>
+            <input type="range" id="delayWetCtrl" min="0" max="1" step="0.05" value="0.3" class="slider">
+            <span class="slider-val" id="delayWetVal">0.3</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="settings-section">
+        <h4>🌊 リバーブ</h4>
+        <div class="settings-row">
+          <label class="inline">
+            <input type="checkbox" id="reverbOn">
+            <span>ON</span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div>
+            <span class="label-text">Decay (s)</span>
+            <input type="range" id="reverbDecay" min="0.5" max="5.0" step="0.1" value="2.0" class="slider">
+            <span class="slider-val" id="reverbDecayVal">2.0</span>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div>
+            <span class="label-text">Wet</span>
+            <input type="range" id="reverbWetCtrl" min="0" max="1" step="0.05" value="0.3" class="slider">
+            <span class="slider-val" id="reverbWetValDisplay">0.3</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="settings-section">
+        <h4>🔔 リングモジュレーター</h4>
+        <div class="settings-row">
+          <label class="inline">
+            <input type="checkbox" id="ringModOn">
+            <span>ON</span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div>
+            <span class="label-text">Freq (Hz)</span>
+            <input type="range" id="ringModFreq" min="20" max="2000" step="10" value="440" class="slider">
+            <span class="slider-val" id="ringModFreqVal">440</span>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div>
+            <span class="label-text">Wet</span>
+            <input type="range" id="ringModWetCtrl" min="0" max="1" step="0.05" value="0.5" class="slider">
+            <span class="slider-val" id="ringModWetVal">0.5</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="settings-section">
+        <h4>📊 コンプレッサー</h4>
+        <div class="settings-row">
+          <label class="inline">
+            <input type="checkbox" id="compOn">
+            <span>ON</span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div>
+            <span class="label-text">Threshold (dB)</span>
+            <input type="range" id="compThreshold" min="-60" max="0" step="1" value="-24" class="slider">
+            <span class="slider-val" id="compThresholdVal">-24</span>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div>
+            <span class="label-text">Ratio</span>
+            <input type="range" id="compRatio" min="1" max="20" step="0.5" value="4" class="slider">
+            <span class="slider-val" id="compRatioVal">4</span>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div>
+            <span class="label-text">Attack (s)</span>
+            <input type="range" id="compAttack" min="0" max="0.1" step="0.001" value="0.003" class="slider">
+            <span class="slider-val" id="compAttackVal">0.003</span>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div>
+            <span class="label-text">Release (s)</span>
+            <input type="range" id="compRelease" min="0.01" max="1" step="0.01" value="0.25" class="slider">
+            <span class="slider-val" id="compReleaseVal">0.25</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="settings-toggle" id="settingsToggle">⚙️ 詳細設定 ▼</button>
+    <div class="settings-panel" id="settingsPanel">
+      <div class="settings-section">
+        <h4>🎹 Basic</h4>
+        <div class="settings-row">
+          <div>
+            <span class="label-text">Root</span>
+            <select id="setRoot"></select>
+          </div>
+          <div>
+            <span class="label-text">Oct</span>
+            <input type="number" id="setOctave" value="4" min="1" max="7">
+          </div>
+          <div>
+            <span class="label-text">Scale</span>
+            <select id="setScale"></select>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div>
+            <span class="label-text">BPM</span>
+            <input type="number" id="setBpm" value="120" min="20" max="300">
+          </div>
+          <div>
+            <span class="label-text">Notes</span>
+            <input type="number" id="setNotes" value="16" min="1" max="64">
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h4>🎚️ Velocity</h4>
+        <div class="settings-row">
+          <div>
+            <span class="label-text">Min</span>
+            <input type="number" id="setVelMin" value="60" min="1" max="127">
+          </div>
+          <div>
+            <span class="label-text">Max</span>
+            <input type="number" id="setVelMax" value="100" min="1" max="127">
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h4>🔀 Octave Shift</h4>
+        <div class="settings-row" id="octShifts"></div>
+      </div>
+
+      <div class="settings-section">
+        <h4>⏱️ Duration %</h4>
+        <div class="settings-row">
+          <div><span class="label-text">1/16</span><input type="number" id="setD16" value="20" min="0" max="100" style="width:55px"></div>
+          <div><span class="label-text">1/8</span><input type="number" id="setD8" value="40" min="0" max="100" style="width:55px"></div>
+          <div><span class="label-text">1/4</span><input type="number" id="setD4" value="30" min="0" max="100" style="width:55px"></div>
+          <div><span class="label-text">1/2</span><input type="number" id="setD2" value="10" min="0" max="100" style="width:55px"></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <label class="inline">
+          <input type="checkbox" id="setRest">
+          <span>Rests</span>
+          <input type="number" id="setRestProb" value="20" min="0" max="100" style="width:50px">
+          <span>%</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="footer">✨ Web Audio API • Pure Sine Wave + ADSR + Effects ✨</div>
+  </div>
+
+<script>
+const ANIMAL_PRESETS = {
+  snail: { emoji: "🐌", title: "カタツムリの昼寝", bpm: 50, scale: "Major", root: "C", octave: 4, velMin: 40, velMax: 70, octShifts: [0], durations: { d16: 0, d8: 10, d4: 50, d2: 40 }, rest: true, restProb: 30, colors: ["#d2b48c", "#deb887", "#f5deb3", "#ffe4c4"],
+    effects: { delay: { on: true, time: 0.5, feedback: 0.3, wet: 0.25 }, reverb: { on: true, decay: 3.0, wet: 0.4 }, ringMod: { on: false, freq: 440, wet: 0.5 }, compressor: { on: false, threshold: -24, ratio: 4, attack: 0.003, release: 0.25 } } },
+  cat: { emoji: "🐱", title: "気まぐれねこ", bpm: 100, scale: "Blues", root: "A", octave: 4, velMin: 50, velMax: 95, octShifts: [-12, 0, 12], durations: { d16: 25, d8: 35, d4: 30, d2: 10 }, rest: true, restProb: 25, colors: ["#ffb6c1", "#ffc0cb", "#ffe4e1", "#fff0f5"],
+    effects: { delay: { on: true, time: 0.2, feedback: 0.4, wet: 0.2 }, reverb: { on: false, decay: 2.0, wet: 0.3 }, ringMod: { on: false, freq: 440, wet: 0.5 }, compressor: { on: true, threshold: -20, ratio: 3, attack: 0.003, release: 0.25 } } },
+  bee: { emoji: "🐝", title: "ミツバチ大忙し！", bpm: 180, scale: "Major", root: "C", octave: 6, velMin: 60, velMax: 90, octShifts: [0], durations: { d16: 70, d8: 25, d4: 5, d2: 0 }, rest: false, restProb: 5, colors: ["#ffd700", "#ffec8b", "#fffacd", "#fff8dc"],
+    effects: { delay: { on: false, time: 0.1, feedback: 0.2, wet: 0.15 }, reverb: { on: false, decay: 1.0, wet: 0.2 }, ringMod: { on: false, freq: 880, wet: 0.3 }, compressor: { on: true, threshold: -15, ratio: 6, attack: 0.001, release: 0.1 } } },
+  whale: { emoji: "🐋", title: "深海クジラ", bpm: 45, scale: "Minor", root: "D", octave: 2, velMin: 50, velMax: 90, octShifts: [-24, -12, 0], durations: { d16: 0, d8: 5, d4: 35, d2: 60 }, rest: true, restProb: 25, colors: ["#87ceeb", "#add8e6", "#b0e0e6", "#afeeee"],
+    effects: { delay: { on: true, time: 0.8, feedback: 0.5, wet: 0.35 }, reverb: { on: true, decay: 5.0, wet: 0.5 }, ringMod: { on: false, freq: 55, wet: 0.2 }, compressor: { on: false, threshold: -24, ratio: 4, attack: 0.003, release: 0.25 } } },
+  dolphin: { emoji: "🐬", title: "イルカのジャンプ", bpm: 140, scale: "Pentatonic", root: "G", octave: 5, velMin: 70, velMax: 110, octShifts: [0, 12], durations: { d16: 40, d8: 40, d4: 20, d2: 0 }, rest: false, restProb: 10, colors: ["#40e0d0", "#7fffd4", "#afeeee", "#e0ffff"],
+    effects: { delay: { on: true, time: 0.15, feedback: 0.35, wet: 0.25 }, reverb: { on: true, decay: 2.5, wet: 0.3 }, ringMod: { on: false, freq: 440, wet: 0.5 }, compressor: { on: false, threshold: -24, ratio: 4, attack: 0.003, release: 0.25 } } },
+  bird: { emoji: "🐦", title: "朝の小鳥", bpm: 160, scale: "Major", root: "E", octave: 6, velMin: 60, velMax: 100, octShifts: [0, 12], durations: { d16: 50, d8: 35, d4: 15, d2: 0 }, rest: true, restProb: 15, colors: ["#90ee90", "#98fb98", "#adff2f", "#7fff00"],
+    effects: { delay: { on: true, time: 0.12, feedback: 0.3, wet: 0.2 }, reverb: { on: true, decay: 1.5, wet: 0.25 }, ringMod: { on: false, freq: 440, wet: 0.5 }, compressor: { on: false, threshold: -24, ratio: 4, attack: 0.003, release: 0.25 } } },
+  rabbit: { emoji: "🐰", title: "ウサギのかけっこ", bpm: 150, scale: "Pentatonic", root: "A", octave: 5, velMin: 70, velMax: 100, octShifts: [0, 12], durations: { d16: 30, d8: 50, d4: 20, d2: 0 }, rest: true, restProb: 20, colors: ["#ffb6c1", "#ffc0cb", "#ffe4e1", "#fff5ee"],
+    effects: { delay: { on: false, time: 0.3, feedback: 0.4, wet: 0.3 }, reverb: { on: true, decay: 1.8, wet: 0.2 }, ringMod: { on: false, freq: 440, wet: 0.5 }, compressor: { on: true, threshold: -18, ratio: 4, attack: 0.002, release: 0.15 } } },
+  owl: { emoji: "🦉", title: "夜更かしフクロウ", bpm: 55, scale: "Japanese", root: "B", octave: 3, velMin: 40, velMax: 80, octShifts: [-12, 0, 12], durations: { d16: 5, d8: 25, d4: 40, d2: 30 }, rest: true, restProb: 35, colors: ["#dda0dd", "#e6e6fa", "#d8bfd8", "#eee8aa"],
+    effects: { delay: { on: true, time: 0.6, feedback: 0.45, wet: 0.3 }, reverb: { on: true, decay: 4.0, wet: 0.45 }, ringMod: { on: false, freq: 220, wet: 0.15 }, compressor: { on: false, threshold: -24, ratio: 4, attack: 0.003, release: 0.25 } } },
+  turtle: { emoji: "🐢", title: "カメのんびり", bpm: 40, scale: "Pentatonic", root: "G", octave: 3, velMin: 50, velMax: 75, octShifts: [0], durations: { d16: 0, d8: 5, d4: 35, d2: 60 }, rest: true, restProb: 40, colors: ["#8fbc8f", "#98fb98", "#90ee90", "#adff2f"],
+    effects: { delay: { on: true, time: 0.7, feedback: 0.35, wet: 0.3 }, reverb: { on: true, decay: 3.5, wet: 0.4 }, ringMod: { on: false, freq: 440, wet: 0.5 }, compressor: { on: false, threshold: -24, ratio: 4, attack: 0.003, release: 0.25 } } },
+  fish: { emoji: "🐠", title: "キラキラ熱帯魚", bpm: 120, scale: "Major", root: "F", octave: 5, velMin: 50, velMax: 85, octShifts: [0, 12], durations: { d16: 35, d8: 45, d4: 20, d2: 0 }, rest: true, restProb: 15, colors: ["#ffa07a", "#fa8072", "#f08080", "#ffb6c1"],
+    effects: { delay: { on: true, time: 0.25, feedback: 0.4, wet: 0.25 }, reverb: { on: true, decay: 2.0, wet: 0.3 }, ringMod: { on: false, freq: 440, wet: 0.5 }, compressor: { on: false, threshold: -24, ratio: 4, attack: 0.003, release: 0.25 } } },
+  butterfly: { emoji: "🦋", title: "蝶々のダンス", bpm: 95, scale: "Major", root: "E", octave: 5, velMin: 45, velMax: 75, octShifts: [0, 12], durations: { d16: 25, d8: 45, d4: 30, d2: 0 }, rest: true, restProb: 25, colors: ["#ee82ee", "#dda0dd", "#da70d6", "#ffb6c1"],
+    effects: { delay: { on: true, time: 0.35, feedback: 0.3, wet: 0.2 }, reverb: { on: true, decay: 2.5, wet: 0.35 }, ringMod: { on: false, freq: 440, wet: 0.5 }, compressor: { on: false, threshold: -24, ratio: 4, attack: 0.003, release: 0.25 } } },
+  dragon: { emoji: "🐉", title: "龍の目覚め", bpm: 70, scale: "Japanese", root: "D", octave: 3, velMin: 70, velMax: 127, octShifts: [-24, -12, 0, 12, 24], durations: { d16: 10, d8: 20, d4: 40, d2: 30 }, rest: true, restProb: 20, colors: ["#ff6b6b", "#ffa07a", "#ffd700", "#ff6b9d"],
+    effects: { delay: { on: true, time: 0.4, feedback: 0.5, wet: 0.3 }, reverb: { on: true, decay: 4.5, wet: 0.5 }, ringMod: { on: true, freq: 110, wet: 0.2 }, compressor: { on: true, threshold: -12, ratio: 8, attack: 0.005, release: 0.3 } } },
+};
+
+const SCALES = {
+  Major: [0, 2, 4, 5, 7, 9, 11],
+  Minor: [0, 2, 3, 5, 7, 8, 10],
+  Pentatonic: [0, 2, 4, 7, 9],
+  Blues: [0, 3, 5, 6, 7, 10],
+  Dorian: [0, 2, 3, 5, 7, 9, 10],
+  Japanese: [0, 2, 5, 7, 9],
+};
+
+const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+let audioCtx = null;
+let isPlaying = false;
+let masterGain = null;
+let delayNode = null;
+let delayFeedback = null;
+let delayWet = null;
+let convolverNode = null;
+let reverbWet = null;
+let reverbDry = null;
+let ringModOsc = null;
+let ringModGain = null;
+let ringModWet = null;
+let ringModDry = null;
+let compressorNode = null;
+
+let effects = {
+  delay: { on: false, time: 0.3, feedback: 0.4, wet: 0.3 },
+  reverb: { on: false, decay: 2.0, wet: 0.3 },
+  ringMod: { on: false, freq: 440, wet: 0.5 },
+  compressor: { on: false, threshold: -24, ratio: 4, attack: 0.003, release: 0.25 }
+};
+let presetChanged = false;
+let currentAnimal = null;
+let playMode = 'oneshot';
+let noteCount = 0;
+let scrollingNotes = [];
+let viewStart = 48;  // 現在の表示開始ノート
+let viewEnd = 84;    // 現在の表示終了ノート
+let targetViewStart = 48;  // ターゲット開始
+let targetViewEnd = 84;    // ターゲット終了
+let settings = {
+  root: 'C', octave: 4, scale: 'Pentatonic', bpm: 120, notes: 16,
+  velMin: 60, velMax: 100,
+  octShifts: { m2: false, m1: true, zero: true, p1: true, p2: false },
+  durations: { d16: 20, d8: 40, d4: 30, d2: 10 },
+  rest: false, restProb: 20,
+  colors: ['#ff6b9d', '#87ceeb', '#ffb6c1', '#98fb98']
+};
+
+function $(id) { return document.getElementById(id); }
+
+function midiToFreq(midi) { return 440 * Math.pow(2, (midi - 69) / 12); }
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    setupEffects();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function createReverbIR(duration, decay) {
+  const sampleRate = audioCtx.sampleRate;
+  const length = sampleRate * duration;
+  const impulse = audioCtx.createBuffer(2, length, sampleRate);
+  
+  for (let channel = 0; channel < 2; channel++) {
+    const channelData = impulse.getChannelData(channel);
+    for (let i = 0; i < length; i++) {
+      channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+    }
+  }
+  return impulse;
+}
+
+function setupEffects() {
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 1.0;
+  
+  // Compressor setup
+  compressorNode = audioCtx.createDynamicsCompressor();
+  compressorNode.threshold.value = effects.compressor.threshold;
+  compressorNode.ratio.value = effects.compressor.ratio;
+  compressorNode.attack.value = effects.compressor.attack;
+  compressorNode.release.value = effects.compressor.release;
+  
+  // Default: bypass compressor (connect master directly to destination)
+  masterGain.connect(audioCtx.destination);
+  
+  // Delay setup
+  delayNode = audioCtx.createDelay(5.0);
+  delayNode.delayTime.value = effects.delay.time;
+  
+  delayFeedback = audioCtx.createGain();
+  delayFeedback.gain.value = effects.delay.feedback;
+  
+  delayWet = audioCtx.createGain();
+  delayWet.gain.value = effects.delay.on ? effects.delay.wet : 0;
+  
+  delayNode.connect(delayFeedback);
+  delayFeedback.connect(delayNode);
+  delayNode.connect(delayWet);
+  delayWet.connect(masterGain);
+  
+  // Reverb setup
+  convolverNode = audioCtx.createConvolver();
+  convolverNode.buffer = createReverbIR(effects.reverb.decay, 2.5);
+  
+  reverbWet = audioCtx.createGain();
+  reverbWet.gain.value = effects.reverb.on ? effects.reverb.wet : 0;
+  
+  reverbDry = audioCtx.createGain();
+  reverbDry.gain.value = 1.0;
+  
+  convolverNode.connect(reverbWet);
+  reverbWet.connect(masterGain);
+  reverbDry.connect(masterGain);
+  
+  // Ring Modulator setup
+  ringModOsc = audioCtx.createOscillator();
+  ringModOsc.type = 'sine';
+  ringModOsc.frequency.value = effects.ringMod.freq;
+  
+  ringModGain = audioCtx.createGain();
+  ringModGain.gain.value = 0; // Will be modulated by ringModOsc
+  
+  ringModWet = audioCtx.createGain();
+  ringModWet.gain.value = effects.ringMod.on ? effects.ringMod.wet : 0;
+  
+  ringModDry = audioCtx.createGain();
+  ringModDry.gain.value = 1.0;
+  
+  ringModOsc.connect(ringModGain.gain);
+  ringModGain.connect(ringModWet);
+  ringModWet.connect(masterGain);
+  ringModDry.connect(masterGain);
+  
+  ringModOsc.start();
+}
+
+function updateDelayParams() {
+  if (!delayNode) return;
+  delayNode.delayTime.value = effects.delay.time;
+  delayFeedback.gain.value = effects.delay.feedback;
+  delayWet.gain.value = effects.delay.on ? effects.delay.wet : 0;
+}
+
+function updateReverbParams() {
+  if (!convolverNode) return;
+  convolverNode.buffer = createReverbIR(effects.reverb.decay, 2.5);
+  reverbWet.gain.value = effects.reverb.on ? effects.reverb.wet : 0;
+}
+
+function updateRingModParams() {
+  if (!ringModOsc) return;
+  ringModOsc.frequency.value = effects.ringMod.freq;
+  ringModWet.gain.value = effects.ringMod.on ? effects.ringMod.wet : 0;
+  ringModDry.gain.value = effects.ringMod.on ? (1 - effects.ringMod.wet) : 1.0;
+}
+
+function updateCompressorParams() {
+  if (!compressorNode) return;
+  compressorNode.threshold.value = effects.compressor.threshold;
+  compressorNode.ratio.value = effects.compressor.ratio;
+  compressorNode.attack.value = effects.compressor.attack;
+  compressorNode.release.value = effects.compressor.release;
+}
+
+function playNote(midiNote, velocity, duration) {
+  const ctx = initAudio();
+  const now = ctx.currentTime;
+  const freq = midiToFreq(midiNote);
+  const vol = (velocity / 127) * 0.4;
+  
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, now);
+  
+  const gain = ctx.createGain();
+  
+  const attack = 0.003;
+  const decay = duration * 0.4;
+  const sustainLevel = 0.25;
+  const release = duration * 0.6;
+  
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(vol, now + attack);
+  gain.gain.exponentialRampToValueAtTime(Math.max(0.001, vol * sustainLevel), now + attack + decay);
+  gain.gain.setValueAtTime(Math.max(0.001, vol * sustainLevel), now + duration * 0.9);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration + release);
+  
+  osc.connect(gain);
+  
+  // Connect to effects
+  gain.connect(reverbDry);
+  gain.connect(convolverNode);
+  gain.connect(delayNode);
+  
+  // Ring modulator connection
+  if (effects.ringMod.on) {
+    gain.connect(ringModGain);
+    gain.connect(ringModDry);
+  } else {
+    gain.connect(ringModDry);
+  }
+  
+  osc.start(now);
+  osc.stop(now + duration + release + 0.1);
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// キャンセル可能なsleep
+let sleepResolve = null;
+let sleepTimeout = null;
+function cancelableSleep(ms) {
+  return new Promise(resolve => {
+    sleepResolve = resolve;
+    sleepTimeout = setTimeout(() => {
+      sleepResolve = null;
+      sleepTimeout = null;
+      resolve();
+    }, ms);
+  });
+}
+
+function cancelSleep() {
+  if (sleepTimeout) {
+    clearTimeout(sleepTimeout);
+    sleepTimeout = null;
+  }
+  if (sleepResolve) {
+    sleepResolve();
+    sleepResolve = null;
+  }
+}
+
+function pickWeighted(items, weights) {
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < items.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return items[i];
+  }
+  return items[items.length - 1];
+}
+
+function getNoteInfo(midi) {
+  const name = NOTE_NAMES[midi % 12];
+  const oct = Math.floor(midi / 12) - 1;
+  return `${name}${oct}`;
+}
+
+function updateUI() {
+  $('btnPlay').disabled = isPlaying;
+  $('btnStop').disabled = !isPlaying;
+  
+  const status = $('visStatus');
+  if (isPlaying) {
+    status.textContent = playMode === 'endless' ? '♾️ ENDLESS' : playMode === 'loop' ? '🔁 LOOP' : '▶ PLAYING';
+    status.className = 'vis-status ' + (playMode === 'endless' ? 'endless' : playMode === 'loop' ? 'loop' : 'playing');
+  } else {
+    status.textContent = '⏸ STOPPED';
+    status.className = 'vis-status';
+  }
+}
+
+function updateNoteDisplay(midi, velocity) {
+  const el = $('visNote');
+  if (midi !== null) {
+    el.textContent = playMode === 'endless' ? `♪ ${getNoteInfo(midi)} #${noteCount}` : `♪ ${getNoteInfo(midi)} (vel:${velocity})`;
+    el.style.color = '#ff6b9d';
+  } else {
+    el.textContent = '--';
+    el.style.color = '#ccc';
+  }
+}
+
+function addScrollingNote(note, velocity, duration) {
+  const color = settings.colors[Math.floor(Math.random() * settings.colors.length)];
+  const bar = document.createElement('div');
+  bar.className = 'note-bar';
+  bar.dataset.note = note;
+  bar.style.cssText = `
+    left: 85%;
+    width: ${Math.max(15, Math.min(100, duration * 50))}px;
+    height: 8px;
+    background: ${color};
+    box-shadow: 0 2px 8px ${color}66;
+    opacity: ${0.7 + (velocity / 127) * 0.3};
+  `;
+  
+  $('pianoRoll').appendChild(bar);
+  scrollingNotes.push({ el: bar, x: 85, note: note });
+  
+  // ビュー範囲を更新
+  updateViewRange(note);
+}
+
+function updateViewRange(note) {
+  const margin = 6;
+  const viewRange = 36;
+  
+  if (note < targetViewStart + margin) {
+    targetViewStart = Math.max(12, note - margin);
+    targetViewEnd = targetViewStart + viewRange;
+  } else if (note > targetViewEnd - margin) {
+    targetViewEnd = Math.min(120, note + margin);
+    targetViewStart = targetViewEnd - viewRange;
+  }
+}
+
+function updateNotePositions() {
+  // ビューをスムーズにターゲットへ補間
+  viewStart += (targetViewStart - viewStart) * 0.1;
+  viewEnd += (targetViewEnd - viewEnd) * 0.1;
+  
+  const viewRange = viewEnd - viewStart;
+  
+  // 全てのノートバーの位置を更新
+  scrollingNotes.forEach(n => {
+    const relNote = n.note - viewStart;
+    const y = (1 - (relNote + 0.5) / viewRange) * 100;
+    n.el.style.top = y + '%';
+    n.el.style.transform = 'translateY(-50%)';
+    
+    // 範囲外なら非表示
+    if (relNote < -2 || relNote > viewRange + 2) {
+      n.el.style.opacity = '0';
+    }
+  });
+  
+  // 範囲表示を更新
+  const startOct = Math.floor(viewStart / 12) - 1;
+  const endOct = Math.floor(viewEnd / 12) - 1;
+  const rangeDisplay = $('rangeDisplay');
+  if (rangeDisplay) {
+    rangeDisplay.textContent = `C${startOct} - C${endOct}`;
+  }
+}
+
+function animateNotes() {
+  const speed = settings.bpm / 25 * 0.5;
+  scrollingNotes = scrollingNotes.filter(n => {
+    n.x -= speed;
+    n.el.style.left = n.x + '%';
+    if (n.x < -10) {
+      n.el.remove();
+      return false;
+    }
+    return true;
+  });
+  
+  // ノートの縦位置を更新（スムーススクロール）
+  updateNotePositions();
+  
+  requestAnimationFrame(animateNotes);
+}
+
+async function generateMelody() {
+  while (isPlaying) {
+    // 各ループの開始時に設定を読み込む（プリセット変更に対応）
+    const rootIdx = NOTE_NAMES.indexOf(settings.root);
+    const rootNote = 12 + (settings.octave * 12) + rootIdx;
+    const intervals = SCALES[settings.scale];
+    const beat = 60 / settings.bpm;
+    
+    const shifts = [];
+    if (settings.octShifts.m2) shifts.push(-24);
+    if (settings.octShifts.m1) shifts.push(-12);
+    if (settings.octShifts.zero) shifts.push(0);
+    if (settings.octShifts.p1) shifts.push(12);
+    if (settings.octShifts.p2) shifts.push(24);
+    if (shifts.length === 0) shifts.push(0);
+    
+    const durs = [], weights = [];
+    const durMap = { d16: 0.25, d8: 0.5, d4: 1.0, d2: 2.0 };
+    Object.entries(settings.durations).forEach(([k, w]) => {
+      if (w > 0) { durs.push(durMap[k]); weights.push(w); }
+    });
+    if (durs.length === 0) { durs.push(1.0); weights.push(1); }
+    
+    presetChanged = false;
+    
+    const playSingle = async () => {
+      // 毎回最新のbeatを使用
+      const currentBeat = 60 / settings.bpm;
+      const dur = pickWeighted(durs, weights);
+      
+      if (settings.rest && Math.random() < settings.restProb / 100) {
+        await cancelableSleep(currentBeat * dur * 1000);
+        return;
+      }
+      
+      const interval = intervals[Math.floor(Math.random() * intervals.length)];
+      const shift = shifts[Math.floor(Math.random() * shifts.length)];
+      const note = Math.max(0, Math.min(127, rootNote + interval + shift));
+      const vel = Math.floor(Math.random() * (settings.velMax - settings.velMin + 1)) + settings.velMin;
+      
+      noteCount++;
+      updateNoteDisplay(note, vel);
+      addScrollingNote(note, vel, dur);
+      playNote(note, vel, currentBeat * dur);
+      
+      await cancelableSleep(currentBeat * dur * 1000);
+    };
+    
+    if (playMode === 'endless') {
+      while (isPlaying && !presetChanged) await playSingle();
+    } else {
+      for (let i = 0; i < settings.notes; i++) {
+        if (!isPlaying || presetChanged) break;
+        await playSingle();
+      }
+    }
+    
+    if (playMode !== 'loop' && !presetChanged) break;
+  }
+  
+  isPlaying = false;
+  updateUI();
+  updateNoteDisplay(null, 0);
+}
+
+function applyPreset(key) {
+  const p = ANIMAL_PRESETS[key];
+  currentAnimal = key;
+  
+  const wasPlaying = isPlaying;
+  presetChanged = true;
+  cancelSleep(); // 現在の待機を即座にキャンセル
+  
+  settings.root = p.root;
+  settings.octave = p.octave;
+  settings.scale = p.scale;
+  settings.bpm = p.bpm;
+  settings.velMin = p.velMin;
+  settings.velMax = Math.min(p.velMax, 127);
+  settings.octShifts = {
+    m2: p.octShifts.includes(-24),
+    m1: p.octShifts.includes(-12),
+    zero: p.octShifts.includes(0),
+    p1: p.octShifts.includes(12),
+    p2: p.octShifts.includes(24),
+  };
+  settings.durations = { ...p.durations };
+  settings.rest = p.rest;
+  settings.restProb = p.restProb;
+  settings.colors = p.colors;
+  
+  // エフェクト設定を適用
+  if (p.effects) {
+    effects.delay = { ...p.effects.delay };
+    effects.reverb = { ...p.effects.reverb };
+    effects.ringMod = { ...p.effects.ringMod };
+    effects.compressor = { ...p.effects.compressor };
+    
+    // エフェクトUIを更新
+    $('delayOn').checked = effects.delay.on;
+    $('delayTime').value = effects.delay.time;
+    $('delayTimeVal').textContent = effects.delay.time;
+    $('delayFeedback').value = effects.delay.feedback;
+    $('delayFeedbackVal').textContent = effects.delay.feedback;
+    $('delayWetCtrl').value = effects.delay.wet;
+    $('delayWetVal').textContent = effects.delay.wet;
+    
+    $('reverbOn').checked = effects.reverb.on;
+    $('reverbDecay').value = effects.reverb.decay;
+    $('reverbDecayVal').textContent = effects.reverb.decay;
+    $('reverbWetCtrl').value = effects.reverb.wet;
+    $('reverbWetValDisplay').textContent = effects.reverb.wet;
+    
+    $('ringModOn').checked = effects.ringMod.on;
+    $('ringModFreq').value = effects.ringMod.freq;
+    $('ringModFreqVal').textContent = effects.ringMod.freq;
+    $('ringModWetCtrl').value = effects.ringMod.wet;
+    $('ringModWetVal').textContent = effects.ringMod.wet;
+    
+    $('compOn').checked = effects.compressor.on;
+    $('compThreshold').value = effects.compressor.threshold;
+    $('compThresholdVal').textContent = effects.compressor.threshold;
+    $('compRatio').value = effects.compressor.ratio;
+    $('compRatioVal').textContent = effects.compressor.ratio;
+    $('compAttack').value = effects.compressor.attack;
+    $('compAttackVal').textContent = effects.compressor.attack;
+    $('compRelease').value = effects.compressor.release;
+    $('compReleaseVal').textContent = effects.compressor.release;
+    
+    // エフェクトパラメータを更新（AudioContextが初期化されている場合）
+    if (audioCtx) {
+      updateDelayParams();
+      updateReverbParams();
+      updateRingModParams();
+      updateCompressorParams();
+      
+      // コンプレッサーの接続を更新
+      if (effects.compressor.on) {
+        masterGain.disconnect();
+        masterGain.connect(compressorNode);
+        compressorNode.connect(audioCtx.destination);
+      } else {
+        masterGain.disconnect();
+        try { compressorNode.disconnect(); } catch(e) {}
+        masterGain.connect(audioCtx.destination);
+      }
+    }
+  }
+  
+  // ビュー範囲をプリセットのオクターブに合わせてリセット
+  const baseNote = 12 + (p.octave * 12);
+  const minShift = Math.min(...p.octShifts);
+  const maxShift = Math.max(...p.octShifts);
+  targetViewStart = Math.max(12, baseNote + minShift - 12);
+  targetViewEnd = Math.min(120, baseNote + maxShift + 24);
+  if (targetViewEnd - targetViewStart < 36) {
+    const center = (targetViewStart + targetViewEnd) / 2;
+    targetViewStart = center - 18;
+    targetViewEnd = center + 18;
+  }
+  
+  $('setRoot').value = p.root;
+  $('setOctave').value = p.octave;
+  $('setScale').value = p.scale;
+  $('setBpm').value = p.bpm;
+  $('setVelMin').value = p.velMin;
+  $('setVelMax').value = Math.min(p.velMax, 127);
+  $('setD16').value = p.durations.d16;
+  $('setD8').value = p.durations.d8;
+  $('setD4').value = p.durations.d4;
+  $('setD2').value = p.durations.d2;
+  $('setRest').checked = p.rest;
+  $('setRestProb').value = p.restProb;
+  
+  updateOctShiftUI();
+  
+  $('visEmoji').textContent = p.emoji;
+  $('currentPreset').textContent = `${p.emoji} ${p.title} (${p.bpm} BPM)`;
+  
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.key === key);
+  });
+}
+
+function updateOctShiftUI() {
+  document.querySelectorAll('.oct-check').forEach(el => {
+    const key = el.dataset.key;
+    el.classList.toggle('checked', settings.octShifts[key]);
+    el.querySelector('input').checked = settings.octShifts[key];
+  });
+}
+
+function createSparkles() {
+  const bg = $('sparkleBg');
+  const stars = ['✦', '✧', '⋆', '｡', '˚', '✩', '⊹'];
+  
+  for (let i = 0; i < 25; i++) {
+    const star = document.createElement('span');
+    star.className = 'star';
+    star.textContent = stars[Math.floor(Math.random() * stars.length)];
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.animationDelay = Math.random() * 3 + 's';
+    star.style.color = ['#ffb6c1', '#add8e6', '#ffe4e1', '#e6e6fa'][Math.floor(Math.random() * 4)];
+    bg.appendChild(star);
+  }
+}
+
+function init() {
+  createSparkles();
+  
+  NOTE_NAMES.forEach(n => {
+    const opt = document.createElement('option');
+    opt.value = opt.textContent = n;
+    $('setRoot').appendChild(opt);
+  });
+  
+  Object.keys(SCALES).forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = opt.textContent = s;
+    $('setScale').appendChild(opt);
+  });
+  
+  const octContainer = $('octShifts');
+  [{ key: 'm2', label: '-2' }, { key: 'm1', label: '-1' }, { key: 'zero', label: '0' }, { key: 'p1', label: '+1' }, { key: 'p2', label: '+2' }].forEach(o => {
+    const label = document.createElement('label');
+    label.className = 'oct-check' + (settings.octShifts[o.key] ? ' checked' : '');
+    label.dataset.key = o.key;
+    label.innerHTML = `<input type="checkbox" ${settings.octShifts[o.key] ? 'checked' : ''}> ${o.label}`;
+    label.addEventListener('click', e => {
+      if (e.target.tagName !== 'INPUT') return;
+      settings.octShifts[o.key] = e.target.checked;
+      label.classList.toggle('checked', e.target.checked);
+    });
+    octContainer.appendChild(label);
+  });
+  
+  const grid = $('presetsGrid');
+  Object.entries(ANIMAL_PRESETS).forEach(([key, p]) => {
+    const btn = document.createElement('button');
+    btn.className = 'preset-btn';
+    btn.dataset.key = key;
+    btn.innerHTML = `<span class="emoji">${p.emoji}</span><span class="title">${p.title}</span><span class="bpm">${p.bpm} BPM</span>`;
+    btn.addEventListener('click', () => applyPreset(key));
+    grid.appendChild(btn);
+  });
+  
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playMode = btn.dataset.mode;
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      $('modeDesc').textContent = playMode === 'oneshot' ? '🎵 1回再生して停止' : 
+                                   playMode === 'loop' ? '🔁 同じパターンをループ' : 
+                                   '♾️ 永遠に新しい音を生成';
+    });
+  });
+  
+  $('btnPlay').addEventListener('click', () => {
+    initAudio();
+    isPlaying = true;
+    noteCount = 0;
+    updateUI();
+    generateMelody();
+  });
+  
+  $('btnStop').addEventListener('click', () => {
+    isPlaying = false;
+    updateUI();
+    updateNoteDisplay(null, 0);
+  });
+  
+  $('settingsToggle').addEventListener('click', () => {
+    const panel = $('settingsPanel');
+    const showing = panel.classList.toggle('show');
+    $('settingsToggle').textContent = `⚙️ 詳細設定 ${showing ? '▲' : '▼'}`;
+  });
+  
+  $('effectsToggle').addEventListener('click', () => {
+    const panel = $('effectsPanel');
+    const showing = panel.classList.toggle('show');
+    $('effectsToggle').textContent = `🎛️ エフェクト ${showing ? '▲' : '▼'}`;
+  });
+  
+  $('delayOn').addEventListener('change', e => {
+    effects.delay.on = e.target.checked;
+    updateDelayParams();
+  });
+  $('delayTime').addEventListener('input', e => {
+    effects.delay.time = parseFloat(e.target.value);
+    $('delayTimeVal').textContent = e.target.value;
+    updateDelayParams();
+  });
+  $('delayFeedback').addEventListener('input', e => {
+    effects.delay.feedback = parseFloat(e.target.value);
+    $('delayFeedbackVal').textContent = e.target.value;
+    updateDelayParams();
+  });
+  $('delayWetCtrl').addEventListener('input', e => {
+    effects.delay.wet = parseFloat(e.target.value);
+    $('delayWetVal').textContent = e.target.value;
+    updateDelayParams();
+  });
+  
+  $('reverbOn').addEventListener('change', e => {
+    effects.reverb.on = e.target.checked;
+    updateReverbParams();
+  });
+  $('reverbDecay').addEventListener('input', e => {
+    effects.reverb.decay = parseFloat(e.target.value);
+    $('reverbDecayVal').textContent = e.target.value;
+    updateReverbParams();
+  });
+  $('reverbWetCtrl').addEventListener('input', e => {
+    effects.reverb.wet = parseFloat(e.target.value);
+    $('reverbWetValDisplay').textContent = e.target.value;
+    updateReverbParams();
+  });
+  
+  // Ring Modulator controls
+  $('ringModOn').addEventListener('change', e => {
+    effects.ringMod.on = e.target.checked;
+    updateRingModParams();
+  });
+  $('ringModFreq').addEventListener('input', e => {
+    effects.ringMod.freq = parseFloat(e.target.value);
+    $('ringModFreqVal').textContent = e.target.value;
+    updateRingModParams();
+  });
+  $('ringModWetCtrl').addEventListener('input', e => {
+    effects.ringMod.wet = parseFloat(e.target.value);
+    $('ringModWetVal').textContent = e.target.value;
+    updateRingModParams();
+  });
+  
+  // Compressor controls
+  $('compOn').addEventListener('change', e => {
+    effects.compressor.on = e.target.checked;
+    if (compressorNode) {
+      if (e.target.checked) {
+        masterGain.disconnect();
+        masterGain.connect(compressorNode);
+        compressorNode.connect(audioCtx.destination);
+      } else {
+        masterGain.disconnect();
+        compressorNode.disconnect();
+        masterGain.connect(audioCtx.destination);
+      }
+    }
+  });
+  $('compThreshold').addEventListener('input', e => {
+    effects.compressor.threshold = parseFloat(e.target.value);
+    $('compThresholdVal').textContent = e.target.value;
+    updateCompressorParams();
+  });
+  $('compRatio').addEventListener('input', e => {
+    effects.compressor.ratio = parseFloat(e.target.value);
+    $('compRatioVal').textContent = e.target.value;
+    updateCompressorParams();
+  });
+  $('compAttack').addEventListener('input', e => {
+    effects.compressor.attack = parseFloat(e.target.value);
+    $('compAttackVal').textContent = e.target.value;
+    updateCompressorParams();
+  });
+  $('compRelease').addEventListener('input', e => {
+    effects.compressor.release = parseFloat(e.target.value);
+    $('compReleaseVal').textContent = e.target.value;
+    updateCompressorParams();
+  });
+  
+  $('setRoot').addEventListener('change', e => settings.root = e.target.value);
+  $('setOctave').addEventListener('change', e => settings.octave = parseInt(e.target.value) || 4);
+  $('setScale').addEventListener('change', e => settings.scale = e.target.value);
+  $('setBpm').addEventListener('change', e => settings.bpm = parseInt(e.target.value) || 120);
+  $('setNotes').addEventListener('change', e => settings.notes = parseInt(e.target.value) || 16);
+  $('setVelMin').addEventListener('change', e => settings.velMin = parseInt(e.target.value) || 60);
+  $('setVelMax').addEventListener('change', e => settings.velMax = parseInt(e.target.value) || 100);
+  $('setD16').addEventListener('change', e => settings.durations.d16 = parseInt(e.target.value) || 0);
+  $('setD8').addEventListener('change', e => settings.durations.d8 = parseInt(e.target.value) || 0);
+  $('setD4').addEventListener('change', e => settings.durations.d4 = parseInt(e.target.value) || 0);
+  $('setD2').addEventListener('change', e => settings.durations.d2 = parseInt(e.target.value) || 0);
+  $('setRest').addEventListener('change', e => settings.rest = e.target.checked);
+  $('setRestProb').addEventListener('change', e => settings.restProb = parseInt(e.target.value) || 20);
+  
+  animateNotes();
+  
+  // 初期ビュー範囲を設定
+  viewStart = targetViewStart = 48;
+  viewEnd = targetViewEnd = 84;
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
