@@ -90,9 +90,9 @@
     
     .keyboard {
       display: flex;
-      justify-content: center;
+      justify-content: flex-start;
       position: relative;
-      height: 220px;
+      height: 180px;
       min-width: fit-content;
       margin: 0 auto;
     }
@@ -102,20 +102,20 @@
       display: flex;
       align-items: flex-end;
       justify-content: center;
-      font-size: 12px;
+      font-size: 9px;
       font-weight: bold;
       user-select: none;
       transition: transform 0.1s, box-shadow 0.1s;
       touch-action: manipulation;
-      border-radius: 0 0 8px 8px;
+      border-radius: 0 0 6px 6px;
     }
     
     .key.white {
       background: linear-gradient(180deg, #fff 0%, #f8f8f8 100%);
-      width: 50px;
-      height: 220px;
+      width: 36px;
+      height: 180px;
       color: #888;
-      padding-bottom: 12px;
+      padding-bottom: 8px;
       border: 1px solid #ddd;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       z-index: 1;
@@ -123,16 +123,21 @@
     
     .key.black {
       background: linear-gradient(180deg, #444 0%, #222 100%);
-      width: 36px;
-      height: 140px;
+      width: 26px;
+      height: 110px;
       color: #fff;
-      margin-left: -18px;
-      margin-right: -18px;
+      margin-left: -13px;
+      margin-right: -13px;
       z-index: 2;
       position: relative;
-      padding-bottom: 10px;
+      padding-bottom: 8px;
       border: 1px solid #000;
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    
+    .key.final-c {
+      border-left: 2px solid #42a5f5;
+      background: linear-gradient(180deg, #f0f8ff 0%, #e8f4ff 100%);
     }
     
     .key.ice {
@@ -260,30 +265,6 @@
       height: 16px;
     }
     
-    .octave-selector {
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-    }
-    .oct-btn {
-      padding: 10px 20px;
-      border-radius: 10px;
-      border: 1px solid rgba(135,206,250,0.3);
-      background: rgba(255,255,255,0.8);
-      color: #666;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .oct-btn:hover {
-      border-color: #42a5f5;
-    }
-    .oct-btn.active {
-      background: linear-gradient(135deg, #42a5f5, #1e88e5);
-      color: #fff;
-      border-color: transparent;
-    }
-    
     .settings-toggle {
       width: 100%;
       padding: 14px;
@@ -341,13 +322,13 @@
   <div class="content">
     <div class="header">
       <h1>❄️ Iceface Tuning Keyboard</h1>
-      <p>黒鍵 +50セント </p>
+      <p>黒鍵が平均律より+50セント高くチューニングされています</p>
     </div>
     
     <div class="info-bar">
-      <span class="info-text">🎹 2オクターブ</span>
+      <span class="info-text">🎹 3オクターブ+1</span>
       <span class="current-note" id="currentNote">--</span>
-      <span class="info-text" id="octaveDisplay">C4-B5</span>
+      <span class="info-text">C4 - C7</span>
     </div>
     
     <div class="keyboard-container">
@@ -358,20 +339,11 @@
     </div>
     
     <div class="controls">
-      <div class="control-card">
+      <div class="control-card" style="grid-column: span 2;">
         <h3>🎚️ 音量</h3>
         <div class="slider-row">
-          <input type="range" id="volume" min="0" max="100" value="50" class="slider">
+          <input type="range" id="volume" min="0" max="100" value="50" class="slider" style="flex:1;">
           <span class="slider-val" id="volumeVal">50%</span>
-        </div>
-      </div>
-      
-      <div class="control-card">
-        <h3>🎹 オクターブ</h3>
-        <div class="octave-selector">
-          <button class="oct-btn" data-oct="3">3</button>
-          <button class="oct-btn active" data-oct="4">4</button>
-          <button class="oct-btn" data-oct="5">5</button>
         </div>
       </div>
     </div>
@@ -489,7 +461,6 @@ let ringModWetGain = null;
 let ringModDryGain = null;
 let compressorNode = null;
 
-let baseOctave = 4;
 let volume = 0.5;
 let activeNotes = new Map();
 
@@ -601,8 +572,8 @@ function playNote(noteData, octave) {
   
   // ADSR Envelope
   const attack = 0.005;
-  const decay = 0.5;
-  const sustainLevel = 0.5;
+  const decay = 0.7;
+  const sustainLevel = 0.7;
   
   gain.gain.setValueAtTime(0, now);
   gain.gain.linearRampToValueAtTime(vol, now + attack);
@@ -653,62 +624,64 @@ function generateKeyboard() {
   const keyboard = $('keyboard');
   keyboard.innerHTML = '';
   
-  // 2オクターブ分生成
-  for (let oct = baseOctave; oct < baseOctave + 2; oct++) {
+  // C4からB6までの3オクターブ + C7
+  for (let oct = 4; oct <= 6; oct++) {
     NOTE_DATA.forEach(nd => {
-      const key = document.createElement('div');
-      key.className = `key ${nd.type}${nd.ice ? ' ice' : ''}`;
-      key.dataset.note = nd.note;
-      key.dataset.octave = oct;
-      
-      if (nd.type === 'white') {
-        key.innerHTML = `<span class="note-label">${nd.note}${oct}</span>`;
-      } else {
-        key.innerHTML = `<span class="ice-icon">❄️</span><span class="note-label">${nd.note}</span>`;
-      }
-      
-      // Touch events
-      key.addEventListener('touchstart', e => {
-        e.preventDefault();
-        key.classList.add('active');
-        playNote(nd, oct);
-      });
-      key.addEventListener('touchend', e => {
-        e.preventDefault();
-        key.classList.remove('active');
-        stopNote(nd, oct);
-      });
-      key.addEventListener('touchcancel', e => {
-        e.preventDefault();
-        key.classList.remove('active');
-        stopNote(nd, oct);
-      });
-      
-      // Mouse events
-      key.addEventListener('mousedown', () => {
-        key.classList.add('active');
-        playNote(nd, oct);
-      });
-      key.addEventListener('mouseup', () => {
-        key.classList.remove('active');
-        stopNote(nd, oct);
-      });
-      key.addEventListener('mouseleave', () => {
-        if (key.classList.contains('active')) {
-          key.classList.remove('active');
-          stopNote(nd, oct);
-        }
-      });
-      
-      keyboard.appendChild(key);
+      createKey(keyboard, nd, oct);
     });
   }
   
-  updateOctaveDisplay();
+  // 最後にC7を追加
+  const c7Data = NOTE_DATA[0]; // C
+  createKey(keyboard, c7Data, 7, true);
 }
 
-function updateOctaveDisplay() {
-  $('octaveDisplay').textContent = `C${baseOctave}-B${baseOctave + 1}`;
+function createKey(keyboard, nd, oct, isFinalC = false) {
+  const key = document.createElement('div');
+  key.className = `key ${nd.type}${nd.ice ? ' ice' : ''}${isFinalC ? ' final-c' : ''}`;
+  key.dataset.note = nd.note;
+  key.dataset.octave = oct;
+  
+  if (nd.type === 'white') {
+    key.innerHTML = `<span class="note-label">${nd.note}${oct}</span>`;
+  } else {
+    key.innerHTML = `<span class="ice-icon">❄️</span><span class="note-label">${nd.note}</span>`;
+  }
+  
+  // Touch events
+  key.addEventListener('touchstart', e => {
+    e.preventDefault();
+    key.classList.add('active');
+    playNote(nd, oct);
+  });
+  key.addEventListener('touchend', e => {
+    e.preventDefault();
+    key.classList.remove('active');
+    stopNote(nd, oct);
+  });
+  key.addEventListener('touchcancel', e => {
+    e.preventDefault();
+    key.classList.remove('active');
+    stopNote(nd, oct);
+  });
+  
+  // Mouse events
+  key.addEventListener('mousedown', () => {
+    key.classList.add('active');
+    playNote(nd, oct);
+  });
+  key.addEventListener('mouseup', () => {
+    key.classList.remove('active');
+    stopNote(nd, oct);
+  });
+  key.addEventListener('mouseleave', () => {
+    if (key.classList.contains('active')) {
+      key.classList.remove('active');
+      stopNote(nd, oct);
+    }
+  });
+  
+  keyboard.appendChild(key);
 }
 
 function createSparkles() {
@@ -763,16 +736,6 @@ document.addEventListener('DOMContentLoaded', () => {
     volume = e.target.value / 100;
     $('volumeVal').textContent = e.target.value + '%';
     if (masterGain) masterGain.gain.value = volume;
-  });
-  
-  // Octave buttons
-  document.querySelectorAll('.oct-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.oct-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      baseOctave = parseInt(btn.dataset.oct);
-      generateKeyboard();
-    });
   });
   
   // Effects toggle
@@ -861,25 +824,26 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCompressorParams();
   });
   
-  // Keyboard input
+  // Keyboard input (固定: C4から開始)
   const keyMap = {
-    'a': { note: 'C', octOffset: 0 },
-    'w': { note: 'C#', octOffset: 0 },
-    's': { note: 'D', octOffset: 0 },
-    'e': { note: 'D#', octOffset: 0 },
-    'd': { note: 'E', octOffset: 0 },
-    'f': { note: 'F', octOffset: 0 },
-    't': { note: 'F#', octOffset: 0 },
-    'g': { note: 'G', octOffset: 0 },
-    'y': { note: 'G#', octOffset: 0 },
-    'h': { note: 'A', octOffset: 0 },
-    'u': { note: 'A#', octOffset: 0 },
-    'j': { note: 'B', octOffset: 0 },
-    'k': { note: 'C', octOffset: 1 },
-    'o': { note: 'C#', octOffset: 1 },
-    'l': { note: 'D', octOffset: 1 },
-    'p': { note: 'D#', octOffset: 1 },
-    ';': { note: 'E', octOffset: 1 },
+    'a': { note: 'C', oct: 4 },
+    'w': { note: 'C#', oct: 4 },
+    's': { note: 'D', oct: 4 },
+    'e': { note: 'D#', oct: 4 },
+    'd': { note: 'E', oct: 4 },
+    'f': { note: 'F', oct: 4 },
+    't': { note: 'F#', oct: 4 },
+    'g': { note: 'G', oct: 4 },
+    'y': { note: 'G#', oct: 4 },
+    'h': { note: 'A', oct: 4 },
+    'u': { note: 'A#', oct: 4 },
+    'j': { note: 'B', oct: 4 },
+    'k': { note: 'C', oct: 5 },
+    'o': { note: 'C#', oct: 5 },
+    'l': { note: 'D', oct: 5 },
+    'p': { note: 'D#', oct: 5 },
+    ';': { note: 'E', oct: 5 },
+    "'": { note: 'F', oct: 5 },
   };
   
   const pressedKeys = new Set();
@@ -888,11 +852,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const k = e.key.toLowerCase();
     if (keyMap[k] && !pressedKeys.has(k)) {
       pressedKeys.add(k);
-      const { note, octOffset } = keyMap[k];
+      const { note, oct } = keyMap[k];
       const nd = NOTE_DATA.find(n => n.note === note);
       if (nd) {
-        playNote(nd, baseOctave + octOffset);
-        const keyEl = document.querySelector(`[data-note="${note}"][data-octave="${baseOctave + octOffset}"]`);
+        playNote(nd, oct);
+        const keyEl = document.querySelector(`[data-note="${note}"][data-octave="${oct}"]`);
         if (keyEl) keyEl.classList.add('active');
       }
     }
@@ -902,11 +866,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const k = e.key.toLowerCase();
     if (keyMap[k]) {
       pressedKeys.delete(k);
-      const { note, octOffset } = keyMap[k];
+      const { note, oct } = keyMap[k];
       const nd = NOTE_DATA.find(n => n.note === note);
       if (nd) {
-        stopNote(nd, baseOctave + octOffset);
-        const keyEl = document.querySelector(`[data-note="${note}"][data-octave="${baseOctave + octOffset}"]`);
+        stopNote(nd, oct);
+        const keyEl = document.querySelector(`[data-note="${note}"][data-octave="${oct}"]`);
         if (keyEl) keyEl.classList.remove('active');
       }
     }
