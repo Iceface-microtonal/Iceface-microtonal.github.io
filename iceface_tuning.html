@@ -1,318 +1,876 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Iceface Tuning (black keys +50c) | 公式定義とデモ</title>
-
-  <!-- 基本SEO -->
-  <link rel="canonical" href="https://iceface-microtonal.github.io/">
-  <meta name="description" content="Iceface Tuning は12平均律を基に黒鍵のみを +50 セント上げる独自調律。白鍵は通常の12平均律、黒鍵で微分音的な彩りを得られます。セント値: 0,150,200,350,400,500,650,700,850,900,1050,1100,1200。デモ内蔵。">
-  <meta name="robots" content="index,follow">
-  <meta name="theme-color" content="#2c3e50">
-
-  <!-- OGP / Twitter -->
-  <meta property="og:type" content="website">
-  <meta property="og:locale" content="ja_JP">
-  <meta property="og:title" content="Iceface Tuning (black keys +50c)">
-  <meta property="og:description" content="黒鍵のみを +50 セント上げる独自調律。公式定義・セント値・デモを掲載。">
-  <meta property="og:url" content="https://iceface-microtonal.github.io/">
-  <meta property="og:image" content="https://iceface-microtonal.github.io/ogp.jpg"><!-- TODO: 画像を用意できたら差し替え -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Iceface Tuning (black keys +50c)">
-  <meta name="twitter:description" content="黒鍵のみ +50 セント。12平均律に自然に微分音を融合。">
-  <meta name="twitter:image" content="https://iceface-microtonal.github.io/ogp.jpg"><!-- TODO -->
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Iceface Tuning Keyboard ❄️</title>
   <style>
-    /* 既存のスタイルはそのまま（略） */
-    body {
-      font-family: 'Helvetica Neue', sans-serif;
-      background: #f0f0f0;
-      color: #333;
-      line-height: 1.7;
-      padding: 3em;
-      max-width: 960px;
-      margin: auto;
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
+    @keyframes soft-gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
-    h1, h2 { color: #2c3e50; }
-    a { color: #2980b9; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .section { margin-bottom: 3em; }
-    footer { margin-top: 5em; text-align: center; color: #888; font-size: 0.9em; }
-    /* Piano Player Styles（既存） */
-    .piano-player { background:#fff;border-radius:8px;padding:2em;margin:2em 0;box-shadow:0 2px 10px rgba(0,0,0,0.1); }
-    .piano-keyboard { display:flex;justify-content:center;margin:2em 0;position:relative;height:200px;overflow-x:auto;padding:0 10px; }
-    .key { cursor:pointer;border:1px solid #ccc;display:flex;align-items:flex-end;justify-content:center;font-size:16px;font-weight:bold;user-select:none;transition:all .1s ease;touch-action:manipulation; }
-    .key.white { background:#fff;width:70px;height:200px;color:#666;padding-bottom:15px; }
-    .key.black { background:#333;width:50px;height:130px;color:#fff;margin-left:-25px;margin-right:-25px;z-index:2;position:relative;padding-bottom:15px; }
-    @media (max-width:768px){ body{padding:1.5em;} .piano-keyboard{height:220px;margin:1em 0;} .key.white{width:65px;height:220px;font-size:16px;padding-bottom:15px;} .key.black{width:45px;height:145px;margin-left:-22.5px;margin-right:-22.5px;font-size:14px;padding-bottom:12px;} .piano-player{padding:1.5em;} }
-    @media (max-width:480px){ body{padding:1em;} .piano-keyboard{height:240px;overflow-x:scroll;-webkit-overflow-scrolling:touch;} .key.white{width:60px;height:240px;font-size:15px;padding-bottom:15px;min-width:60px;} .key.black{width:42px;height:160px;margin-left:-21px;margin-right:-21px;font-size:13px;padding-bottom:12px;min-width:42px;} .piano-player{padding:1em;} .control-group label{width:80px;font-size:14px;} input[type="range"]{width:150px;} button{padding:12px 18px;font-size:14px;margin:8px 4px;} }
-    @media (max-width:360px){ .piano-keyboard{height:260px;} .key.white{width:55px;height:260px;font-size:14px;} .key.black{width:38px;height:175px;margin-left:-19px;margin-right:-19px;font-size:12px;} }
-    .key.ice { background:linear-gradient(to bottom,#e3f2fd,#90caf9); color:#1565c0; box-shadow:0 0 8px rgba(33,150,243,.3); }
-    .key:hover{ transform:translateY(2px); }
-    .key.active{ transform:translateY(4px); box-shadow:inset 0 2px 4px rgba(0,0,0,.3); }
-    .controls{text-align:center;margin:2em 0;}
-    .control-group{margin:1em 0;}
-    .control-group label{display:inline-block;width:100px;text-align:right;margin-right:10px;}
-    input[type="range"]{width:200px;}
-    button{background:#2980b9;color:#fff;border:none;padding:10px 20px;border-radius:4px;cursor:pointer;margin:5px;transition:background .3s ease;}
-    button:hover{background:#1976d2;}
-    button:disabled{background:#bbb;cursor:not-allowed;}
-    .demo-melody{background:#4caf50;}
-    .demo-melody:hover{background:#388e3c;}
-    .status{text-align:center;margin:1em 0;font-style:italic;color:#666;}
-    .mobile-instruction{text-align:center;color:#666;font-size:.9em;margin-top:1em;}
-    @media (min-width:769px){ .mobile-instruction{display:none;} }
-    .dl { background:#fff;padding:1em 1.2em;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.06); }
-    .dl a{ font-weight:bold; }
-    .meta { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background:#fff; padding:1em; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+    
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; transform: scale(0.8); }
+      50% { opacity: 0.6; transform: scale(1.1); }
+    }
+    
+    @keyframes ice-glow {
+      0%, 100% { box-shadow: 0 0 10px rgba(33, 150, 243, 0.3), inset 0 0 20px rgba(255,255,255,0.3); }
+      50% { box-shadow: 0 0 20px rgba(33, 150, 243, 0.5), inset 0 0 30px rgba(255,255,255,0.5); }
+    }
+    
+    body {
+      font-family: 'Nunito', 'Hiragino Kaku Gothic ProN', sans-serif;
+      background: linear-gradient(180deg, 
+        rgba(255,240,245,1) 0%, 
+        rgba(255,255,255,1) 30%,
+        rgba(255,255,255,1) 50%,
+        rgba(240,255,255,1) 70%,
+        rgba(255,250,240,1) 100%);
+      background-size: 100% 200%;
+      animation: soft-gradient 20s ease infinite;
+      min-height: 100vh;
+      color: #333;
+      padding: 16px;
+      padding-bottom: 40px;
+      overflow-x: hidden;
+      position: relative;
+      touch-action: manipulation;
+    }
+    
+    .sparkle-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .star {
+      position: absolute;
+      font-size: 14px;
+      animation: twinkle 3s ease-in-out infinite;
+      opacity: 0.3;
+    }
+    
+    .content { position: relative; z-index: 1; }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 16px;
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(255,182,193,0.15), rgba(173,216,230,0.15));
+      border-radius: 20px;
+      border: 1px solid rgba(255,182,193,0.3);
+    }
+    .header h1 {
+      font-size: 24px;
+      font-weight: 900;
+      background: linear-gradient(90deg, #ff6b9d, #ffb6c1, #87ceeb, #ff6b9d);
+      background-size: 300% 300%;
+      animation: soft-gradient 4s ease infinite;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header p { margin-top: 6px; font-size: 12px; color: #ff6b9d; opacity: 0.8; }
+    
+    .keyboard-container {
+      background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,240,245,0.9));
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255,182,193,0.3);
+      box-shadow: 0 4px 20px rgba(255,182,193,0.15);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .keyboard {
+      display: flex;
+      justify-content: center;
+      position: relative;
+      height: 180px;
+      min-width: fit-content;
+      margin: 0 auto;
+    }
+    
+    .key {
+      cursor: pointer;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: bold;
+      user-select: none;
+      transition: transform 0.1s, box-shadow 0.1s;
+      touch-action: manipulation;
+      border-radius: 0 0 6px 6px;
+    }
+    
+    .key.white {
+      background: linear-gradient(180deg, #fff 0%, #f8f8f8 100%);
+      width: 36px;
+      height: 180px;
+      color: #888;
+      padding-bottom: 8px;
+      border: 1px solid #ddd;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      z-index: 1;
+    }
+    
+    .key.black {
+      background: linear-gradient(180deg, #444 0%, #222 100%);
+      width: 26px;
+      height: 110px;
+      color: #fff;
+      margin-left: -13px;
+      margin-right: -13px;
+      z-index: 2;
+      position: relative;
+      padding-bottom: 8px;
+      border: 1px solid #000;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    
+    .key.ice {
+      background: linear-gradient(180deg, #e3f2fd 0%, #90caf9 50%, #64b5f6 100%);
+      color: #1565c0;
+      border: 1px solid #42a5f5;
+      animation: ice-glow 2s ease-in-out infinite;
+    }
+    
+    .key:active, .key.active {
+      transform: translateY(4px);
+    }
+    .key.white:active, .key.white.active {
+      background: linear-gradient(180deg, #e8e8e8 0%, #ddd 100%);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .key.black:active, .key.black.active {
+      background: linear-gradient(180deg, #333 0%, #111 100%);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .key.ice:active, .key.ice.active {
+      background: linear-gradient(180deg, #bbdefb 0%, #64b5f6 50%, #42a5f5 100%);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 0 15px rgba(33,150,243,0.5);
+    }
+    
+    .note-label {
+      font-size: 10px;
+      opacity: 0.8;
+    }
+    .ice-icon {
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    
+    .info-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.8);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255,182,193,0.2);
+    }
+    .info-text { font-size: 14px; color: #ff6b9d; }
+    .current-note { font-size: 18px; font-weight: bold; color: #ff6b9d; }
+    
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .control-card {
+      background: rgba(255,255,255,0.9);
+      border-radius: 16px;
+      padding: 14px;
+      border: 1px solid rgba(255,182,193,0.2);
+    }
+    .control-card h3 {
+      font-size: 13px;
+      color: #ff6b9d;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .slider-row:last-child { margin-bottom: 0; }
+    .slider-label {
+      font-size: 11px;
+      color: #666;
+      width: 70px;
+    }
+    .slider {
+      flex: 1;
+      height: 6px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: linear-gradient(90deg, rgba(255,182,193,0.4), rgba(173,216,230,0.4));
+      border-radius: 3px;
+      outline: none;
+    }
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      background: linear-gradient(135deg, #ff6b9d, #ffb6c1);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(255,107,157,0.3);
+    }
+    .slider-val {
+      font-size: 11px;
+      color: #ff6b9d;
+      width: 36px;
+      text-align: right;
+    }
+    
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .toggle-row label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #666;
+      cursor: pointer;
+    }
+    input[type="checkbox"] {
+      accent-color: #ff6b9d;
+      width: 16px;
+      height: 16px;
+    }
+    
+    .settings-toggle {
+      width: 100%;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,182,193,0.25);
+      background: rgba(255,255,255,0.8);
+      color: #ff6b9d;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+    .settings-panel {
+      background: rgba(255,255,255,0.9);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: none;
+      border: 1px solid rgba(255,182,193,0.2);
+    }
+    .settings-panel.show { display: block; }
+    
+    .effect-section {
+      margin-bottom: 16px;
+    }
+    .effect-section:last-child { margin-bottom: 0; }
+    .effect-section h4 {
+      font-size: 13px;
+      color: #ff6b9d;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .footer {
+      text-align: center;
+      padding: 16px;
+      color: #ffb6c1;
+      font-size: 12px;
+    }
+    
+    .cents-info {
+      text-align: center;
+      font-size: 11px;
+      color: #ff6b9d;
+      opacity: 0.7;
+      margin-top: 8px;
+    }
   </style>
-
-  <!-- JSON-LD: 定義（DefinedTerm） -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "DefinedTerm",
-    "name": "Iceface Tuning",
-    "alternateName": ["アイスフェイス・チューニング", "Iceface Tuning (black keys +50c)"],
-    "description": "12平均律を基に黒鍵のみを+50セント上げる独自調律。白鍵で安定、黒鍵で微分音の彩りを得る。",
-    "inDefinedTermSet": "https://iceface-microtonal.github.io/",
-    "url": "https://iceface-microtonal.github.io/",
-    "additionalProperty": [
-      {"@type":"PropertyValue","name":"octave","value":"1200 cents"},
-      {"@type":"PropertyValue","name":"cents","value":"0,150,200,350,400,500,650,700,850,900,1050,1100,1200"}
-    ]
-    /* "sameAs": ["https://zenodo.org/record/XXXXX","https://github.com/…"]  ← DOI等ができたら追加 */
-  }
-  </script>
-
-  <!-- JSON-LD: FAQ（定義クエリを拾わせる） -->
-  <script type="application/ld+json">
-  {
-    "@context":"https://schema.org",
-    "@type":"FAQPage",
-    "mainEntity":[
-      {"@type":"Question","name":"Iceface Tuning とは？","acceptedAnswer":{"@type":"Answer","text":"12平均律を基に黒鍵のみを+50セント上げる調律です。白鍵は通常の12平均律、黒鍵で微分音的な彩りを与えます。"}},
-      {"@type":"Question","name":"セント値は？","acceptedAnswer":{"@type":"Answer","text":"0,150,200,350,400,500,650,700,850,900,1050,1100,1200（オクターブ=1200c）。"}},
-      {"@type":"Question","name":"どうやって使う？","acceptedAnswer":{"@type":"Answer","text":"Scalaの.scl/.tun、MTS-ESP対応シンセで読み込みます。Surge XTやVital等で利用可能。"}}
-    ]
-  }
-  </script>
 </head>
 <body>
-  <h1>Iceface Tuning (black keys +50c)</h1>
-  <p>微分音・GDC・AIによる創作を探求する新しい音の世界へようこそ。</p>
-
-  <div class="section">
-    <h2>Iceface Tuningとは</h2>
-    <p>
-      Iceface Tuning は、日本の作曲家 H. Wakabayashi によって提案された独自の微分音チューニングです。
-      ハ長調を基準とした場合、すべての黒鍵（シャープ/フラット）を約 <strong>+50 セント</strong>（四分音）とします。
-      白鍵は通常の12平均律のままなので、直感的に演奏できます。
-    </p>
-    <p>
-      これにより、旋律や和音に対して局所的なデチューン効果（コーラス感）やダブリング的な効果が生まれ、
-      12平均律の中に自然に微分音を融合させることが可能になります。
-    </p>
-
-    <!-- セント一覧（機械抽出されやすい形で明記） -->
-    <div class="meta" aria-label="Cents list">
-      <strong>Cents:</strong>
-      0,150,200,350,400,500,650,700,850,900,1050,1100,1200
+  <div class="sparkle-bg" id="sparkleBg"></div>
+  
+  <div class="content">
+    <div class="header">
+      <h1>❄️ Iceface Tuning Keyboard</h1>
+      <p>黒鍵が平均律より50セント高くチューニングされています</p>
     </div>
-
-    <p style="margin-top:1em;">
-      派生として「Iced Lydian」「Iced Maqam Rast」などの<span>アイス化モード</span>もあり、
-      非西洋音楽にも応用が広がっています。
-    </p>
-  </div>
-
-  <!-- ダウンロード導線（後でリンクを差し替え） -->
-  <div class="section dl">
-    <h2>定義ファイル（Download）</h2>
-    <p>Scala / MTS-ESP などで読み込めます。</p>
-    <ul>
-      <li><a href="#" download>Iceface_Tuning.scl</a>（Scala scale）</li> <!-- TODO: 実ファイルに差し替え -->
-      <li><a href="#" download>Iceface_Tuning.tun</a>（AnaMark .tun）</li> <!-- TODO -->
-      <li><a href="#" download>Iceface_Tuning.mts</a>（MTS-ESP）</li> <!-- TODO -->
-    </ul>
-    <!-- DOI が取れたら表示 -->
-    <!-- <p>DOI: <a href="https://doi.org/10.5281/zenodo.XXXXX">10.5281/zenodo.XXXXX</a></p> -->
-  </div>
-
-  <!-- 体験デモ（既存） -->
-  <div class="section">
-    <h2>Iceface Tuning を体験する</h2>
-    <div class="piano-player">
-      <div class="status" id="status">まず「音声を有効化」ボタンをタップしてください（iPhone必須）</div>
-
-      <div class="controls">
-        <div class="control-group">
-          <button onclick="initAudio()" class="audio-init" id="initButton" style="background:#ff9800;font-size:18px;padding:15px 30px;">🔊 音声を有効化（タップ必須）</button>
-        </div>
-        <div class="control-group">
-          <label>音量:</label>
-          <input type="range" id="volume" min="0" max="100" value="30">
-          <span id="volumeValue">30%</span>
-        </div>
-        <div class="control-group">
-          <label>オクターブ:</label>
-          <input type="range" id="octave" min="3" max="6" value="4">
-          <span id="octaveValue">4</span>
-        </div>
-        <div class="control-group">
-          <button onclick="playDemoMelody()" class="demo-melody" disabled id="demoButton">デモメロディを再生</button>
-          <button onclick="stopAll()" disabled id="stopButton">すべて停止</button>
+    
+    <div class="info-bar">
+      <span class="info-text">🎹 3オクターブ+1</span>
+      <span class="current-note" id="currentNote">--</span>
+      <span class="info-text">C4 - C7</span>
+    </div>
+    
+    <div class="keyboard-container">
+      <div class="keyboard" id="keyboard"></div>
+      <div class="cents-info">
+        Cents: 0, 150, 200, 350, 400, 500, 650, 700, 850, 900, 1050, 1100
+      </div>
+    </div>
+    
+    <div class="controls">
+      <div class="control-card" style="grid-column: span 2;">
+        <h3>🎚️ 音量</h3>
+        <div class="slider-row">
+          <input type="range" id="volume" min="0" max="100" value="50" class="slider" style="flex:1;">
+          <span class="slider-val" id="volumeVal">50%</span>
         </div>
       </div>
-
-      <div class="piano-keyboard" id="keyboard"></div>
-
-      <p style="text-align:center;color:#666;font-size:.9em;">
-        <strong>青いキー</strong>がアイス・ノート（+50 セント）です。通常の黒鍵と聴き比べてください。
-      </p>
-      <div class="mobile-instruction">スマートフォンでは鍵盤を横スクロールできます。横向きにすると演奏しやすいです。</div>
     </div>
+    
+    <button class="settings-toggle" id="effectsToggle">🎛️ エフェクト ▼</button>
+    <div class="settings-panel" id="effectsPanel">
+      <div class="effect-section">
+        <h4>🔊 ディレイ</h4>
+        <div class="toggle-row">
+          <label><input type="checkbox" id="delayOn"> ON</label>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Time</span>
+          <input type="range" id="delayTime" min="0.05" max="1.0" step="0.05" value="0.3" class="slider">
+          <span class="slider-val" id="delayTimeVal">0.3s</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Feedback</span>
+          <input type="range" id="delayFeedback" min="0" max="0.9" step="0.05" value="0.4" class="slider">
+          <span class="slider-val" id="delayFeedbackVal">0.4</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Wet</span>
+          <input type="range" id="delayWet" min="0" max="1" step="0.05" value="0.3" class="slider">
+          <span class="slider-val" id="delayWetVal">0.3</span>
+        </div>
+      </div>
+      
+      <div class="effect-section">
+        <h4>🌊 リバーブ</h4>
+        <div class="toggle-row">
+          <label><input type="checkbox" id="reverbOn"> ON</label>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Decay</span>
+          <input type="range" id="reverbDecay" min="0.5" max="5.0" step="0.1" value="2.0" class="slider">
+          <span class="slider-val" id="reverbDecayVal">2.0s</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Wet</span>
+          <input type="range" id="reverbWet" min="0" max="1" step="0.05" value="0.3" class="slider">
+          <span class="slider-val" id="reverbWetVal">0.3</span>
+        </div>
+      </div>
+      
+      <div class="effect-section">
+        <h4>🔔 リングモジュレーター</h4>
+        <div class="toggle-row">
+          <label><input type="checkbox" id="ringModOn"> ON</label>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Freq</span>
+          <input type="range" id="ringModFreq" min="20" max="2000" step="10" value="440" class="slider">
+          <span class="slider-val" id="ringModFreqVal">440Hz</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Wet</span>
+          <input type="range" id="ringModWet" min="0" max="1" step="0.05" value="0.5" class="slider">
+          <span class="slider-val" id="ringModWetVal">0.5</span>
+        </div>
+      </div>
+      
+      <div class="effect-section">
+        <h4>📊 コンプレッサー</h4>
+        <div class="toggle-row">
+          <label><input type="checkbox" id="compOn"> ON</label>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Threshold</span>
+          <input type="range" id="compThreshold" min="-60" max="0" step="1" value="-24" class="slider">
+          <span class="slider-val" id="compThresholdVal">-24dB</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Ratio</span>
+          <input type="range" id="compRatio" min="1" max="20" step="0.5" value="4" class="slider">
+          <span class="slider-val" id="compRatioVal">4:1</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="footer">❄️ Iceface Tuning • Pure Sine Wave + ADSR + Effects ❄️</div>
   </div>
 
-  <div class="section">
-    <h2>使用例（Iceface Maqam Rast）</h2>
-<pre>
-C - C
-D♭ +50c (ice note)
-D - D
-E♭ - E♭ (ice note)
-E -50c
-F - F
-G♭ +50c (ice note)
-G - G
-A♭ +50c (ice note)
-A - A
-B - B (ice note)
-B -50c
-</pre>
-  </div>
+<script>
+const $ = id => document.getElementById(id);
 
-  <div class="section">
-    <h2>H. Wakabayashiについて</h2>
-    <p>H. Wakabayashi は作曲家・サウンドアーティスト。YouTubeやSoundCloudで Iceface Tuning を用いた作品を公開しています。</p>
-    <p>
-      <a href="http://bit.ly/1TxRGAd" target="_blank" rel="noopener">▶ SoundCloudで聴く</a><br>
-      <a href="http://mewomihi.tumblr.com/" target="_blank" rel="noopener">▶ Tumblrの記事を読む</a>
-    </p>
-  </div>
+// Iceface Tuning: 黒鍵は+50セント
+// Cents: C=0, C#=150, D=200, D#=350, E=400, F=500, F#=650, G=700, G#=850, A=900, A#=1050, B=1100
+const NOTE_DATA = [
+  { note: 'C', type: 'white', ice: false, cents: 0 },
+  { note: 'C#', type: 'black', ice: true, cents: 150 },
+  { note: 'D', type: 'white', ice: false, cents: 200 },
+  { note: 'D#', type: 'black', ice: true, cents: 350 },
+  { note: 'E', type: 'white', ice: false, cents: 400 },
+  { note: 'F', type: 'white', ice: false, cents: 500 },
+  { note: 'F#', type: 'black', ice: true, cents: 650 },
+  { note: 'G', type: 'white', ice: false, cents: 700 },
+  { note: 'G#', type: 'black', ice: true, cents: 850 },
+  { note: 'A', type: 'white', ice: false, cents: 900 },
+  { note: 'A#', type: 'black', ice: true, cents: 1050 },
+  { note: 'B', type: 'white', ice: false, cents: 1100 },
+];
 
-  <div class="section">
-    <h2>特徴と影響</h2>
-    <ul>
-      <li>Native Instruments Kontakt や DAW の microtuning 機能を活用</li>
-      <li>Sevish やXenharmonicコミュニティから注目</li>
-      <li>Lumatone を用いたライブ演奏</li>
-      <li>哲学・ユーモア・教育的視点のある音律設計</li>
-    </ul>
-  </div>
+let audioCtx = null;
+let masterGain = null;
+let delayNode = null;
+let delayFeedback = null;
+let delayWetGain = null;
+let convolverNode = null;
+let reverbWetGain = null;
+let reverbDryGain = null;
+let ringModOsc = null;
+let ringModGain = null;
+let ringModWetGain = null;
+let ringModDryGain = null;
+let compressorNode = null;
 
-  <div class="section">
-    <h2>今後の展望</h2>
-    <p>「Ice Tonality」や「Iceface Maqam」など、AIやGDCと連携しながら新しい音楽世界の開拓を進めています。</p>
-  </div>
+let volume = 0.5;
+let activeNotes = new Map();
 
-  <footer>
-    &copy; 2025 H. Wakabayashi — Iceface Tuning Project. All rights reserved.
-  </footer>
+let effects = {
+  delay: { on: false, time: 0.3, feedback: 0.4, wet: 0.3 },
+  reverb: { on: false, decay: 2.0, wet: 0.3 },
+  ringMod: { on: false, freq: 440, wet: 0.5 },
+  compressor: { on: false, threshold: -24, ratio: 4 }
+};
 
-  <!-- Web Audio / Piano JS（既存） -->
-  <script>
-    let audioContext; let currentNotes = new Map(); let gainNode; let isAudioInitialized = false;
-    const baseFrequencies = {'C':261.63,'C#':277.18,'D':293.66,'D#':311.13,'E':329.63,'F':349.23,'F#':369.99,'G':392.00,'G#':415.30,'A':440.00,'A#':466.16,'B':493.88};
-    const centToRatio = (cents)=>Math.pow(2, cents/1200); const iceNoteRatio = centToRatio(50);
+function initAudio() {
+  if (audioCtx) return audioCtx;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  setupEffects();
+  return audioCtx;
+}
 
-    function initAudio(){
-      try{
-        audioContext = new (window.AudioContext||window.webkitAudioContext)();
-        gainNode = audioContext.createGain(); gainNode.connect(audioContext.destination);
-        updateVolume(); isAudioInitialized = true;
-        const osc = audioContext.createOscillator(); const tmp = audioContext.createGain();
-        tmp.gain.setValueAtTime(0, audioContext.currentTime); osc.connect(tmp); tmp.connect(audioContext.destination);
-        osc.start(); osc.stop(audioContext.currentTime+0.1);
-        document.getElementById('demoButton').disabled=false;
-        document.getElementById('stopButton').disabled=false;
-        document.getElementById('initButton').style.display='none';
-        document.getElementById('status').textContent='鍵盤をタップして音を再生できます';
-      }catch(e){
-        console.error('Audio init failed', e);
-        document.getElementById('status').textContent='オーディオの初期化に失敗。Safariをお試しください。';
+function createReverbIR(decay, duration) {
+  const length = audioCtx.sampleRate * duration;
+  const buffer = audioCtx.createBuffer(2, length, audioCtx.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = buffer.getChannelData(ch);
+    for (let i = 0; i < length; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+    }
+  }
+  return buffer;
+}
+
+function setupEffects() {
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = volume;
+  
+  compressorNode = audioCtx.createDynamicsCompressor();
+  compressorNode.threshold.value = effects.compressor.threshold;
+  compressorNode.ratio.value = effects.compressor.ratio;
+  compressorNode.attack.value = 0.003;
+  compressorNode.release.value = 0.25;
+  
+  masterGain.connect(audioCtx.destination);
+  
+  // Delay
+  delayNode = audioCtx.createDelay(5.0);
+  delayNode.delayTime.value = effects.delay.time;
+  delayFeedback = audioCtx.createGain();
+  delayFeedback.gain.value = effects.delay.feedback;
+  delayWetGain = audioCtx.createGain();
+  delayWetGain.gain.value = effects.delay.on ? effects.delay.wet : 0;
+  
+  delayNode.connect(delayFeedback);
+  delayFeedback.connect(delayNode);
+  delayNode.connect(delayWetGain);
+  delayWetGain.connect(masterGain);
+  
+  // Reverb
+  convolverNode = audioCtx.createConvolver();
+  convolverNode.buffer = createReverbIR(effects.reverb.decay, 2.5);
+  reverbWetGain = audioCtx.createGain();
+  reverbWetGain.gain.value = effects.reverb.on ? effects.reverb.wet : 0;
+  reverbDryGain = audioCtx.createGain();
+  reverbDryGain.gain.value = 1.0;
+  
+  convolverNode.connect(reverbWetGain);
+  reverbWetGain.connect(masterGain);
+  reverbDryGain.connect(masterGain);
+  
+  // Ring Modulator
+  ringModOsc = audioCtx.createOscillator();
+  ringModOsc.type = 'sine';
+  ringModOsc.frequency.value = effects.ringMod.freq;
+  ringModGain = audioCtx.createGain();
+  ringModGain.gain.value = 0;
+  ringModWetGain = audioCtx.createGain();
+  ringModWetGain.gain.value = effects.ringMod.on ? effects.ringMod.wet : 0;
+  ringModDryGain = audioCtx.createGain();
+  ringModDryGain.gain.value = 1.0;
+  
+  ringModOsc.connect(ringModGain.gain);
+  ringModGain.connect(ringModWetGain);
+  ringModWetGain.connect(masterGain);
+  ringModDryGain.connect(masterGain);
+  ringModOsc.start();
+}
+
+function centsToFreq(cents, octave) {
+  // A4 = 440Hz, A is at 900 cents in our scale
+  // C4 = 440 * 2^(-9/12) = 261.63Hz
+  const c4 = 261.63;
+  const octaveOffset = octave - 4;
+  return c4 * Math.pow(2, octaveOffset) * Math.pow(2, cents / 1200);
+}
+
+function playNote(noteData, octave) {
+  const ctx = initAudio();
+  const noteKey = `${noteData.note}${octave}`;
+  
+  if (activeNotes.has(noteKey)) return;
+  
+  const now = ctx.currentTime;
+  const freq = centsToFreq(noteData.cents, octave);
+  const vol = volume * 0.4;
+  
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, now);
+  
+  const gain = ctx.createGain();
+  
+  // ADSR Envelope
+  const attack = 0.005;
+  const decay = 0.3;
+  const sustainLevel = 0.3;
+  
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(vol, now + attack);
+  gain.gain.exponentialRampToValueAtTime(Math.max(0.001, vol * sustainLevel), now + attack + decay);
+  
+  osc.connect(gain);
+  
+  // Connect to effects
+  gain.connect(reverbDryGain);
+  gain.connect(convolverNode);
+  gain.connect(delayNode);
+  
+  if (effects.ringMod.on) {
+    gain.connect(ringModGain);
+    gain.connect(ringModDryGain);
+  } else {
+    gain.connect(ringModDryGain);
+  }
+  
+  osc.start(now);
+  
+  activeNotes.set(noteKey, { osc, gain, noteData, octave });
+  
+  // Update display
+  const displayNote = noteData.ice ? `${noteData.note} ❄️ (+50c)` : noteData.note;
+  $('currentNote').textContent = `${displayNote}${octave}`;
+}
+
+function stopNote(noteData, octave) {
+  const noteKey = `${noteData.note}${octave}`;
+  const active = activeNotes.get(noteKey);
+  
+  if (!active) return;
+  
+  const { osc, gain } = active;
+  const now = audioCtx.currentTime;
+  const release = 0.5;
+  
+  gain.gain.cancelScheduledValues(now);
+  gain.gain.setValueAtTime(gain.gain.value, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + release);
+  
+  osc.stop(now + release + 0.1);
+  activeNotes.delete(noteKey);
+}
+
+function generateKeyboard() {
+  const keyboard = $('keyboard');
+  keyboard.innerHTML = '';
+  
+  // C4からB6までの3オクターブ + C7
+  for (let oct = 4; oct <= 6; oct++) {
+    NOTE_DATA.forEach(nd => {
+      createKey(keyboard, nd, oct);
+    });
+  }
+  
+  // 最後にC7を追加
+  const c7Data = NOTE_DATA[0]; // C
+  createKey(keyboard, c7Data, 7);
+}
+
+function createKey(keyboard, nd, oct) {
+  const key = document.createElement('div');
+  key.className = `key ${nd.type}${nd.ice ? ' ice' : ''}`;
+  key.dataset.note = nd.note;
+  key.dataset.octave = oct;
+  
+  if (nd.type === 'white') {
+    key.innerHTML = `<span class="note-label">${nd.note}${oct}</span>`;
+  } else {
+    key.innerHTML = `<span class="ice-icon">❄️</span><span class="note-label">${nd.note}</span>`;
+  }
+  
+  // Touch events
+  key.addEventListener('touchstart', e => {
+    e.preventDefault();
+    key.classList.add('active');
+    playNote(nd, oct);
+  });
+  key.addEventListener('touchend', e => {
+    e.preventDefault();
+    key.classList.remove('active');
+    stopNote(nd, oct);
+  });
+  key.addEventListener('touchcancel', e => {
+    e.preventDefault();
+    key.classList.remove('active');
+    stopNote(nd, oct);
+  });
+  
+  // Mouse events
+  key.addEventListener('mousedown', () => {
+    key.classList.add('active');
+    playNote(nd, oct);
+  });
+  key.addEventListener('mouseup', () => {
+    key.classList.remove('active');
+    stopNote(nd, oct);
+  });
+  key.addEventListener('mouseleave', () => {
+    if (key.classList.contains('active')) {
+      key.classList.remove('active');
+      stopNote(nd, oct);
+    }
+  });
+  
+  keyboard.appendChild(key);
+}
+
+function createSparkles() {
+  const bg = $('sparkleBg');
+  const stars = ['✦', '✧', '⋆', '｡', '˚', '✩', '⊹'];
+  
+  for (let i = 0; i < 20; i++) {
+    const star = document.createElement('span');
+    star.className = 'star';
+    star.textContent = stars[Math.floor(Math.random() * stars.length)];
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.animationDelay = Math.random() * 3 + 's';
+    star.style.color = ['#ffb6c1', '#add8e6', '#ffe4e1', '#e6e6fa'][Math.floor(Math.random() * 4)];
+    bg.appendChild(star);
+  }
+}
+
+function updateDelayParams() {
+  if (!delayNode) return;
+  delayNode.delayTime.value = effects.delay.time;
+  delayFeedback.gain.value = effects.delay.feedback;
+  delayWetGain.gain.value = effects.delay.on ? effects.delay.wet : 0;
+}
+
+function updateReverbParams() {
+  if (!convolverNode) return;
+  convolverNode.buffer = createReverbIR(effects.reverb.decay, 2.5);
+  reverbWetGain.gain.value = effects.reverb.on ? effects.reverb.wet : 0;
+}
+
+function updateRingModParams() {
+  if (!ringModOsc) return;
+  ringModOsc.frequency.value = effects.ringMod.freq;
+  ringModWetGain.gain.value = effects.ringMod.on ? effects.ringMod.wet : 0;
+  ringModDryGain.gain.value = effects.ringMod.on ? (1 - effects.ringMod.wet) : 1.0;
+}
+
+function updateCompressorParams() {
+  if (!compressorNode) return;
+  compressorNode.threshold.value = effects.compressor.threshold;
+  compressorNode.ratio.value = effects.compressor.ratio;
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  createSparkles();
+  generateKeyboard();
+  
+  // Volume control
+  $('volume').addEventListener('input', e => {
+    volume = e.target.value / 100;
+    $('volumeVal').textContent = e.target.value + '%';
+    if (masterGain) masterGain.gain.value = volume;
+  });
+  
+  // Effects toggle
+  $('effectsToggle').addEventListener('click', () => {
+    const panel = $('effectsPanel');
+    const showing = panel.classList.toggle('show');
+    $('effectsToggle').textContent = `🎛️ エフェクト ${showing ? '▲' : '▼'}`;
+  });
+  
+  // Delay controls
+  $('delayOn').addEventListener('change', e => {
+    effects.delay.on = e.target.checked;
+    updateDelayParams();
+  });
+  $('delayTime').addEventListener('input', e => {
+    effects.delay.time = parseFloat(e.target.value);
+    $('delayTimeVal').textContent = e.target.value + 's';
+    updateDelayParams();
+  });
+  $('delayFeedback').addEventListener('input', e => {
+    effects.delay.feedback = parseFloat(e.target.value);
+    $('delayFeedbackVal').textContent = e.target.value;
+    updateDelayParams();
+  });
+  $('delayWet').addEventListener('input', e => {
+    effects.delay.wet = parseFloat(e.target.value);
+    $('delayWetVal').textContent = e.target.value;
+    updateDelayParams();
+  });
+  
+  // Reverb controls
+  $('reverbOn').addEventListener('change', e => {
+    effects.reverb.on = e.target.checked;
+    updateReverbParams();
+  });
+  $('reverbDecay').addEventListener('input', e => {
+    effects.reverb.decay = parseFloat(e.target.value);
+    $('reverbDecayVal').textContent = e.target.value + 's';
+    updateReverbParams();
+  });
+  $('reverbWet').addEventListener('input', e => {
+    effects.reverb.wet = parseFloat(e.target.value);
+    $('reverbWetVal').textContent = e.target.value;
+    updateReverbParams();
+  });
+  
+  // Ring Mod controls
+  $('ringModOn').addEventListener('change', e => {
+    effects.ringMod.on = e.target.checked;
+    updateRingModParams();
+  });
+  $('ringModFreq').addEventListener('input', e => {
+    effects.ringMod.freq = parseFloat(e.target.value);
+    $('ringModFreqVal').textContent = e.target.value + 'Hz';
+    updateRingModParams();
+  });
+  $('ringModWet').addEventListener('input', e => {
+    effects.ringMod.wet = parseFloat(e.target.value);
+    $('ringModWetVal').textContent = e.target.value;
+    updateRingModParams();
+  });
+  
+  // Compressor controls
+  $('compOn').addEventListener('change', e => {
+    effects.compressor.on = e.target.checked;
+    if (audioCtx) {
+      if (e.target.checked) {
+        masterGain.disconnect();
+        masterGain.connect(compressorNode);
+        compressorNode.connect(audioCtx.destination);
+      } else {
+        masterGain.disconnect();
+        try { compressorNode.disconnect(); } catch(e) {}
+        masterGain.connect(audioCtx.destination);
       }
     }
-
-    function generateKeyboard(){
-      const keyboard=document.getElementById('keyboard');
-      const keys=[{note:'C',type:'white',ice:false},{note:'C#',type:'black',ice:true},{note:'D',type:'white',ice:false},{note:'D#',type:'black',ice:true},{note:'E',type:'white',ice:false},{note:'F',type:'white',ice:false},{note:'F#',type:'black',ice:true},{note:'G',type:'white',ice:false},{note:'G#',type:'black',ice:true},{note:'A',type:'white',ice:false},{note:'A#',type:'black',ice:true},{note:'B',type:'white',ice:false}];
-      keyboard.innerHTML='';
-      keys.forEach(k=>{
-        const key=document.createElement('div');
-        key.className=`key ${k.type}${k.ice?' ice':''}`;
-        key.textContent=k.note+(k.ice?' ❄':''); key.dataset.note=k.note; key.dataset.ice=k.ice;
-        key.addEventListener('mousedown',()=>playNote(k.note,k.ice));
-        key.addEventListener('mouseup',()=>stopNote(k.note));
-        key.addEventListener('mouseleave',()=>stopNote(k.note));
-        key.addEventListener('touchstart',e=>{e.preventDefault(); playNote(k.note,k.ice); key.style.opacity='0.7';});
-        key.addEventListener('touchend',e=>{e.preventDefault(); stopNote(k.note); key.style.opacity='1';});
-        key.addEventListener('touchcancel',e=>{e.preventDefault(); stopNote(k.note); key.style.opacity='1';});
-        keyboard.appendChild(key);
-      });
-    }
-
-    function playNote(note,isIce=false){
-      if(!isAudioInitialized){ document.getElementById('status').textContent='まず「音声を有効化」をタップしてください'; return; }
-      try{
-        const octave=parseInt(document.getElementById('octave').value);
-        const base=baseFrequencies[note]; const mult=Math.pow(2,octave-4);
-        let freq=base*mult; if(isIce){ freq *= iceNoteRatio; }
-        const osc=audioContext.createOscillator(); const ng=audioContext.createGain();
-        osc.type='triangle'; osc.frequency.setValueAtTime(freq,audioContext.currentTime);
-        ng.gain.setValueAtTime(0,audioContext.currentTime); ng.gain.linearRampToValueAtTime(0.1,audioContext.currentTime+0.05);
-        osc.connect(ng); ng.connect(gainNode); osc.start();
-        currentNotes.set(note,{oscillator:osc,gainNode:ng});
-        const el=document.querySelector(`[data-note="${note}"]`); if(el){ el.classList.add('active'); }
-      }catch(e){ console.error('playNote error',e); }
-    }
-
-    function stopNote(note){
-      if(currentNotes.has(note)){
-        const {oscillator, gainNode:ng}=currentNotes.get(note);
-        ng.gain.linearRampToValueAtTime(0,audioContext.currentTime+0.1);
-        setTimeout(()=>{ try{oscillator.stop();}catch(_){} },100);
-        currentNotes.delete(note);
+  });
+  $('compThreshold').addEventListener('input', e => {
+    effects.compressor.threshold = parseFloat(e.target.value);
+    $('compThresholdVal').textContent = e.target.value + 'dB';
+    updateCompressorParams();
+  });
+  $('compRatio').addEventListener('input', e => {
+    effects.compressor.ratio = parseFloat(e.target.value);
+    $('compRatioVal').textContent = e.target.value + ':1';
+    updateCompressorParams();
+  });
+  
+  // Keyboard input (固定: C4から開始)
+  const keyMap = {
+    'a': { note: 'C', oct: 4 },
+    'w': { note: 'C#', oct: 4 },
+    's': { note: 'D', oct: 4 },
+    'e': { note: 'D#', oct: 4 },
+    'd': { note: 'E', oct: 4 },
+    'f': { note: 'F', oct: 4 },
+    't': { note: 'F#', oct: 4 },
+    'g': { note: 'G', oct: 4 },
+    'y': { note: 'G#', oct: 4 },
+    'h': { note: 'A', oct: 4 },
+    'u': { note: 'A#', oct: 4 },
+    'j': { note: 'B', oct: 4 },
+    'k': { note: 'C', oct: 5 },
+    'o': { note: 'C#', oct: 5 },
+    'l': { note: 'D', oct: 5 },
+    'p': { note: 'D#', oct: 5 },
+    ';': { note: 'E', oct: 5 },
+    "'": { note: 'F', oct: 5 },
+  };
+  
+  const pressedKeys = new Set();
+  
+  document.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    if (keyMap[k] && !pressedKeys.has(k)) {
+      pressedKeys.add(k);
+      const { note, oct } = keyMap[k];
+      const nd = NOTE_DATA.find(n => n.note === note);
+      if (nd) {
+        playNote(nd, oct);
+        const keyEl = document.querySelector(`[data-note="${note}"][data-octave="${oct}"]`);
+        if (keyEl) keyEl.classList.add('active');
       }
-      const el=document.querySelector(`[data-note="${note}"]`); if(el){ el.classList.remove('active'); }
     }
-
-    function stopAll(){ currentNotes.forEach((_,n)=>stopNote(n)); }
-    function updateVolume(){ const v=document.getElementById('volume').value/100; document.getElementById('volumeValue').textContent=document.getElementById('volume').value+'%'; if(gainNode){ gainNode.gain.setValueAtTime(v*0.3,audioContext.currentTime);} }
-    function updateOctave(){ document.getElementById('octaveValue').textContent=document.getElementById('octave').value; }
-    function playDemoMelody(){
-      if(!isAudioInitialized){ document.getElementById('status').textContent='まず音声を有効化してください'; return; }
-      const melody=[{note:'C',ice:false,duration:500},{note:'D#',ice:true,duration:500},{note:'E',ice:false,duration:500},{note:'F#',ice:true,duration:500},{note:'G',ice:false,duration:500},{note:'A#',ice:true,duration:500},{note:'B',ice:false,duration:500},{note:'C',ice:false,duration:1000}];
-      let t=0; melody.forEach(m=>{ setTimeout(()=>{ playNote(m.note,m.ice); setTimeout(()=>stopNote(m.note),m.duration-50); }, t); t+=m.duration; });
+  });
+  
+  document.addEventListener('keyup', e => {
+    const k = e.key.toLowerCase();
+    if (keyMap[k]) {
+      pressedKeys.delete(k);
+      const { note, oct } = keyMap[k];
+      const nd = NOTE_DATA.find(n => n.note === note);
+      if (nd) {
+        stopNote(nd, oct);
+        const keyEl = document.querySelector(`[data-note="${note}"][data-octave="${oct}"]`);
+        if (keyEl) keyEl.classList.remove('active');
+      }
     }
-
-    document.getElementById('volume').addEventListener('input',updateVolume);
-    document.getElementById('octave').addEventListener('input',updateOctave);
-    document.addEventListener('keydown',e=>{
-      const map={'a':'C','w':'C#','s':'D','e':'D#','d':'E','f':'F','t':'F#','g':'G','y':'G#','h':'A','u':'A#','j':'B'};
-      const n=map[e.key.toLowerCase()]; if(n && !currentNotes.has(n)){ const ice=['C#','D#','F#','G#','A#'].includes(n); playNote(n,ice); }
-    });
-    document.addEventListener('keyup',e=>{
-      const map={'a':'C','w':'C#','s':'D','e':'D#','d':'E','f':'F','t':'F#','g':'G','y':'G#','h':'A','u':'A#','j':'B'};
-      const n=map[e.key.toLowerCase()]; if(n){ stopNote(n); }
-    });
-    document.addEventListener('DOMContentLoaded',()=>{
-      generateKeyboard(); updateVolume(); updateOctave();
-      if(window.innerWidth<=768){ document.getElementById('status').textContent='鍵盤をタップして音を再生できます'; }
-      else{ document.getElementById('status').textContent='キーボード: A-S-D-F-G-H-J（白鍵）、W-E-T-Y-U（アイス）'; }
-    });
-  </script>
+  });
+});
+</script>
 </body>
 </html>
