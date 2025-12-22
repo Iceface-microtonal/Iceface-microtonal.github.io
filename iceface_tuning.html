@@ -567,8 +567,8 @@ function playNote(noteData, octave) {
   
   // ADSR Envelope
   const attack = 0.005;
-  const decay = 0.3;
-  const sustainLevel = 0.3;
+  const decay = 0.7;
+  const sustainLevel = 0.7;
   
   gain.gain.setValueAtTime(0, now);
   gain.gain.linearRampToValueAtTime(vol, now + attack);
