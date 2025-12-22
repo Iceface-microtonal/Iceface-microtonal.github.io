@@ -90,7 +90,7 @@
     
     .keyboard {
       display: flex;
-      justify-content: flex-start;
+      justify-content: center;
       position: relative;
       height: 180px;
       min-width: fit-content;
@@ -133,11 +133,6 @@
       padding-bottom: 8px;
       border: 1px solid #000;
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    }
-    
-    .key.final-c {
-      border-left: 2px solid #42a5f5;
-      background: linear-gradient(180deg, #f0f8ff 0%, #e8f4ff 100%);
     }
     
     .key.ice {
@@ -322,7 +317,7 @@
   <div class="content">
     <div class="header">
       <h1>❄️ Iceface Tuning Keyboard</h1>
-      <p>黒鍵が平均律より+50セント高くチューニングされています</p>
+      <p>黒鍵 +50セント ✦ 微分音の世界へ</p>
     </div>
     
     <div class="info-bar">
@@ -572,8 +567,8 @@ function playNote(noteData, octave) {
   
   // ADSR Envelope
   const attack = 0.005;
-  const decay = 0.7;
-  const sustainLevel = 0.7;
+  const decay = 0.3;
+  const sustainLevel = 0.3;
   
   gain.gain.setValueAtTime(0, now);
   gain.gain.linearRampToValueAtTime(vol, now + attack);
@@ -633,12 +628,12 @@ function generateKeyboard() {
   
   // 最後にC7を追加
   const c7Data = NOTE_DATA[0]; // C
-  createKey(keyboard, c7Data, 7, true);
+  createKey(keyboard, c7Data, 7);
 }
 
-function createKey(keyboard, nd, oct, isFinalC = false) {
+function createKey(keyboard, nd, oct) {
   const key = document.createElement('div');
-  key.className = `key ${nd.type}${nd.ice ? ' ice' : ''}${isFinalC ? ' final-c' : ''}`;
+  key.className = `key ${nd.type}${nd.ice ? ' ice' : ''}`;
   key.dataset.note = nd.note;
   key.dataset.octave = oct;
   
