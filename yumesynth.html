@@ -658,11 +658,11 @@
     <div class="studio">
         <div class="synth">
             <img src="https://iceface-microtonal.github.io/toys.PNG" alt="ICEFACE TOYS" class="synth-logo">
-            <div class="brand">ICEFACE TOYS</div>
+            <div class="brand">Yume De Mita OTO</div>
             
             <div class="sliders-panel">
                 <div style="text-align: center; color: #FF85A2; font-size: 10px; margin-bottom: 8px; font-weight: bold;">
-                    ⭐ SOUND CONTROL ⭐ 音を自在に操れ！夢のツマミを回せ！
+                    ⭐ SOUND CONTROL ⭐ 音を自在に操ろ！夢のツマミを回そ！
                 </div>
                 <div class="slider-row">
                     <div class="slider-container">
@@ -738,7 +738,7 @@
 
             <div class="keyboard">
                 <div style="text-align: center; color: #C485FF; font-size: 10px; margin-bottom: 8px; font-weight: bold;">
-                    🎹 DREAM KEYBOARD 🎹 弾け！奏でろ！夢のメロディー！
+                    🎹 DREAM KEYBOARD 🎹 弾け！奏でろ！夢見のメロディー！
                 </div>
                 <div class="keys">
                     <div class="white-key" data-note="C4">
@@ -834,7 +834,7 @@
                 <div class="footswitch" id="reverb-switch">
                     <span class="footswitch-label">ON/OFF</span>
                 </div>
-                <div class="pedal-footer">🎵 REVERB IS LOVE 🎵 踏め！夢を広げろ！</div>
+                <div class="pedal-footer">🎵 REVERB IS LOVE 🎵 踏も！夢を広げろ！</div>
             </div>
 
             <!-- ディレイペダル -->
@@ -846,10 +846,10 @@
                     <span class="pedal-name-jp">🔁 遅延 〜夢のこだま〜 🔁</span>
                 </div>
                 <div class="pedal-messages">
-                    <span class="msg-big msg-pink">★ 繰り返せ！夢の鼓動！★</span>
+                    <span class="msg-big msg-pink">★ 繰り返せ！夢見の鼓動！★</span>
                     <span class="msg-yellow">やまびこのように響け！</span><br>
                     <span class="msg-cyan">REPEAT YOUR DREAMS</span><br>
-                    <span>過去と未来をつなげ！</span>
+                    <span>過去と未来をつなご！</span>
                     <span class="msg-pink">∞ INFINITE ECHO ∞</span>
                 </div>
                 <div class="knobs-row">
@@ -1095,10 +1095,17 @@
             }
         }
 
-        // Keyboard event handlers
+        // Keyboard event handlers with glissando support
+        let isMouseDown = false;
+        let currentTouchKey = null;
+
+        document.addEventListener('mousedown', () => { isMouseDown = true; });
+        document.addEventListener('mouseup', () => { isMouseDown = false; });
+
         document.querySelectorAll('.white-key, .black-key:not(.hidden)').forEach(key => {
             const note = key.dataset.note;
             
+            // Mouse events
             key.addEventListener('mousedown', (e) => {
                 e.preventDefault();
                 key.classList.add('active');
@@ -1117,17 +1124,62 @@
                 }
             });
 
+            // Glissando: trigger note when mouse enters while button is held
+            key.addEventListener('mouseenter', (e) => {
+                if (isMouseDown) {
+                    key.classList.add('active');
+                    playNote(note);
+                }
+            });
+
+            // Touch events
             key.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 key.classList.add('active');
                 playNote(note);
+                currentTouchKey = key;
             });
 
             key.addEventListener('touchend', (e) => {
                 e.preventDefault();
                 key.classList.remove('active');
                 stopNote(note);
+                currentTouchKey = null;
             });
+        });
+
+        // Touch glissando handler
+        document.querySelector('.keys').addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            if (element && (element.classList.contains('white-key') || element.classList.contains('black-key'))) {
+                const newNote = element.dataset.note;
+                
+                if (element !== currentTouchKey && newNote) {
+                    // Stop previous note
+                    if (currentTouchKey) {
+                        const oldNote = currentTouchKey.dataset.note;
+                        currentTouchKey.classList.remove('active');
+                        stopNote(oldNote);
+                    }
+                    
+                    // Play new note
+                    element.classList.add('active');
+                    playNote(newNote);
+                    currentTouchKey = element;
+                }
+            }
+        });
+
+        document.querySelector('.keys').addEventListener('touchend', (e) => {
+            if (currentTouchKey) {
+                const note = currentTouchKey.dataset.note;
+                currentTouchKey.classList.remove('active');
+                stopNote(note);
+                currentTouchKey = null;
+            }
         });
 
         // Slider handling
