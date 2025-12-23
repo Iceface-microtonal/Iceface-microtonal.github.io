@@ -469,6 +469,69 @@
             margin-top: 4px;
         }
 
+        /* プリセットパネル */
+        .presets-panel {
+            width: 100%;
+            background: linear-gradient(180deg, 
+                rgba(255, 240, 245, 0.85) 0%, 
+                rgba(240, 248, 255, 0.85) 100%);
+            border-radius: 16px;
+            padding: 10px;
+            box-shadow: 
+                0 8px 25px rgba(200, 180, 220, 0.35),
+                inset 0 2px 0 rgba(255,255,255,0.6);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .presets-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: 14px;
+            color: #8B6090;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .presets-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .preset-btn {
+            background: linear-gradient(180deg, 
+                rgba(255, 255, 255, 0.9) 0%, 
+                rgba(240, 230, 250, 0.9) 100%);
+            border: 2px solid rgba(200, 180, 220, 0.4);
+            border-radius: 8px;
+            padding: 8px 3px;
+            cursor: pointer;
+            font-family: 'Kosugi Maru', sans-serif;
+            font-size: 9px;
+            color: #6B5090;
+            font-weight: bold;
+            transition: all 0.15s;
+            text-align: center;
+        }
+
+        .preset-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 6px rgba(180, 150, 200, 0.3);
+        }
+
+        .preset-btn .preset-icon {
+            font-size: 14px;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .preset-btn.active {
+            background: linear-gradient(180deg, 
+                rgba(255, 180, 200, 0.9) 0%, 
+                rgba(200, 180, 255, 0.9) 100%);
+            border-color: rgba(255, 150, 180, 0.6);
+        }
+
         .knobs-row {
             display: flex;
             justify-content: space-around;
@@ -610,11 +673,10 @@
     <div class="studio">
         <div class="synth">
             <img src="https://iceface-microtonal.github.io/toys.PNG" alt="ICEFACE TOYS" class="synth-logo">
-            <div class="brand">Yume DE mita OTO</div>
-            
+            <div class="brand">アイスフェイス🍨トイズ</div>            
             <div class="sliders-panel">
                 <div style="text-align: center; color: #FF85A2; font-size: 8px; margin-bottom: 5px; font-weight: bold;">
-                    ⭐ SOUND CONTROL ⭐ 夢のツマミを回そ！
+                    ⭐ SOUND CONTROL ⭐ 夢のツマミを回SO！
                 </div>
                 <div class="slider-row">
                     <div class="slider-container">
@@ -659,7 +721,7 @@
                     </div>
                 </div>
                 <div style="text-align: center; color: #6BFFB8; font-size: 7px; margin-top: 5px;">
-                    💚 君の夢感性で！ 💚
+                    💚 君の感性で！ 💚
                 </div>
             </div>
 
@@ -749,7 +811,7 @@
             </div>
 
             <div class="instructions">
-                🎹 鍵盤をタップで演奏！ 🎵 スライダーで音色変化！ ⭐ 君だけのサウンドを作れ！ 💫
+                🎹 鍵盤をタップで演奏！ 🎵 スライダーで音色変化！ ⭐ 君だけのサウンドを作Ro！ 💫
             </div>
         </div>
 
@@ -763,8 +825,8 @@
                     <span class="pedal-name-jp">🌌 残響 〜無限の空間〜 🌌</span>
                 </div>
                 <div class="pedal-messages">
-                    <span class="msg-big msg-yellow">★ 響け！夢の残響！★</span>
-                    <span class="msg-cyan">音は消えない！心に残る！</span><br>
+                    <span class="msg-big msg-yellow">★ 響こ！夢見の残響！★</span>
+                    <span class="msg-cyan">音は消えない！心に残ろ！</span><br>
                     <span class="msg-pink">広がれ無限大！</span>
                     <span>ECHO YOUR SOUL</span><br>
                     <span class="msg-yellow">⭐ SPACE IS YOURS ⭐</span>
@@ -786,7 +848,7 @@
                 <div class="footswitch" id="reverb-switch">
                     <span class="footswitch-label">ON/OFF</span>
                 </div>
-                <div class="pedal-footer">🎵 REVERB IS LOVE 🎵 踏んも！夢を広げろ！</div>
+                <div class="pedal-footer">🎵 REVERB IS LOVE 🎵 踏め！夢を広げろ！</div>
             </div>
 
             <!-- ディレイペダル -->
@@ -795,13 +857,13 @@
                 <div class="led-indicator led-off" id="delay-led"></div>
                 <div class="pedal-name">
                     DELAY
-                    <span class="pedal-name-jp">🔁 遅延 〜夢見のこだま〜 🔁</span>
+                    <span class="pedal-name-jp">🔁 遅延 〜夢実のこだま〜 🔁</span>
                 </div>
                 <div class="pedal-messages">
-                    <span class="msg-big msg-pink">★ 繰り返そ！夢の鼓動！★</span>
-                    <span class="msg-yellow">やまびこのように響けえ！</span><br>
+                    <span class="msg-big msg-pink">★ 繰り返そ！夢見の鼓動！★</span>
+                    <span class="msg-yellow">やまびこのように響ko！</span><br>
                     <span class="msg-cyan">REPEAT YOUR DREAMS</span><br>
-                    <span>過去と未来をつなげえ！</span>
+                    <span>過去と未来をつなGO！</span>
                     <span class="msg-pink">∞ INFINITE ECHO ∞</span>
                 </div>
                 <div class="knobs-row">
@@ -827,7 +889,46 @@
                 <div class="footswitch" id="delay-switch">
                     <span class="footswitch-label">ON/OFF</span>
                 </div>
-                <div class="pedal-footer">🎶 TIME IS ART 🎶 踏んで時を操ろ！</div>
+                <div class="pedal-footer">🎶 TIME IS ART 🎶 踏んで時を操れ！</div>
+            </div>
+        </div>
+
+        <!-- プリセットパネル -->
+        <div class="presets-panel">
+            <div class="presets-title">✨ PRESETS ✨</div>
+            <div class="presets-grid">
+                <button class="preset-btn" data-preset="lead">
+                    <span class="preset-icon">🎸</span>
+                    Lead
+                </button>
+                <button class="preset-btn" data-preset="pad">
+                    <span class="preset-icon">🌊</span>
+                    Pad
+                </button>
+                <button class="preset-btn" data-preset="pluck">
+                    <span class="preset-icon">🎻</span>
+                    Pluck
+                </button>
+                <button class="preset-btn" data-preset="strings">
+                    <span class="preset-icon">🎼</span>
+                    Strings
+                </button>
+                <button class="preset-btn" data-preset="bell">
+                    <span class="preset-icon">🔔</span>
+                    Bell
+                </button>
+                <button class="preset-btn" data-preset="retro">
+                    <span class="preset-icon">👾</span>
+                    Retro
+                </button>
+                <button class="preset-btn" data-preset="dreamy">
+                    <span class="preset-icon">💭</span>
+                    Dreamy
+                </button>
+                <button class="preset-btn" data-preset="init">
+                    <span class="preset-icon">🔄</span>
+                    Init
+                </button>
             </div>
         </div>
     </div>
@@ -852,7 +953,10 @@
             tailor: 0.5,
             gleam: 0.5,
             pujet: 0.5,
-            rate: 0.5
+            rate: 0.5,
+            attack: 0.02,    // Attack time (seconds)
+            fmAmount: 0,     // FM modulation amount
+            fmRatio: 2       // FM frequency ratio
         };
 
         // Effects parameters
@@ -942,11 +1046,15 @@
             const freq = noteFrequencies[note];
             if (!freq) return;
 
-            // Main oscillator
+            // Main oscillators
             const osc1 = audioCtx.createOscillator();
             const osc2 = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
             const filter = audioCtx.createBiquadFilter();
+            
+            // FM modulation oscillator (for bell sounds)
+            const fmOsc = audioCtx.createOscillator();
+            const fmGain = audioCtx.createGain();
             
             // Vibrato LFO
             const lfo = audioCtx.createOscillator();
@@ -963,6 +1071,11 @@
             osc2.frequency.value = freq;
             osc2.detune.value = params.tailor * 30 - 15;
 
+            // FM modulation setup
+            fmOsc.type = 'sine';
+            fmOsc.frequency.value = freq * params.fmRatio;
+            fmGain.gain.value = params.fmAmount * freq;
+
             // Filter based on love parameter
             filter.type = 'lowpass';
             filter.frequency.value = 200 + params.love * 4000;
@@ -978,6 +1091,10 @@
             lfoGain.connect(osc1.detune);
             lfoGain.connect(osc2.detune);
 
+            // FM modulation connection
+            fmOsc.connect(fmGain);
+            fmGain.connect(osc1.frequency);
+
             osc1.connect(filter);
             osc2.connect(filter);
             filter.connect(gainNode);
@@ -987,17 +1104,19 @@
             gainNode.connect(reverbNode);
             gainNode.connect(delayNode);
 
-            // Envelope
+            // Envelope with configurable attack
             const now = audioCtx.currentTime;
+            const attackTime = params.attack;
             gainNode.gain.setValueAtTime(0, now);
-            gainNode.gain.linearRampToValueAtTime(0.3, now + 0.02);
-            gainNode.gain.linearRampToValueAtTime(0.2, now + 0.1);
+            gainNode.gain.linearRampToValueAtTime(0.3, now + attackTime);
+            gainNode.gain.linearRampToValueAtTime(0.2, now + attackTime + 0.08);
 
             osc1.start(now);
             osc2.start(now);
+            fmOsc.start(now);
             lfo.start(now);
 
-            activeOscillators.set(note, { osc1, osc2, lfo, gainNode });
+            activeOscillators.set(note, { osc1, osc2, fmOsc, lfo, gainNode });
         }
 
         function stopNote(note) {
@@ -1019,6 +1138,7 @@
                 try {
                     oscs.osc1.stop();
                     oscs.osc2.stop();
+                    oscs.fmOsc.stop();
                     oscs.lfo.stop();
                 } catch(e) {}
                 activeOscillators.delete(note);
@@ -1049,6 +1169,7 @@
 
         // Keyboard event handlers with glissando support
         let isMouseDown = false;
+        let isTouching = false;
         let currentTouchKey = null;
 
         document.addEventListener('mousedown', () => { isMouseDown = true; });
@@ -1084,19 +1205,13 @@
                 }
             });
 
-            // Touch events
+            // Touch events - only handle start, let the global handlers manage the rest
             key.addEventListener('touchstart', (e) => {
                 e.preventDefault();
+                isTouching = true;
                 key.classList.add('active');
                 playNote(note);
                 currentTouchKey = key;
-            });
-
-            key.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                key.classList.remove('active');
-                stopNote(note);
-                currentTouchKey = null;
             });
         });
 
@@ -1125,12 +1240,24 @@
             }
         });
 
-        document.querySelector('.keys').addEventListener('touchend', (e) => {
-            if (currentTouchKey) {
+        // Global touch end handler for glissando
+        document.addEventListener('touchend', (e) => {
+            if (isTouching && currentTouchKey) {
                 const note = currentTouchKey.dataset.note;
                 currentTouchKey.classList.remove('active');
                 stopNote(note);
                 currentTouchKey = null;
+                isTouching = false;
+            }
+        });
+
+        document.addEventListener('touchcancel', (e) => {
+            if (isTouching && currentTouchKey) {
+                const note = currentTouchKey.dataset.note;
+                currentTouchKey.classList.remove('active');
+                stopNote(note);
+                currentTouchKey = null;
+                isTouching = false;
             }
         });
 
@@ -1271,6 +1398,128 @@
             if (e.target.closest('.keyboard') || e.target.closest('.slider-track') || e.target.closest('.knob') || e.target.closest('.footswitch')) {
                 e.preventDefault();
             }
+        });
+
+        // Presets
+        const presets = {
+            lead: {
+                name: 'Lead',
+                synth: { love: 0.85, tailor: 0.55, gleam: 0.6, pujet: 0.35, rate: 0.45, attack: 0.02, fmAmount: 0, fmRatio: 2 },
+                fx: {
+                    reverb: { enabled: true, mix: 0.25, decay: 0.4 },
+                    delay: { enabled: true, time: 0.35, feedback: 0.3, mix: 0.25 }
+                }
+            },
+            pad: {
+                name: 'Pad',
+                synth: { love: 0.4, tailor: 0.75, gleam: 0.35, pujet: 0.3, rate: 0.15, attack: 0.4, fmAmount: 0, fmRatio: 2 },
+                fx: {
+                    reverb: { enabled: true, mix: 0.65, decay: 0.8 },
+                    delay: { enabled: true, time: 0.5, feedback: 0.4, mix: 0.3 }
+                }
+            },
+            pluck: {
+                name: 'Pluck',
+                synth: { love: 1.0, tailor: 0.5, gleam: 0.25, pujet: 0, rate: 0.5, attack: 0.001, fmAmount: 0.3, fmRatio: 3 },
+                fx: {
+                    reverb: { enabled: true, mix: 0.3, decay: 0.25 },
+                    delay: { enabled: false, time: 0.2, feedback: 0.2, mix: 0.2 }
+                }
+            },
+            strings: {
+                name: 'Strings',
+                synth: { love: 0.5, tailor: 0.7, gleam: 0.5, pujet: 0.45, rate: 0.3, attack: 0.35, fmAmount: 0, fmRatio: 2 },
+                fx: {
+                    reverb: { enabled: true, mix: 0.55, decay: 0.65 },
+                    delay: { enabled: false, time: 0.4, feedback: 0.3, mix: 0.2 }
+                }
+            },
+            bell: {
+                name: 'Bell',
+                synth: { love: 1.0, tailor: 0.5, gleam: 0.0, pujet: 0.1, rate: 0.5, attack: 0.001, fmAmount: 0.8, fmRatio: 5.5 },
+                fx: {
+                    reverb: { enabled: true, mix: 0.6, decay: 0.7 },
+                    delay: { enabled: true, time: 0.45, feedback: 0.4, mix: 0.3 }
+                }
+            },
+            retro: {
+                name: 'Retro',
+                synth: { love: 0.7, tailor: 0.5, gleam: 0.95, pujet: 0, rate: 0.5, attack: 0.01, fmAmount: 0, fmRatio: 2 },
+                fx: {
+                    reverb: { enabled: false, mix: 0.2, decay: 0.3 },
+                    delay: { enabled: true, time: 0.25, feedback: 0.45, mix: 0.35 }
+                }
+            },
+            dreamy: {
+                name: 'Dreamy',
+                synth: { love: 0.35, tailor: 0.8, gleam: 0.15, pujet: 0.55, rate: 0.12, attack: 0.5, fmAmount: 0.2, fmRatio: 2 },
+                fx: {
+                    reverb: { enabled: true, mix: 0.8, decay: 0.9 },
+                    delay: { enabled: true, time: 0.6, feedback: 0.55, mix: 0.5 }
+                }
+            },
+            init: {
+                name: 'Init',
+                synth: { love: 0.7, tailor: 0.5, gleam: 0.0, pujet: 0, rate: 0.5, attack: 0.02, fmAmount: 0, fmRatio: 2 },
+                fx: {
+                    reverb: { enabled: false, mix: 0.3, decay: 0.5 },
+                    delay: { enabled: false, time: 0.4, feedback: 0.3, mix: 0.4 }
+                }
+            }
+        };
+
+        function applyPreset(presetName) {
+            const preset = presets[presetName];
+            if (!preset) return;
+
+            initAudio();
+
+            // Apply synth params
+            Object.keys(preset.synth).forEach(key => {
+                params[key] = preset.synth[key];
+            });
+
+            // Update slider thumbs
+            document.querySelectorAll('.slider-track').forEach(track => {
+                const param = track.dataset.param;
+                const thumb = track.querySelector('.slider-thumb');
+                const trackHeight = track.offsetHeight - 24;
+                thumb.style.top = (6 + (1 - params[param]) * trackHeight) + 'px';
+            });
+
+            // Apply FX params
+            fxParams.reverb = { ...preset.fx.reverb };
+            fxParams.delay = { ...preset.fx.delay };
+
+            // Update knobs
+            document.querySelectorAll('.knob').forEach(knob => {
+                const fx = knob.dataset.fx;
+                const param = knob.dataset.param;
+                const value = fxParams[fx][param];
+                const rotation = value * 270 - 135;
+                knob.style.setProperty('--rotation', rotation + 'deg');
+            });
+
+            // Update LEDs
+            document.getElementById('reverb-led').className = 
+                fxParams.reverb.enabled ? 'led-indicator led-on-purple' : 'led-indicator led-off';
+            document.getElementById('delay-led').className = 
+                fxParams.delay.enabled ? 'led-indicator led-on-red' : 'led-indicator led-off';
+
+            updateEffects();
+
+            // Update active button
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-preset="${presetName}"]`).classList.add('active');
+        }
+
+        // Preset button handlers
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                applyPreset(btn.dataset.preset);
+            });
         });
     </script>
 </body>
