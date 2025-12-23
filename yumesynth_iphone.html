@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LOVE DREAM PURSUIT シンセ + FX (iPhone)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Kosugi+Maru&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background: linear-gradient(180deg, 
+                #FFF0F5 0%, 
+                #FFE4EC 20%,
+                #E8F4FF 50%,
+                #F0FFF0 80%,
+                #FFFEF0 100%);
+            font-family: 'Kosugi Maru', sans-serif;
+            padding: 15px 10px;
+        }
+
+        .studio {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+            max-width: 400px;
+            min-height: calc(100vh - 30px);
+            padding-bottom: 20px;
+        }
+
+        .synth {
+            width: 100%;
+            max-width: 380px;
+            min-width: auto;
+            background: linear-gradient(180deg, 
+                rgba(255, 182, 193, 0.7) 0%, 
+                rgba(255, 218, 233, 0.8) 50%,
+                rgba(230, 240, 255, 0.7) 100%);
+            border-radius: 20px;
+            padding: 12px 15px;
+            box-shadow: 
+                0 10px 40px rgba(255, 150, 180, 0.3),
+                inset 0 2px 0 rgba(255,255,255,0.8),
+                inset 0 -2px 0 rgba(200, 180, 200, 0.2);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .synth-logo {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 40px;
+            height: auto;
+            opacity: 0.9;
+            border-radius: 5px;
+        }
+
+        .brand {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 18px;
+            color: #FF6B9D;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(255, 150, 180, 0.3);
+        }
+
+        .sliders-panel {
+            background: linear-gradient(180deg, 
+                rgba(255, 255, 255, 0.6) 0%, 
+                rgba(240, 248, 255, 0.7) 100%);
+            border-radius: 12px;
+            padding: 8px;
+            margin-bottom: 8px;
+            box-shadow: 
+                0 4px 15px rgba(180, 200, 220, 0.3),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .slider-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 4px;
+        }
+
+        .slider-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .slider-label-top {
+            font-size: 9px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-align: center;
+            min-height: 14px;
+        }
+
+        .slider-label-top:nth-child(1) { color: #FF6B9D; }
+        .slider-container:nth-child(1) .slider-label-top { color: #FF6B9D; }
+        .slider-container:nth-child(2) .slider-label-top { color: #9D6BFF; }
+        .slider-container:nth-child(3) .slider-label-top { color: #6BB8FF; }
+        .slider-container:nth-child(4) .slider-label-top { color: #FFB86B; }
+        .slider-container:nth-child(5) .slider-label-top { color: #6BFFB8; }
+
+        .slider-track {
+            width: 32px;
+            height: 60px;
+            background: linear-gradient(180deg, 
+                rgba(255, 200, 220, 0.5) 0%, 
+                rgba(200, 220, 255, 0.5) 100%);
+            border-radius: 8px;
+            position: relative;
+            box-shadow: inset 0 2px 8px rgba(180, 150, 200, 0.3);
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .slider-groove {
+            position: absolute;
+            left: 50%;
+            top: 8px;
+            bottom: 8px;
+            width: 3px;
+            transform: translateX(-50%);
+            background: rgba(255, 150, 200, 0.4);
+            border-radius: 2px;
+        }
+
+        .slider-thumb {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 28px;
+            height: 12px;
+            background: linear-gradient(180deg, #fff 0%, #FFE4EC 50%, #fff 100%);
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(255, 150, 180, 0.4);
+            cursor: grab;
+            top: 24px;
+            border: 1px solid rgba(255, 180, 200, 0.5);
+        }
+
+        .slider-thumb:active {
+            cursor: grabbing;
+        }
+
+        .slider-label-bottom {
+            font-size: 8px;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .slider-container:nth-child(1) .slider-label-bottom { color: #FF6B9D; }
+        .slider-container:nth-child(2) .slider-label-bottom { color: #9D6BFF; }
+        .slider-container:nth-child(3) .slider-label-bottom { color: #6BB8FF; }
+        .slider-container:nth-child(4) .slider-label-bottom { color: #FFB86B; }
+        .slider-container:nth-child(5) .slider-label-bottom { color: #6BFFB8; }
+
+        .message-area {
+            text-align: center;
+            padding: 5px 3px;
+            position: relative;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .title-main {
+            font-family: 'Fredoka One', cursive;
+            font-size: 26px;
+            margin-bottom: 2px;
+        }
+
+        .title-love {
+            color: #FF85A2;
+            text-shadow: 0 2px 10px rgba(255, 133, 162, 0.5);
+        }
+
+        .title-dream {
+            color: #85C1FF;
+            text-shadow: 0 2px 10px rgba(133, 193, 255, 0.5);
+        }
+
+        .title-pursuit {
+            font-family: 'Fredoka One', cursive;
+            font-size: 20px;
+            color: #C485FF;
+            text-shadow: 0 2px 10px rgba(196, 133, 255, 0.5);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .message-flood {
+            font-size: 9px;
+            line-height: 1.3;
+            color: #8B7090;
+            font-weight: bold;
+            text-align: justify;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+        }
+
+        .message-flood .hl-pink { color: #FF6B9D; }
+        .message-flood .hl-blue { color: #6B9DFF; }
+        .message-flood .hl-yellow { color: #E6A800; }
+        .message-flood .hl-orange { color: #FF7B5C; }
+        .message-flood .hl-purple { color: #C485FF; }
+        .message-flood .hl-green { color: #6BFFB8; }
+
+        .decorations {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .deco {
+            position: absolute;
+            font-size: 14px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-5px) rotate(10deg); }
+        }
+
+        .deco:nth-child(odd) { animation-delay: -1.5s; }
+
+        .keyboard {
+            background: linear-gradient(180deg, 
+                rgba(255, 255, 255, 0.6) 0%, 
+                rgba(240, 248, 255, 0.7) 100%);
+            border-radius: 12px;
+            padding: 8px;
+            padding-bottom: 6px;
+            box-shadow: 
+                0 4px 15px rgba(180, 200, 220, 0.3),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            margin-top: auto;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .keys {
+            display: flex;
+            position: relative;
+            height: 100px;
+        }
+
+        .white-key {
+            flex: 1;
+            background: linear-gradient(180deg, #fff 0%, #FFF5F8 80%, #FFE8EE 100%);
+            border: 1px solid rgba(255, 180, 200, 0.4);
+            border-radius: 0 0 6px 6px;
+            margin: 0 1px;
+            position: relative;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(255, 150, 180, 0.25);
+            transition: all 0.05s;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 5px;
+        }
+
+        .white-key:active, .white-key.active {
+            background: linear-gradient(180deg, #FFE8EE 0%, #FFD5E0 80%, #FFC8D6 100%);
+            box-shadow: 0 2px 5px rgba(255, 150, 180, 0.3);
+            transform: translateY(2px);
+        }
+
+        .white-key .key-deco {
+            font-size: 12px;
+            margin-bottom: 1px;
+        }
+
+        .white-key .key-label {
+            font-size: 10px;
+            color: #FF85A2;
+        }
+
+        .black-keys {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            height: 55px;
+            pointer-events: none;
+        }
+
+        .black-key-space {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            margin: 0 1px;
+        }
+
+        .black-key {
+            width: 65%;
+            max-width: 24px;
+            height: 100%;
+            background: linear-gradient(180deg, #B8A0C8 0%, #9080A0 100%);
+            border-radius: 0 0 5px 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(150, 130, 170, 0.4);
+            transition: all 0.05s;
+            pointer-events: auto;
+        }
+
+        .black-key:active, .black-key.active {
+            background: linear-gradient(180deg, #A090B0 0%, #806888 100%);
+            box-shadow: 0 2px 4px rgba(150, 130, 170, 0.4);
+            transform: translateY(2px);
+        }
+
+        .black-key.hidden {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .running-shoes {
+            text-align: center;
+            margin: 4px 0;
+            font-family: 'Nunito', sans-serif;
+            font-size: 9px;
+            color: #8B7090;
+        }
+
+        .running-shoes span {
+            color: #FF7B5C;
+            font-weight: bold;
+        }
+
+        .instructions {
+            text-align: center;
+            font-size: 8px;
+            color: rgba(139, 112, 144, 0.8);
+            margin-top: 5px;
+        }
+
+        /* エフェクターペダル */
+        .effects-rack {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .pedal {
+            width: 170px;
+            border-radius: 16px;
+            padding: 10px;
+            box-shadow: 
+                0 8px 25px rgba(200, 180, 220, 0.35),
+                inset 0 2px 0 rgba(255,255,255,0.6);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-height: none;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .pedal-reverb {
+            background: linear-gradient(180deg, 
+                rgba(200, 180, 255, 0.7) 0%, 
+                rgba(180, 200, 255, 0.7) 50%,
+                rgba(220, 200, 255, 0.6) 100%);
+        }
+
+        .pedal-delay {
+            background: linear-gradient(180deg, 
+                rgba(255, 180, 200, 0.7) 0%, 
+                rgba(255, 200, 180, 0.7) 50%,
+                rgba(255, 220, 200, 0.6) 100%);
+        }
+
+        .pedal-brand {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 12px;
+            color: rgba(120, 100, 140, 0.8);
+            margin-bottom: 8px;
+        }
+
+        .pedal-name {
+            font-family: 'Fredoka One', cursive;
+            font-size: 18px;
+            color: #8B6090;
+            text-shadow: 0 2px 8px rgba(139, 96, 144, 0.3);
+            margin-bottom: 4px;
+            text-align: center;
+        }
+
+        .pedal-name-jp {
+            font-size: 9px;
+            color: rgba(100, 80, 120, 0.9);
+            display: block;
+            margin-top: 2px;
+            font-family: 'Kosugi Maru', sans-serif;
+        }
+
+        .pedal-messages {
+            font-size: 8px;
+            color: rgba(100, 80, 120, 0.95);
+            text-align: center;
+            line-height: 1.4;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        .pedal-messages .msg-big {
+            font-size: 9px;
+            display: block;
+            margin: 2px 0;
+        }
+
+        .pedal-messages .msg-yellow {
+            color: #D4A000;
+        }
+
+        .pedal-messages .msg-cyan {
+            color: #5090B0;
+        }
+
+        .pedal-messages .msg-pink {
+            color: #D06080;
+        }
+
+        .pedal-footer {
+            font-size: 7px;
+            color: rgba(100, 80, 120, 0.7);
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        .knobs-row {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 8px;
+            flex: 1;
+            align-items: center;
+        }
+
+        .knob-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .knob {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(145deg, 
+                rgba(255, 255, 255, 0.9) 0%, 
+                rgba(230, 220, 240, 0.9) 100%);
+            border-radius: 50%;
+            position: relative;
+            cursor: pointer;
+            box-shadow: 
+                0 4px 12px rgba(180, 150, 200, 0.4),
+                inset 0 2px 4px rgba(255,255,255,0.8);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .knob::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 3px;
+            height: 18px;
+            background: linear-gradient(180deg, #FF85A2 0%, #C485FF 100%);
+            border-radius: 2px;
+            transform-origin: center bottom;
+            transform: translate(-50%, -100%) rotate(var(--rotation, 0deg));
+            box-shadow: 0 0 8px rgba(255, 133, 162, 0.5);
+        }
+
+        .knob-ring {
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border: 2px solid rgba(200, 180, 220, 0.4);
+            border-radius: 50%;
+        }
+
+        .knob-label {
+            font-size: 8px;
+            color: #8B6090;
+            margin-top: 5px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .led-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            box-shadow: inset 0 1px 2px rgba(150, 130, 170, 0.3);
+            transition: all 0.2s;
+        }
+
+        .led-off {
+            background: rgba(200, 180, 220, 0.4);
+        }
+
+        .led-on-purple {
+            background: #C8A8FF;
+            box-shadow: 0 0 15px #C8A8FF, 0 0 30px rgba(200, 168, 255, 0.5);
+        }
+
+        .led-on-red {
+            background: #FFB0C0;
+            box-shadow: 0 0 15px #FFB0C0, 0 0 30px rgba(255, 176, 192, 0.5);
+        }
+
+        .footswitch {
+            width: 60px;
+            height: 30px;
+            background: linear-gradient(180deg, 
+                rgba(255, 255, 255, 0.8) 0%, 
+                rgba(230, 220, 240, 0.8) 100%);
+            border-radius: 10px;
+            margin: 0 auto;
+            cursor: pointer;
+            box-shadow: 
+                0 4px 12px rgba(180, 150, 200, 0.3),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            transition: all 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .footswitch:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 6px rgba(180, 150, 200, 0.3);
+        }
+
+        .footswitch-label {
+            font-size: 8px;
+            color: #8B6090;
+            font-weight: bold;
+        }
+
+        .pedal-deco {
+            position: absolute;
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        /* Touch feedback */
+        @media (hover: hover) {
+            .white-key:hover {
+                background: linear-gradient(180deg, #FFF8FA 0%, #FFE8F0 80%, #FFD8E4 100%);
+            }
+            .black-key:hover {
+                background: linear-gradient(180deg, #C8B0D8 0%, #A090B0 100%);
+            }
+            .knob:hover {
+                box-shadow: 
+                    0 4px 15px rgba(200, 150, 220, 0.5),
+                    inset 0 2px 4px rgba(255,255,255,0.9),
+                    0 0 20px rgba(255, 180, 220, 0.3);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="studio">
+        <div class="synth">
+            <img src="https://iceface-microtonal.github.io/toys.PNG" alt="ICEFACE TOYS" class="synth-logo">
+            <div class="brand">ICEFACE TOYS</div>
+            
+            <div class="sliders-panel">
+                <div style="text-align: center; color: #FF85A2; font-size: 8px; margin-bottom: 5px; font-weight: bold;">
+                    ⭐ SOUND CONTROL ⭐ 夢のツマミを回せ！
+                </div>
+                <div class="slider-row">
+                    <div class="slider-container">
+                        <div class="slider-label-top">LOVE</div>
+                        <div class="slider-track" data-param="love">
+                            <div class="slider-groove"></div>
+                            <div class="slider-thumb"></div>
+                        </div>
+                        <div class="slider-label-bottom">TONE</div>
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-label-top">テーラ</div>
+                        <div class="slider-track" data-param="tailor">
+                            <div class="slider-groove"></div>
+                            <div class="slider-thumb"></div>
+                        </div>
+                        <div class="slider-label-bottom">DEPTH</div>
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-label-top">グリーム</div>
+                        <div class="slider-track" data-param="gleam">
+                            <div class="slider-groove"></div>
+                            <div class="slider-thumb"></div>
+                        </div>
+                        <div class="slider-label-bottom">TONE</div>
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-label-top">(PU JET ツ)</div>
+                        <div class="slider-track" data-param="pujet">
+                            <div class="slider-groove"></div>
+                            <div class="slider-thumb"></div>
+                        </div>
+                        <div class="slider-label-bottom">DEPTH</div>
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-label-top">RATE</div>
+                        <div class="slider-track" data-param="rate">
+                            <div class="slider-groove"></div>
+                            <div class="slider-thumb"></div>
+                        </div>
+                        <div class="slider-label-bottom">RATE</div>
+                    </div>
+                </div>
+                <div style="text-align: center; color: #6BFFB8; font-size: 7px; margin-top: 5px;">
+                    💚 君の感性で！ 💚
+                </div>
+            </div>
+
+            <div class="message-area">
+                <div class="decorations">
+                    <span class="deco" style="top: 2%; left: 3%;">⭐</span>
+                    <span class="deco" style="top: 5%; right: 5%;">💛</span>
+                    <span class="deco" style="top: 15%; left: 1%;">✨</span>
+                    <span class="deco" style="top: 20%; right: 2%;">💖</span>
+                    <span class="deco" style="top: 35%; left: 5%;">⭐</span>
+                    <span class="deco" style="top: 40%; right: 4%;">🧡</span>
+                    <span class="deco" style="top: 55%; left: 2%;">💫</span>
+                    <span class="deco" style="top: 60%; right: 6%;">💚</span>
+                    <span class="deco" style="top: 75%; left: 4%;">🌟</span>
+                    <span class="deco" style="top: 80%; right: 3%;">💜</span>
+                    <span class="deco" style="top: 90%; left: 6%;">✨</span>
+                    <span class="deco" style="top: 85%; right: 8%;">⭐</span>
+                </div>
+                <div class="title-main">
+                    <span class="title-love">LOVE</span>
+                    <span class="title-dream">DREAM</span>
+                </div>
+                <span class="title-pursuit">✨ PURSUIT ✨</span>
+                <div class="message-flood">
+                    <span class="hl-pink">夢を追っている人は愛される！</span><span class="hl-yellow">⭐</span><span class="hl-blue">夢を追う背中は光って見えるから！</span><span class="hl-orange">★</span><span class="hl-purple">白昼夢でもかまわない</span><span class="hl-pink">💖</span><span class="hl-yellow">今すぐ夢を追え！</span><span class="hl-green">✨</span><span class="hl-orange">走り出そう！</span><span class="hl-blue">🏃</span><span class="hl-pink">夢を目指せ！</span><span class="hl-yellow">+RUNNING SHOES+</span><span class="hl-purple">💫</span><span class="hl-blue">追いつけなくても大丈夫！</span><span class="hl-orange">⭐</span><span class="hl-pink">今日から始めよう！</span><span class="hl-green">🌈</span><span class="hl-yellow">音を奏でろ！</span><span class="hl-purple">心を解き放て！</span><span class="hl-blue">🎵</span><span class="hl-orange">MUSIC IS LIFE</span><span class="hl-pink">💕</span><span class="hl-green">夢は逃げない！</span><span class="hl-yellow">✨</span><span class="hl-purple">SHINE BRIGHT</span><span class="hl-blue">⭐</span><span class="hl-pink">君の音が世界を変える！</span><span class="hl-orange">🌟</span><span class="hl-yellow">DREAM BIG</span><span class="hl-green">💚</span><span class="hl-blue">NEVER GIVE UP</span><span class="hl-purple">💪</span><span class="hl-pink">夢見る力を信じろ！</span><span class="hl-orange">⭐</span><span class="hl-yellow">RUN FAST</span><span class="hl-blue">🏃</span><span class="hl-green">すべては夢から始まる</span><span class="hl-purple">✨</span><span class="hl-pink">今この瞬間が夢の入口！</span><span class="hl-orange">💖</span><span class="hl-yellow">限界なんてない！</span><span class="hl-blue">⭐</span><span class="hl-green">明日じゃなくて今日！</span><span class="hl-purple">🌈</span><span class="hl-pink">夢中になれ！</span><span class="hl-orange">✨</span><span class="hl-yellow">KEEP DREAMING</span><span class="hl-blue">💫</span><span class="hl-green">音楽は魔法！</span><span class="hl-purple">🎹</span><span class="hl-pink">夢を音にしろ！</span><span class="hl-orange">⭐</span><span class="hl-yellow">無限の可能性</span><span class="hl-blue">💕</span><span class="hl-green">BELIEVE IN YOURSELF</span><span class="hl-purple">✨</span><span class="hl-pink">夢を諦めるな！</span><span class="hl-orange">🌟</span><span class="hl-yellow">走れ走れ走れ！</span><span class="hl-blue">🏃</span><span class="hl-green">夢の先へ！</span><span class="hl-purple">💖</span><span class="hl-pink">LOVE YOUR DREAM</span><span class="hl-orange">⭐</span><span class="hl-yellow">輝け！</span><span class="hl-blue">✨</span>
+                </div>
+            </div>
+
+            <div class="keyboard">
+                <div style="text-align: center; color: #C485FF; font-size: 8px; margin-bottom: 5px; font-weight: bold;">
+                    🎹 DREAM KEYBOARD 🎹 夢のメロディー！
+                </div>
+                <div class="keys">
+                    <div class="white-key" data-note="C4">
+                        <span class="key-deco">❤️</span>
+                        <span class="key-label"></span>
+                    </div>
+                    <div class="white-key" data-note="D4">
+                        <span class="key-deco">⭐</span>
+                        <span class="key-label">夢</span>
+                    </div>
+                    <div class="white-key" data-note="E4">
+                        <span class="key-deco"></span>
+                        <span class="key-label">ね</span>
+                    </div>
+                    <div class="white-key" data-note="F4">
+                        <span class="key-deco">●</span>
+                        <span class="key-label"></span>
+                    </div>
+                    <div class="white-key" data-note="G4">
+                        <span class="key-deco">❤️</span>
+                        <span class="key-label"></span>
+                    </div>
+                    <div class="white-key" data-note="A4">
+                        <span class="key-deco">●</span>
+                        <span class="key-label"></span>
+                    </div>
+                    <div class="white-key" data-note="B4">
+                        <span class="key-deco"></span>
+                        <span class="key-label">う</span>
+                    </div>
+                    <div class="white-key" data-note="C5">
+                        <span class="key-deco"></span>
+                        <span class="key-label">も</span>
+                    </div>
+                    <div class="white-key" data-note="D5">
+                        <span class="key-deco"></span>
+                        <span class="key-label">ゆ</span>
+                    </div>
+                    <div class="white-key" data-note="E5">
+                        <span class="key-deco"></span>
+                        <span class="key-label">夢</span>
+                    </div>
+                    <div class="black-keys">
+                        <div class="black-key-space"><div class="black-key" data-note="C#4"></div></div>
+                        <div class="black-key-space"><div class="black-key" data-note="D#4"></div></div>
+                        <div class="black-key-space"><div class="black-key hidden"></div></div>
+                        <div class="black-key-space"><div class="black-key" data-note="F#4"></div></div>
+                        <div class="black-key-space"><div class="black-key" data-note="G#4"></div></div>
+                        <div class="black-key-space"><div class="black-key" data-note="A#4"></div></div>
+                        <div class="black-key-space"><div class="black-key hidden"></div></div>
+                        <div class="black-key-space"><div class="black-key" data-note="C#5"></div></div>
+                        <div class="black-key-space"><div class="black-key" data-note="D#5"></div></div>
+                        <div class="black-key-space"><div class="black-key hidden"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="instructions">
+                🎹 鍵盤をタップで演奏！ 🎵 スライダーで音色変化！ ⭐ 君だけのサウンドを作れ！ 💫
+            </div>
+        </div>
+
+        <div class="effects-rack">
+            <!-- リバーブペダル -->
+            <div class="pedal pedal-reverb">
+                <div class="pedal-brand">✨ YUME FX ✨</div>
+                <div class="led-indicator led-off" id="reverb-led"></div>
+                <div class="pedal-name">
+                    REVERB
+                    <span class="pedal-name-jp">🌌 残響 〜無限の空間〜 🌌</span>
+                </div>
+                <div class="pedal-messages">
+                    <span class="msg-big msg-yellow">★ 響け！夢の残響！★</span>
+                    <span class="msg-cyan">音は消えない！心に残る！</span><br>
+                    <span class="msg-pink">広がれ無限大！</span>
+                    <span>ECHO YOUR SOUL</span><br>
+                    <span class="msg-yellow">⭐ SPACE IS YOURS ⭐</span>
+                </div>
+                <div class="knobs-row">
+                    <div class="knob-container">
+                        <div class="knob" data-fx="reverb" data-param="mix" style="--rotation: -60deg">
+                            <div class="knob-ring"></div>
+                        </div>
+                        <div class="knob-label">MIX</div>
+                    </div>
+                    <div class="knob-container">
+                        <div class="knob" data-fx="reverb" data-param="decay" style="--rotation: 0deg">
+                            <div class="knob-ring"></div>
+                        </div>
+                        <div class="knob-label">DECAY</div>
+                    </div>
+                </div>
+                <div class="footswitch" id="reverb-switch">
+                    <span class="footswitch-label">ON/OFF</span>
+                </div>
+                <div class="pedal-footer">🎵 REVERB IS LOVE 🎵 踏め！夢を広げろ！</div>
+            </div>
+
+            <!-- ディレイペダル -->
+            <div class="pedal pedal-delay">
+                <div class="pedal-brand">🌙 YUME FX 🌙</div>
+                <div class="led-indicator led-off" id="delay-led"></div>
+                <div class="pedal-name">
+                    DELAY
+                    <span class="pedal-name-jp">🔁 遅延 〜夢のこだま〜 🔁</span>
+                </div>
+                <div class="pedal-messages">
+                    <span class="msg-big msg-pink">★ 繰り返せ！夢の鼓動！★</span>
+                    <span class="msg-yellow">やまびこのように響け！</span><br>
+                    <span class="msg-cyan">REPEAT YOUR DREAMS</span><br>
+                    <span>過去と未来をつなげ！</span>
+                    <span class="msg-pink">∞ INFINITE ECHO ∞</span>
+                </div>
+                <div class="knobs-row">
+                    <div class="knob-container">
+                        <div class="knob" data-fx="delay" data-param="time" style="--rotation: -30deg">
+                            <div class="knob-ring"></div>
+                        </div>
+                        <div class="knob-label">TIME</div>
+                    </div>
+                    <div class="knob-container">
+                        <div class="knob" data-fx="delay" data-param="feedback" style="--rotation: -60deg">
+                            <div class="knob-ring"></div>
+                        </div>
+                        <div class="knob-label">FDBK</div>
+                    </div>
+                    <div class="knob-container">
+                        <div class="knob" data-fx="delay" data-param="mix" style="--rotation: -45deg">
+                            <div class="knob-ring"></div>
+                        </div>
+                        <div class="knob-label">MIX</div>
+                    </div>
+                </div>
+                <div class="footswitch" id="delay-switch">
+                    <span class="footswitch-label">ON/OFF</span>
+                </div>
+                <div class="pedal-footer">🎶 TIME IS ART 🎶 踏んで時を操れ！</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Audio Context
+        let audioCtx = null;
+        const activeOscillators = new Map();
+
+        // Effects nodes
+        let reverbNode = null;
+        let reverbGain = null;
+        let dryGain = null;
+        let delayNode = null;
+        let delayFeedback = null;
+        let delayGain = null;
+        let masterGain = null;
+
+        // Synth parameters
+        const params = {
+            love: 0.5,
+            tailor: 0.5,
+            gleam: 0.5,
+            pujet: 0.5,
+            rate: 0.5
+        };
+
+        // Effects parameters
+        const fxParams = {
+            reverb: {
+                enabled: false,
+                mix: 0.3,
+                decay: 0.5
+            },
+            delay: {
+                enabled: false,
+                time: 0.4,
+                feedback: 0.3,
+                mix: 0.4
+            }
+        };
+
+        // Note frequencies
+        const noteFrequencies = {
+            'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13,
+            'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00,
+            'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88,
+            'C5': 523.25, 'C#5': 554.37, 'D5': 587.33, 'D#5': 622.25,
+            'E5': 659.25
+        };
+
+        // Create reverb impulse response
+        function createReverbIR(duration, decay) {
+            const sampleRate = audioCtx.sampleRate;
+            const length = sampleRate * duration;
+            const impulse = audioCtx.createBuffer(2, length, sampleRate);
+            
+            for (let channel = 0; channel < 2; channel++) {
+                const channelData = impulse.getChannelData(channel);
+                for (let i = 0; i < length; i++) {
+                    channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay * 3 + 1);
+                }
+            }
+            return impulse;
+        }
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Create master gain
+                masterGain = audioCtx.createGain();
+                masterGain.gain.value = 1;
+                masterGain.connect(audioCtx.destination);
+
+                // Create dry path
+                dryGain = audioCtx.createGain();
+                dryGain.gain.value = 1;
+                dryGain.connect(masterGain);
+
+                // Create reverb
+                reverbNode = audioCtx.createConvolver();
+                reverbNode.buffer = createReverbIR(2.5, fxParams.reverb.decay);
+                reverbGain = audioCtx.createGain();
+                reverbGain.gain.value = 0;
+                reverbNode.connect(reverbGain);
+                reverbGain.connect(masterGain);
+
+                // Create delay
+                delayNode = audioCtx.createDelay(2);
+                delayNode.delayTime.value = fxParams.delay.time;
+                delayFeedback = audioCtx.createGain();
+                delayFeedback.gain.value = fxParams.delay.feedback;
+                delayGain = audioCtx.createGain();
+                delayGain.gain.value = 0;
+                
+                delayNode.connect(delayFeedback);
+                delayFeedback.connect(delayNode);
+                delayNode.connect(delayGain);
+                delayGain.connect(masterGain);
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playNote(note) {
+            initAudio();
+            
+            if (activeOscillators.has(note)) return;
+
+            const freq = noteFrequencies[note];
+            if (!freq) return;
+
+            // Main oscillator
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+            
+            // Vibrato LFO
+            const lfo = audioCtx.createOscillator();
+            const lfoGain = audioCtx.createGain();
+
+            // Waveform based on gleam parameter
+            const waveforms = ['sine', 'triangle', 'sawtooth', 'square'];
+            const waveIndex = Math.floor(params.gleam * 3.99);
+            osc1.type = waveforms[waveIndex];
+            osc2.type = waveforms[Math.max(0, waveIndex - 1)];
+
+            // Frequency with detune
+            osc1.frequency.value = freq;
+            osc2.frequency.value = freq;
+            osc2.detune.value = params.tailor * 30 - 15;
+
+            // Filter based on love parameter
+            filter.type = 'lowpass';
+            filter.frequency.value = 200 + params.love * 4000;
+            filter.Q.value = 1 + params.love * 5;
+
+            // Vibrato setup
+            lfo.type = 'sine';
+            lfo.frequency.value = 1 + params.rate * 10;
+            lfoGain.gain.value = params.pujet * 20;
+
+            // Connections
+            lfo.connect(lfoGain);
+            lfoGain.connect(osc1.detune);
+            lfoGain.connect(osc2.detune);
+
+            osc1.connect(filter);
+            osc2.connect(filter);
+            filter.connect(gainNode);
+            
+            // Connect to effects chain
+            gainNode.connect(dryGain);
+            gainNode.connect(reverbNode);
+            gainNode.connect(delayNode);
+
+            // Envelope
+            const now = audioCtx.currentTime;
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0.3, now + 0.02);
+            gainNode.gain.linearRampToValueAtTime(0.2, now + 0.1);
+
+            osc1.start(now);
+            osc2.start(now);
+            lfo.start(now);
+
+            activeOscillators.set(note, { osc1, osc2, lfo, gainNode });
+        }
+
+        function stopNote(note) {
+            const oscs = activeOscillators.get(note);
+            if (!oscs) return;
+
+            const now = audioCtx.currentTime;
+            const releaseTime = 0.4; // サスティン/リリース時間
+            
+            // 現在のゲイン値を取得して固定
+            oscs.gainNode.gain.cancelScheduledValues(now);
+            oscs.gainNode.gain.setValueAtTime(oscs.gainNode.gain.value, now);
+            
+            // 指数関数的にフェードアウト（より自然な減衰）
+            oscs.gainNode.gain.exponentialRampToValueAtTime(0.0001, now + releaseTime);
+            oscs.gainNode.gain.setValueAtTime(0, now + releaseTime + 0.01);
+
+            setTimeout(() => {
+                try {
+                    oscs.osc1.stop();
+                    oscs.osc2.stop();
+                    oscs.lfo.stop();
+                } catch(e) {}
+                activeOscillators.delete(note);
+            }, (releaseTime + 0.05) * 1000);
+        }
+
+        // Update effects
+        function updateEffects() {
+            if (!audioCtx) return;
+
+            // Reverb
+            if (fxParams.reverb.enabled) {
+                reverbGain.gain.value = fxParams.reverb.mix;
+                reverbNode.buffer = createReverbIR(2.5, fxParams.reverb.decay);
+            } else {
+                reverbGain.gain.value = 0;
+            }
+
+            // Delay
+            if (fxParams.delay.enabled) {
+                delayNode.delayTime.value = fxParams.delay.time * 0.8 + 0.05;
+                delayFeedback.gain.value = fxParams.delay.feedback * 0.7;
+                delayGain.gain.value = fxParams.delay.mix;
+            } else {
+                delayGain.gain.value = 0;
+            }
+        }
+
+        // Keyboard event handlers with glissando support
+        let isMouseDown = false;
+        let currentTouchKey = null;
+
+        document.addEventListener('mousedown', () => { isMouseDown = true; });
+        document.addEventListener('mouseup', () => { isMouseDown = false; });
+
+        document.querySelectorAll('.white-key, .black-key:not(.hidden)').forEach(key => {
+            const note = key.dataset.note;
+            
+            // Mouse events
+            key.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                key.classList.add('active');
+                playNote(note);
+            });
+
+            key.addEventListener('mouseup', () => {
+                key.classList.remove('active');
+                stopNote(note);
+            });
+
+            key.addEventListener('mouseleave', () => {
+                if (key.classList.contains('active')) {
+                    key.classList.remove('active');
+                    stopNote(note);
+                }
+            });
+
+            // Glissando: trigger note when mouse enters while button is held
+            key.addEventListener('mouseenter', (e) => {
+                if (isMouseDown) {
+                    key.classList.add('active');
+                    playNote(note);
+                }
+            });
+
+            // Touch events
+            key.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                key.classList.add('active');
+                playNote(note);
+                currentTouchKey = key;
+            });
+
+            key.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                key.classList.remove('active');
+                stopNote(note);
+                currentTouchKey = null;
+            });
+        });
+
+        // Touch glissando handler
+        document.querySelector('.keys').addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            if (element && (element.classList.contains('white-key') || element.classList.contains('black-key'))) {
+                const newNote = element.dataset.note;
+                
+                if (element !== currentTouchKey && newNote) {
+                    // Stop previous note
+                    if (currentTouchKey) {
+                        const oldNote = currentTouchKey.dataset.note;
+                        currentTouchKey.classList.remove('active');
+                        stopNote(oldNote);
+                    }
+                    
+                    // Play new note
+                    element.classList.add('active');
+                    playNote(newNote);
+                    currentTouchKey = element;
+                }
+            }
+        });
+
+        document.querySelector('.keys').addEventListener('touchend', (e) => {
+            if (currentTouchKey) {
+                const note = currentTouchKey.dataset.note;
+                currentTouchKey.classList.remove('active');
+                stopNote(note);
+                currentTouchKey = null;
+            }
+        });
+
+        // Slider handling
+        document.querySelectorAll('.slider-track').forEach(track => {
+            const thumb = track.querySelector('.slider-thumb');
+            const param = track.dataset.param;
+            let isDragging = false;
+
+            function updateThumbPosition(clientY) {
+                const rect = track.getBoundingClientRect();
+                const trackHeight = rect.height - 24; // Account for thumb height and padding (smaller for iPhone)
+                let y = clientY - rect.top - 6;
+                y = Math.max(0, Math.min(y, trackHeight));
+                
+                thumb.style.top = (y + 6) + 'px';
+                params[param] = 1 - (y / trackHeight);
+            }
+
+            thumb.style.top = (6 + (1 - params[param]) * (track.offsetHeight - 24)) + 'px';
+
+            track.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                updateThumbPosition(e.clientY);
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    updateThumbPosition(e.clientY);
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            track.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                updateThumbPosition(e.touches[0].clientY);
+            });
+
+            track.addEventListener('touchmove', (e) => {
+                if (isDragging) {
+                    e.preventDefault();
+                    updateThumbPosition(e.touches[0].clientY);
+                }
+            });
+
+            track.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+        });
+
+        // Knob handling
+        document.querySelectorAll('.knob').forEach(knob => {
+            const fx = knob.dataset.fx;
+            const param = knob.dataset.param;
+            let isDragging = false;
+            let startY = 0;
+            let startRotation = 0;
+
+            function getRotation() {
+                const style = knob.style.getPropertyValue('--rotation');
+                return parseFloat(style) || 0;
+            }
+
+            function setRotation(deg) {
+                deg = Math.max(-135, Math.min(135, deg));
+                knob.style.setProperty('--rotation', deg + 'deg');
+                
+                // Update parameter (map -135 to 135 -> 0 to 1)
+                const value = (deg + 135) / 270;
+                fxParams[fx][param] = value;
+                updateEffects();
+            }
+
+            knob.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startY = e.clientY;
+                startRotation = getRotation();
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    const deltaY = startY - e.clientY;
+                    setRotation(startRotation + deltaY * 1.5);
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            knob.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                startY = e.touches[0].clientY;
+                startRotation = getRotation();
+                e.preventDefault();
+            });
+
+            knob.addEventListener('touchmove', (e) => {
+                if (isDragging) {
+                    const deltaY = startY - e.touches[0].clientY;
+                    setRotation(startRotation + deltaY * 1.5);
+                }
+            });
+
+            knob.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+
+            // Initialize knob position from params
+            const initialValue = fxParams[fx][param];
+            const initialRotation = initialValue * 270 - 135;
+            knob.style.setProperty('--rotation', initialRotation + 'deg');
+        });
+
+        // Footswitch handling
+        document.getElementById('reverb-switch').addEventListener('click', () => {
+            initAudio();
+            fxParams.reverb.enabled = !fxParams.reverb.enabled;
+            const led = document.getElementById('reverb-led');
+            led.className = fxParams.reverb.enabled ? 'led-indicator led-on-purple' : 'led-indicator led-off';
+            updateEffects();
+        });
+
+        document.getElementById('delay-switch').addEventListener('click', () => {
+            initAudio();
+            fxParams.delay.enabled = !fxParams.delay.enabled;
+            const led = document.getElementById('delay-led');
+            led.className = fxParams.delay.enabled ? 'led-indicator led-on-red' : 'led-indicator led-off';
+            updateEffects();
+        });
+
+        // Prevent context menu on long press
+        document.addEventListener('contextmenu', (e) => {
+            if (e.target.closest('.keyboard') || e.target.closest('.slider-track') || e.target.closest('.knob') || e.target.closest('.footswitch')) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
