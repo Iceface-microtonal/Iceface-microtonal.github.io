@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>C̴̛H̸A̵O̶S̷ ̸R̴I̵T̶M̸O̷ - 混沌律動機</title>
+    <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Righteous&family=Creepster&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --void: #0a0a0f;
+            --blood: #8B0000;
+            --acid: #39FF14;
+            --plasma: #FF00FF;
+            --cyber: #00FFFF;
+            --gold: #FFD700;
+            --rust: #B7410E;
+            --abyss: #1a0a2e;
+        }
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: var(--void);
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: #fff;
+        }
+
+        /* Glitch background */
+        .bg-chaos {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: 
+                radial-gradient(ellipse at 20% 80%, rgba(139,0,0,0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(255,0,255,0.2) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(57,255,20,0.1) 0%, transparent 70%);
+            animation: bgPulse 8s infinite alternate;
+        }
+
+        @keyframes bgPulse {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(30deg); }
+        }
+
+        .glitch-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(255,255,255,0.03) 2px,
+                rgba(255,255,255,0.03) 4px
+            );
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .glitch-title {
+            font-family: 'Creepster', cursive;
+            font-size: clamp(2.5rem, 10vw, 5rem);
+            color: var(--acid);
+            text-shadow: 
+                3px 3px 0 var(--plasma),
+                -3px -3px 0 var(--cyber),
+                0 0 30px var(--acid);
+            animation: glitchText 0.3s infinite;
+            letter-spacing: 5px;
+        }
+
+        @keyframes glitchText {
+            0%, 90%, 100% { transform: translate(0); }
+            92% { transform: translate(-2px, 1px); }
+            94% { transform: translate(2px, -1px); }
+            96% { transform: translate(-1px, -1px); }
+            98% { transform: translate(1px, 1px); }
+        }
+
+        .subtitle {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            color: var(--plasma);
+            letter-spacing: 8px;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        .kanji-sub {
+            font-size: 1.5rem;
+            color: var(--gold);
+            margin-top: 10px;
+            text-shadow: 0 0 20px var(--gold);
+        }
+
+        /* Loading */
+        .loading-section {
+            background: linear-gradient(135deg, rgba(139,0,0,0.3) 0%, rgba(26,10,46,0.8) 100%);
+            border: 2px solid var(--acid);
+            border-radius: 0;
+            padding: 15px;
+            margin: 15px 0;
+            clip-path: polygon(0 0, 100% 0, 98% 100%, 2% 100%);
+        }
+
+        .loading-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            margin: 10px 0;
+        }
+
+        .loading-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--blood), var(--plasma), var(--acid), var(--cyber));
+            background-size: 300% 100%;
+            animation: gradientMove 2s linear infinite;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 300% 50%; }
+        }
+
+        .loading-status {
+            font-size: 0.8rem;
+            color: var(--cyber);
+            text-align: center;
+        }
+
+        .sample-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .sample-indicator {
+            padding: 5px 8px;
+            font-size: 0.6rem;
+            opacity: 0.3;
+            transition: all 0.3s;
+            border: 1px solid currentColor;
+        }
+
+        .sample-indicator.loaded {
+            opacity: 1;
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        /* Chaos controls */
+        .chaos-panel {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--plasma);
+            padding: 15px;
+            margin: 15px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+        }
+
+        .chaos-btn {
+            padding: 12px;
+            border: 2px solid var(--acid);
+            background: transparent;
+            color: var(--acid);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .chaos-btn:hover {
+            background: var(--acid);
+            color: var(--void);
+            box-shadow: 0 0 20px var(--acid);
+        }
+
+        .chaos-btn.active {
+            background: var(--plasma);
+            border-color: var(--plasma);
+            color: white;
+            animation: btnPulse 0.5s infinite alternate;
+        }
+
+        @keyframes btnPulse {
+            to { box-shadow: 0 0 30px var(--plasma); }
+        }
+
+        /* Transport */
+        .transport {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .transport-btn {
+            width: 70px;
+            height: 70px;
+            border: 3px solid var(--gold);
+            background: transparent;
+            color: var(--gold);
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        }
+
+        .transport-btn:hover {
+            background: rgba(255,215,0,0.2);
+            box-shadow: 0 0 30px var(--gold);
+        }
+
+        .transport-btn.playing {
+            background: var(--gold);
+            color: var(--void);
+            animation: hexPulse 0.3s infinite alternate;
+        }
+
+        @keyframes hexPulse {
+            to { 
+                box-shadow: 0 0 50px var(--gold), 0 0 100px var(--plasma);
+                transform: scale(1.05);
+            }
+        }
+
+        /* Controls */
+        .controls-row {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            text-align: center;
+        }
+
+        .control-label {
+            font-size: 0.7rem;
+            color: var(--cyber);
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+
+        .control-value {
+            font-size: 1.8rem;
+            color: var(--acid);
+            text-shadow: 0 0 10px var(--acid);
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 120px;
+            height: 6px;
+            background: linear-gradient(90deg, var(--blood), var(--plasma), var(--acid));
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--cyber);
+            cursor: pointer;
+            box-shadow: 0 0 15px var(--cyber);
+        }
+
+        /* Pattern selector */
+        .section-title {
+            font-family: 'Creepster', cursive;
+            font-size: 1.5rem;
+            color: var(--plasma);
+            text-align: center;
+            margin: 20px 0 15px;
+            text-shadow: 0 0 20px var(--plasma);
+        }
+
+        .patterns {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 8px;
+        }
+
+        .pattern-btn {
+            padding: 12px 8px;
+            border: 1px solid var(--rust);
+            background: rgba(183,65,14,0.1);
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pattern-btn:hover {
+            border-color: var(--gold);
+            transform: scale(1.02);
+        }
+
+        .pattern-btn.active {
+            background: linear-gradient(135deg, var(--blood) 0%, var(--abyss) 100%);
+            border-color: var(--acid);
+            box-shadow: 0 0 15px var(--acid);
+        }
+
+        .pattern-name { 
+            font-size: 0.85rem; 
+            color: var(--gold);
+            margin-bottom: 3px;
+        }
+        .pattern-origin { 
+            font-size: 0.6rem; 
+            color: var(--cyber);
+            opacity: 0.8;
+        }
+
+        /* Sequencer */
+        .sequencer {
+            margin: 20px 0;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border: 1px solid var(--blood);
+        }
+
+        .step-selector {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .step-option {
+            padding: 6px 12px;
+            border: 1px solid var(--cyber);
+            background: transparent;
+            color: var(--cyber);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        .step-option.active {
+            background: var(--cyber);
+            color: var(--void);
+        }
+
+        .track {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            gap: 8px;
+        }
+
+        .track-info {
+            width: 75px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .track-name {
+            font-size: 0.6rem;
+            text-align: center;
+            cursor: pointer;
+            padding: 4px;
+            transition: all 0.2s;
+        }
+
+        .track-name:hover { 
+            text-shadow: 0 0 10px currentColor;
+        }
+
+        .track-name.pcm { color: var(--gold); }
+        .track-name.synth { color: var(--acid); }
+
+        .track-volume {
+            width: 60px;
+            height: 3px;
+        }
+
+        .steps {
+            display: flex;
+            gap: 3px;
+            flex: 1;
+            overflow-x: auto;
+            padding: 3px 0;
+        }
+
+        .step {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            cursor: pointer;
+            transition: all 0.1s;
+            position: relative;
+            border: 1px solid;
+        }
+
+        .step.t0 { border-color: var(--blood); background: rgba(139,0,0,0.2); }
+        .step.t1 { border-color: var(--gold); background: rgba(255,215,0,0.2); }
+        .step.t2 { border-color: var(--cyber); background: rgba(0,255,255,0.2); }
+        .step.t3 { border-color: var(--plasma); background: rgba(255,0,255,0.2); }
+        .step.t4 { border-color: var(--rust); background: rgba(183,65,14,0.2); }
+        .step.t5 { border-color: var(--acid); background: rgba(57,255,20,0.2); }
+        .step.t6 { border-color: #FF6B6B; background: rgba(255,107,107,0.2); }
+        .step.t7 { border-color: #4ECDC4; background: rgba(78,205,196,0.2); }
+
+        .step.active.t0 { background: var(--blood); box-shadow: 0 0 8px var(--blood); }
+        .step.active.t1 { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+        .step.active.t2 { background: var(--cyber); box-shadow: 0 0 8px var(--cyber); }
+        .step.active.t3 { background: var(--plasma); box-shadow: 0 0 8px var(--plasma); }
+        .step.active.t4 { background: var(--rust); box-shadow: 0 0 8px var(--rust); }
+        .step.active.t5 { background: var(--acid); box-shadow: 0 0 8px var(--acid); }
+        .step.active.t6 { background: #FF6B6B; box-shadow: 0 0 8px #FF6B6B; }
+        .step.active.t7 { background: #4ECDC4; box-shadow: 0 0 8px #4ECDC4; }
+
+        .step.current::after {
+            content: '◆';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--acid);
+            font-size: 8px;
+            animation: blink 0.2s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0.3; }
+        }
+
+        .step:nth-child(4n+1) { margin-left: 5px; }
+        .step:first-child { margin-left: 0; }
+
+        /* Visualizer */
+        .visualizer {
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 4px;
+            margin: 15px 0;
+        }
+
+        .viz-bar {
+            width: 10px;
+            border-radius: 2px 2px 0 0;
+            transition: height 0.05s;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.7rem;
+            color: var(--plasma);
+        }
+
+        @media (max-width: 600px) {
+            .step { width: 24px; height: 24px; min-width: 24px; }
+            .track-info { width: 60px; }
+            .track-name { font-size: 0.55rem; }
+            .chaos-panel { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        .fallback-btn {
+            background: transparent;
+            border: 1px solid var(--acid);
+            color: var(--acid);
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-chaos"></div>
+    <div class="glitch-lines"></div>
+
+    <div class="container">
+        <header>
+            <div class="glitch-title">CHAOS RITMO</div>
+            <p class="subtitle">Dimensional Rhythm Destroyer</p>
+            <p class="kanji-sub">混沌律動機</p>
+        </header>
+
+        <div class="loading-section">
+            <div class="loading-status" id="loadingStatus">INITIALIZING CHAOS...</div>
+            <div class="loading-bar">
+                <div class="loading-progress" id="loadingProgress"></div>
+            </div>
+            <div class="sample-indicators" id="sampleIndicators"></div>
+            <button class="fallback-btn" id="fallbackBtn" style="display:none;">PURE SYNTH MODE</button>
+        </div>
+
+        <div class="chaos-panel">
+            <button class="chaos-btn" id="glitchBtn">👁 GLITCH</button>
+            <button class="chaos-btn" id="mutateBtn">🧬 MUTATE</button>
+            <button class="chaos-btn" id="reverseBtn">⟲ REVERSE</button>
+            <button class="chaos-btn" id="randomBtn">🎲 RANDOM</button>
+            <button class="chaos-btn" id="doubleBtn">⚡ DOUBLE</button>
+            <button class="chaos-btn" id="filterBtn">◎ FILTER</button>
+        </div>
+
+        <div class="visualizer" id="visualizer"></div>
+
+        <div class="transport">
+            <button class="transport-btn" id="playBtn">▶</button>
+        </div>
+
+        <div class="controls-row">
+            <div class="control-group">
+                <div class="control-label">BPM</div>
+                <div class="control-value" id="tempoValue">150</div>
+                <input type="range" id="tempo" min="60" max="300" value="150">
+            </div>
+            <div class="control-group">
+                <div class="control-label">SWING</div>
+                <div class="control-value" id="swingValue">0%</div>
+                <input type="range" id="swing" min="0" max="90" value="0">
+            </div>
+            <div class="control-group">
+                <div class="control-label">CHAOS</div>
+                <div class="control-value" id="chaosValue">0%</div>
+                <input type="range" id="chaos" min="0" max="100" value="0">
+            </div>
+        </div>
+
+        <h2 class="section-title">⛧ FORBIDDEN PATTERNS ⛧</h2>
+        <div class="patterns" id="patterns"></div>
+
+        <div class="sequencer">
+            <div class="step-selector" id="stepSelector"></div>
+            <div id="tracks"></div>
+        </div>
+
+        <footer>
+            <p>⛧ CHAOS RITMO v6.66 - 次元を破壊せよ ⛧</p>
+        </footer>
+    </div>
+
+    <script>
+        let audioCtx = null;
+        let filterNode = null;
+        let masterGain = null;
+        let filterEnabled = false;
+        let glitchEnabled = false;
+        const samples = {};
+
+        const sampleUrls = {
+            bongo1: 'https://iceface-microtonal.github.io/bongo1.wav',
+            bongo2: 'https://iceface-microtonal.github.io/bongo2.wav',
+            bongo3: 'https://iceface-microtonal.github.io/bongo3.wav',
+            bass: 'https://iceface-microtonal.github.io/bass_drum.wav',
+            snare: 'https://iceface-microtonal.github.io/snare.wav'
+        };
+
+        // 8 tracks: 5 PCM + 3 Synth
+        const trackConfig = [
+            { id: 'bongo1', name: 'PCM:DUM', color: 't0', type: 'pcm' },
+            { id: 'bongo2', name: 'PCM:TAK', color: 't1', type: 'pcm' },
+            { id: 'bongo3', name: 'PCM:LOW', color: 't2', type: 'pcm' },
+            { id: 'bass', name: 'PCM:BOMB', color: 't3', type: 'pcm' },
+            { id: 'snare', name: 'PCM:SNAP', color: 't4', type: 'pcm' },
+            { id: 'synth1', name: 'SYN:ACID', color: 't5', type: 'synth' },
+            { id: 'synth2', name: 'SYN:NOISE', color: 't6', type: 'synth' },
+            { id: 'synth3', name: 'SYN:FM', color: 't7', type: 'synth' }
+        ];
+
+        // Chaotic patterns mixing everything
+        const patterns = {
+            'dimensional_rift': { 
+                name: '次元裂傷', origin: 'Dimension X', steps: 17,
+                pattern: { 
+                    bongo1: [1,0,0,1,0,1,0,0,1,0,0,1,0,1,0,0,1],
+                    bongo2: [0,1,0,0,1,0,1,0,0,1,0,0,1,0,1,0,0],
+                    bongo3: [0,0,1,0,0,0,0,1,0,0,1,0,0,0,0,1,0],
+                    bass:   [1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
+                    snare:  [0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,1,0],
+                    synth1: [1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1],
+                    synth2: [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0],
+                    synth3: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0]
+                }
+            },
+            'blood_ritual': { 
+                name: '血の儀式', origin: 'Abyss', steps: 16,
+                pattern: { 
+                    bongo1: [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
+                    bongo2: [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+                    bongo3: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
+                    bass:   [1,0,0,1,0,0,1,0,1,0,0,1,0,0,1,0],
+                    snare:  [0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,0],
+                    synth1: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+                    synth2: [0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1],
+                    synth3: [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0]
+                }
+            },
+            'sahara_glitch': { 
+                name: 'サハラ電脳', origin: 'Cyber Desert', steps: 12,
+                pattern: { 
+                    bongo1: [1,0,1,1,0,1,1,0,1,1,0,1],
+                    bongo2: [0,1,0,0,1,0,0,1,0,0,1,0],
+                    bongo3: [1,0,0,1,0,0,1,0,0,1,0,0],
+                    bass:   [1,0,0,0,0,0,1,0,0,0,0,0],
+                    snare:  [0,0,0,1,0,0,0,0,0,1,0,0],
+                    synth1: [1,1,1,0,1,1,1,0,1,1,1,0],
+                    synth2: [0,0,0,0,0,1,0,0,0,0,0,1],
+                    synth3: [0,1,0,1,0,0,0,1,0,1,0,0]
+                }
+            },
+            'havana_noir': { 
+                name: 'ハバナ暗黒', origin: 'Shadow Cuba', steps: 16,
+                pattern: { 
+                    bongo1: [1,0,0,1,0,0,1,0,0,0,1,0,1,0,0,0],
+                    bongo2: [0,0,1,0,1,0,0,1,0,1,0,0,0,1,0,1],
+                    bongo3: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    bass:   [1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0],
+                    snare:  [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+                    synth1: [0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1],
+                    synth2: [0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+                    synth3: [0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0]
+                }
+            },
+            'prime_chaos': { 
+                name: '素数カオス', origin: 'Mathematics', steps: 11,
+                pattern: { 
+                    bongo1: [1,0,1,0,0,1,0,0,0,0,1],
+                    bongo2: [0,1,0,1,0,0,1,0,0,1,0],
+                    bongo3: [0,0,0,0,1,0,0,1,0,0,0],
+                    bass:   [1,0,0,0,0,0,0,1,0,0,0],
+                    snare:  [0,0,1,0,0,0,0,0,0,0,1],
+                    synth1: [1,1,0,1,1,0,1,1,0,1,1],
+                    synth2: [0,0,1,0,0,1,0,0,1,0,0],
+                    synth3: [0,0,0,0,0,1,0,0,0,0,0]
+                }
+            },
+            'turkish_doom': { 
+                name: 'トルコ滅亡', origin: 'Istanbul 2099', steps: 9,
+                pattern: { 
+                    bongo1: [1,0,1,0,1,0,1,0,0],
+                    bongo2: [0,1,0,1,0,1,0,1,1],
+                    bongo3: [1,0,0,1,0,0,1,0,0],
+                    bass:   [1,0,0,0,0,1,0,0,0],
+                    snare:  [0,0,1,0,1,0,0,1,0],
+                    synth1: [0,0,0,0,0,0,1,0,1],
+                    synth2: [0,1,0,0,0,0,0,1,0],
+                    synth3: [1,0,0,1,0,0,0,0,1]
+                }
+            },
+            'amazon_machine': { 
+                name: 'アマゾン機械', origin: 'Jungle Tech', steps: 16,
+                pattern: { 
+                    bongo1: [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
+                    bongo2: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0],
+                    bongo3: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
+                    bass:   [1,0,0,1,0,0,1,0,1,0,0,1,0,0,1,0],
+                    snare:  [0,0,0,0,1,0,0,1,0,0,0,0,1,0,0,1],
+                    synth1: [1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0],
+                    synth2: [0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0],
+                    synth3: [0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0]
+                }
+            },
+            'nile_virus': { 
+                name: 'ナイルウイルス', origin: 'Digital Egypt', steps: 16,
+                pattern: { 
+                    bongo1: [1,0,0,1,0,1,0,0,1,0,0,1,0,1,0,1],
+                    bongo2: [0,1,1,0,1,0,1,1,0,1,1,0,1,0,1,0],
+                    bongo3: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    bass:   [1,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0],
+                    snare:  [0,0,1,0,1,0,0,1,0,0,1,0,1,0,0,1],
+                    synth1: [0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0],
+                    synth2: [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+                    synth3: [0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0]
+                }
+            },
+            'fibonacci_beat': { 
+                name: 'フィボナッチ', origin: 'Golden Ratio', steps: 13,
+                pattern: { 
+                    bongo1: [1,1,0,1,0,0,1,0,0,0,1,0,0],
+                    bongo2: [0,0,1,0,1,0,0,1,0,0,0,1,0],
+                    bongo3: [0,0,0,0,0,1,0,0,1,0,0,0,1],
+                    bass:   [1,0,0,0,0,0,0,0,1,0,0,0,0],
+                    snare:  [0,0,0,1,0,0,0,0,0,0,0,0,1],
+                    synth1: [1,0,1,0,0,1,0,0,0,1,0,0,0],
+                    synth2: [0,1,0,0,1,0,0,0,1,0,0,0,0],
+                    synth3: [0,0,0,1,0,0,1,0,0,0,1,0,0]
+                }
+            },
+            'berlin_souk': { 
+                name: 'ベルリン市場', origin: 'Techno Bazaar', steps: 16,
+                pattern: { 
+                    bongo1: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+                    bongo2: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0],
+                    bongo3: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
+                    bass:   [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+                    snare:  [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+                    synth1: [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
+                    synth2: [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+                    synth3: [0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0]
+                }
+            },
+            'void_cumbia': { 
+                name: '虚無クンビア', origin: 'Null Space', steps: 16,
+                pattern: { 
+                    bongo1: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0],
+                    bongo2: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
+                    bongo3: [0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1],
+                    bass:   [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+                    snare:  [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+                    synth1: [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+                    synth2: [0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0],
+                    synth3: [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+                }
+            },
+            'quantum_zar': { 
+                name: '量子ザール', origin: 'Superposition', steps: 12,
+                pattern: { 
+                    bongo1: [1,0,1,1,0,1,1,0,1,1,0,1],
+                    bongo2: [0,1,0,0,1,0,0,1,0,0,1,0],
+                    bongo3: [1,0,0,1,0,0,1,0,0,1,0,0],
+                    bass:   [1,0,0,0,0,0,1,0,0,0,0,0],
+                    snare:  [0,0,1,0,1,0,0,0,1,0,1,0],
+                    synth1: [0,0,0,1,0,0,0,1,0,0,0,1],
+                    synth2: [1,1,0,0,0,1,1,0,0,0,1,1],
+                    synth3: [0,0,1,0,0,0,0,0,1,0,0,0]
+                }
+            }
+        };
+
+        let isPlaying = false;
+        let currentStep = 0;
+        let stepCount = 16;
+        let tempo = 150;
+        let swing = 0;
+        let chaosAmount = 0;
+        let currentPattern = 'dimensional_rift';
+        let sequencerTimeout = null;
+        let trackVolumes = {};
+        trackConfig.forEach(t => trackVolumes[t.id] = 1);
+        let sequence = JSON.parse(JSON.stringify(patterns[currentPattern].pattern));
+
+        async function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                masterGain = audioCtx.createGain();
+                filterNode = audioCtx.createBiquadFilter();
+                filterNode.type = 'lowpass';
+                filterNode.frequency.value = 20000;
+                filterNode.Q.value = 5;
+                filterNode.connect(masterGain);
+                masterGain.connect(audioCtx.destination);
+            }
+            if (audioCtx.state === 'suspended') {
+                await audioCtx.resume();
+            }
+        }
+
+        function buildSampleIndicators() {
+            const container = document.getElementById('sampleIndicators');
+            container.innerHTML = '';
+            trackConfig.forEach(track => {
+                const ind = document.createElement('span');
+                ind.className = `sample-indicator`;
+                ind.id = `indicator-${track.id}`;
+                ind.textContent = track.name;
+                ind.style.color = `var(--${track.color === 't0' ? 'blood' : track.color === 't1' ? 'gold' : track.color === 't2' ? 'cyber' : track.color === 't3' ? 'plasma' : track.color === 't4' ? 'rust' : track.color === 't5' ? 'acid' : track.color === 't6' ? 'blood' : 'cyber'})`;
+                if (track.type === 'synth') ind.classList.add('loaded');
+                container.appendChild(ind);
+            });
+        }
+
+        async function loadSamples() {
+            await initAudio();
+            const progressEl = document.getElementById('loadingProgress');
+            const statusEl = document.getElementById('loadingStatus');
+            const fallbackBtn = document.getElementById('fallbackBtn');
+            
+            const total = Object.keys(sampleUrls).length;
+            let loaded = 0;
+
+            for (const [name, url] of Object.entries(sampleUrls)) {
+                try {
+                    statusEl.textContent = `LOADING ${name.toUpperCase()}...`;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const arrayBuffer = await response.arrayBuffer();
+                    samples[name] = await audioCtx.decodeAudioData(arrayBuffer);
+                    const ind = document.getElementById(`indicator-${name}`);
+                    if (ind) ind.classList.add('loaded');
+                    loaded++;
+                    progressEl.style.width = `${(loaded / total) * 100}%`;
+                } catch (error) {
+                    console.error(`Error loading ${name}:`, error);
+                }
+            }
+
+            if (loaded === total) {
+                statusEl.textContent = '⛧ CHAOS READY ⛧';
+            } else if (loaded > 0) {
+                statusEl.textContent = `${loaded}/${total} PCM + SYNTH READY`;
+            } else {
+                statusEl.textContent = 'PCM FAILED - SYNTH MODE ACTIVE';
+                fallbackBtn.style.display = 'inline-block';
+            }
+        }
+
+        // ====== SYNTH ENGINES ======
+        
+        // Acid synth - 303 style
+        function playSynthAcid(volume) {
+            const osc = audioCtx.createOscillator();
+            const filter = audioCtx.createBiquadFilter();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sawtooth';
+            const baseFreq = 80 + Math.random() * 60;
+            osc.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.5, audioCtx.currentTime + 0.15);
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(3000, audioCtx.currentTime);
+            filter.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.15);
+            filter.Q.value = 15;
+            
+            gain.gain.setValueAtTime(volume * 0.6, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(filterNode);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        }
+        
+        // Noise percussion
+        function playSynthNoise(volume) {
+            const bufferSize = audioCtx.sampleRate * 0.05;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i/bufferSize, 2);
+            }
+            
+            const source = audioCtx.createBufferSource();
+            source.buffer = buffer;
+            
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 2000 + Math.random() * 3000;
+            filter.Q.value = 2;
+            
+            const gain = audioCtx.createGain();
+            gain.gain.value = volume * 0.5;
+            
+            source.connect(filter);
+            filter.connect(gain);
+            gain.connect(filterNode);
+            
+            source.start();
+        }
+        
+        // FM metallic hit
+        function playSynthFM(volume) {
+            const carrier = audioCtx.createOscillator();
+            const modulator = audioCtx.createOscillator();
+            const modGain = audioCtx.createGain();
+            const outGain = audioCtx.createGain();
+            
+            const ratio = [1.4, 2.76, 3.5, 5.19][Math.floor(Math.random() * 4)];
+            const baseFreq = 200 + Math.random() * 200;
+            
+            carrier.frequency.value = baseFreq;
+            modulator.frequency.value = baseFreq * ratio;
+            
+            modGain.gain.setValueAtTime(500, audioCtx.currentTime);
+            modGain.gain.exponentialRampToValueAtTime(1, audioCtx.currentTime + 0.1);
+            
+            outGain.gain.setValueAtTime(volume * 0.4, audioCtx.currentTime);
+            outGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+            
+            modulator.connect(modGain);
+            modGain.connect(carrier.frequency);
+            carrier.connect(outGain);
+            outGain.connect(filterNode);
+            
+            carrier.start();
+            modulator.start();
+            carrier.stop(audioCtx.currentTime + 0.15);
+            modulator.stop(audioCtx.currentTime + 0.15);
+        }
+
+        // PCM synth fallback
+        function playSynthBongo(pitch, volume) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(pitch, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(pitch * 0.4, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(volume * 0.7, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+            osc.connect(gain);
+            gain.connect(filterNode);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.12);
+        }
+
+        function playSynthBass(volume) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(60, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.2);
+            gain.gain.setValueAtTime(volume * 1.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+            osc.connect(gain);
+            gain.connect(filterNode);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.25);
+        }
+
+        function playSynthSnare(volume) {
+            const bufferSize = audioCtx.sampleRate * 0.08;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            const noiseGain = audioCtx.createGain();
+            noiseGain.gain.setValueAtTime(volume * 0.4, audioCtx.currentTime);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+            noise.connect(noiseGain);
+            noiseGain.connect(filterNode);
+            noise.start();
+            noise.stop(audioCtx.currentTime + 0.08);
+        }
+
+        function playSample(id, volume = 1) {
+            if (!audioCtx) return;
+            
+            // Chaos random skip
+            if (chaosAmount > 0 && Math.random() < chaosAmount * 0.003) return;
+            
+            // Chaos pitch variation
+            const pitchVar = 1 + (Math.random() - 0.5) * chaosAmount * 0.01;
+            const vol = volume * trackVolumes[id];
+            
+            // Glitch double trigger
+            const triggerCount = glitchEnabled && Math.random() < 0.2 ? 2 : 1;
+            
+            for (let t = 0; t < triggerCount; t++) {
+                setTimeout(() => {
+                    if (samples[id]) {
+                        const source = audioCtx.createBufferSource();
+                        const gainNode = audioCtx.createGain();
+                        source.buffer = samples[id];
+                        source.playbackRate.value = pitchVar;
+                        gainNode.gain.value = vol;
+                        source.connect(gainNode);
+                        gainNode.connect(filterNode);
+                        source.start();
+                    } else if (id === 'bongo1') {
+                        playSynthBongo(800 * pitchVar, vol);
+                    } else if (id === 'bongo2') {
+                        playSynthBongo(500 * pitchVar, vol);
+                    } else if (id === 'bongo3') {
+                        playSynthBongo(300 * pitchVar, vol);
+                    } else if (id === 'bass') {
+                        playSynthBass(vol);
+                    } else if (id === 'snare') {
+                        playSynthSnare(vol);
+                    } else if (id === 'synth1') {
+                        playSynthAcid(vol);
+                    } else if (id === 'synth2') {
+                        playSynthNoise(vol);
+                    } else if (id === 'synth3') {
+                        playSynthFM(vol);
+                    }
+                }, t * 30);
+            }
+            
+            triggerVizBar(id);
+        }
+
+        function createVisualizer() {
+            const viz = document.getElementById('visualizer');
+            viz.innerHTML = '';
+            const colors = ['var(--blood)', 'var(--gold)', 'var(--cyber)', 'var(--plasma)', 'var(--rust)', 'var(--acid)', '#FF6B6B', '#4ECDC4'];
+            trackConfig.forEach((track, i) => {
+                const bar = document.createElement('div');
+                bar.className = 'viz-bar';
+                bar.id = `viz-${track.id}`;
+                bar.style.height = '4px';
+                bar.style.background = colors[i];
+                viz.appendChild(bar);
+            });
+        }
+
+        function triggerVizBar(id) {
+            const bar = document.getElementById(`viz-${id}`);
+            if (bar) {
+                bar.style.height = '80px';
+                setTimeout(() => { bar.style.height = '4px'; }, 60);
+            }
+        }
+
+        function step() {
+            document.querySelectorAll('.step.current').forEach(el => el.classList.remove('current'));
+
+            trackConfig.forEach(track => {
+                if (sequence[track.id] && sequence[track.id][currentStep]) {
+                    playSample(track.id);
+                }
+            });
+
+            document.querySelectorAll(`.step:nth-child(${currentStep + 1})`).forEach(el => {
+                el.classList.add('current');
+            });
+
+            currentStep = (currentStep + 1) % stepCount;
+        }
+
+        function togglePlay() {
+            isPlaying ? stopSequencer() : startSequencer();
+        }
+
+        function startSequencer() {
+            if (sequencerTimeout) clearTimeout(sequencerTimeout);
+            isPlaying = true;
+            currentStep = 0;
+            document.getElementById('playBtn').classList.add('playing');
+            document.getElementById('playBtn').textContent = '■';
+            scheduleNextStep();
+        }
+
+        function scheduleNextStep() {
+            if (!isPlaying) return;
+            step();
+
+            let baseInterval = (60 / tempo) * 1000 / 4;
+            
+            // Chaos tempo wobble
+            if (chaosAmount > 0) {
+                baseInterval *= 1 + (Math.random() - 0.5) * chaosAmount * 0.005;
+            }
+            
+            let interval = baseInterval;
+            if (currentStep % 2 === 1 && swing > 0) {
+                interval = baseInterval * (1 + swing / 100);
+            } else if (currentStep % 2 === 0 && swing > 0) {
+                interval = baseInterval * (1 - swing / 200);
+            }
+
+            sequencerTimeout = setTimeout(scheduleNextStep, interval);
+        }
+
+        function stopSequencer() {
+            isPlaying = false;
+            if (sequencerTimeout) clearTimeout(sequencerTimeout);
+            document.getElementById('playBtn').classList.remove('playing');
+            document.getElementById('playBtn').textContent = '▶';
+            document.querySelectorAll('.step.current').forEach(el => el.classList.remove('current'));
+            currentStep = 0;
+        }
+
+        function buildPatternButtons() {
+            const container = document.getElementById('patterns');
+            container.innerHTML = '';
+            for (const [key, pattern] of Object.entries(patterns)) {
+                const btn = document.createElement('button');
+                btn.className = `pattern-btn ${key === currentPattern ? 'active' : ''}`;
+                btn.innerHTML = `<div class="pattern-name">${pattern.name}</div><div class="pattern-origin">${pattern.origin}</div>`;
+                btn.onclick = () => selectPattern(key);
+                container.appendChild(btn);
+            }
+        }
+
+        function selectPattern(key) {
+            currentPattern = key;
+            const pattern = patterns[key];
+            stepCount = pattern.steps;
+            sequence = JSON.parse(JSON.stringify(pattern.pattern));
+            trackConfig.forEach(track => {
+                if (!sequence[track.id]) sequence[track.id] = new Array(stepCount).fill(0);
+                while (sequence[track.id].length < stepCount) sequence[track.id].push(0);
+                sequence[track.id] = sequence[track.id].slice(0, stepCount);
+            });
+            buildPatternButtons();
+            buildStepSelector();
+            buildTracks();
+            if (isPlaying) currentStep = 0;
+        }
+
+        function buildStepSelector() {
+            const container = document.getElementById('stepSelector');
+            container.innerHTML = '';
+            [8, 9, 11, 12, 13, 16, 17].forEach(count => {
+                const btn = document.createElement('button');
+                btn.className = `step-option ${count === stepCount ? 'active' : ''}`;
+                btn.textContent = count;
+                btn.onclick = () => {
+                    stepCount = count;
+                    trackConfig.forEach(track => {
+                        while (sequence[track.id].length < stepCount) sequence[track.id].push(0);
+                        sequence[track.id] = sequence[track.id].slice(0, stepCount);
+                    });
+                    buildStepSelector();
+                    buildTracks();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function buildTracks() {
+            const container = document.getElementById('tracks');
+            container.innerHTML = '';
+            trackConfig.forEach(track => {
+                const trackEl = document.createElement('div');
+                trackEl.className = 'track';
+
+                const info = document.createElement('div');
+                info.className = 'track-info';
+                
+                const name = document.createElement('div');
+                name.className = `track-name ${track.type}`;
+                name.textContent = track.name;
+                name.onclick = () => playSample(track.id);
+                
+                const volume = document.createElement('input');
+                volume.type = 'range';
+                volume.className = 'track-volume';
+                volume.min = 0;
+                volume.max = 100;
+                volume.value = trackVolumes[track.id] * 100;
+                volume.oninput = (e) => { trackVolumes[track.id] = e.target.value / 100; };
+
+                info.appendChild(name);
+                info.appendChild(volume);
+                trackEl.appendChild(info);
+
+                const steps = document.createElement('div');
+                steps.className = 'steps';
+
+                for (let i = 0; i < stepCount; i++) {
+                    const stepEl = document.createElement('div');
+                    stepEl.className = `step ${track.color} ${sequence[track.id][i] ? 'active' : ''}`;
+                    stepEl.onclick = () => {
+                        sequence[track.id][i] = sequence[track.id][i] ? 0 : 1;
+                        stepEl.classList.toggle('active');
+                        if (sequence[track.id][i]) playSample(track.id);
+                    };
+                    steps.appendChild(stepEl);
+                }
+
+                trackEl.appendChild(steps);
+                container.appendChild(trackEl);
+            });
+        }
+
+        // ====== CHAOS FUNCTIONS ======
+        
+        document.getElementById('glitchBtn').onclick = function() {
+            glitchEnabled = !glitchEnabled;
+            this.classList.toggle('active');
+        };
+
+        document.getElementById('mutateBtn').onclick = function() {
+            trackConfig.forEach(track => {
+                sequence[track.id] = sequence[track.id].map(v => 
+                    Math.random() < 0.15 ? (v ? 0 : 1) : v
+                );
+            });
+            buildTracks();
+        };
+
+        document.getElementById('reverseBtn').onclick = function() {
+            trackConfig.forEach(track => {
+                sequence[track.id] = sequence[track.id].reverse();
+            });
+            buildTracks();
+        };
+
+        document.getElementById('randomBtn').onclick = function() {
+            trackConfig.forEach(track => {
+                const density = 0.2 + Math.random() * 0.4;
+                sequence[track.id] = Array(stepCount).fill(0).map(() => Math.random() < density ? 1 : 0);
+            });
+            buildTracks();
+        };
+
+        document.getElementById('doubleBtn').onclick = function() {
+            tempo = Math.min(300, tempo * 2);
+            document.getElementById('tempo').value = tempo;
+            document.getElementById('tempoValue').textContent = tempo;
+        };
+
+        document.getElementById('filterBtn').onclick = function() {
+            filterEnabled = !filterEnabled;
+            this.classList.toggle('active');
+            if (filterEnabled) {
+                let freq = 5000;
+                const sweep = () => {
+                    if (!filterEnabled) {
+                        filterNode.frequency.value = 20000;
+                        return;
+                    }
+                    freq = 200 + Math.sin(Date.now() * 0.002) * 2000 + 2000;
+                    filterNode.frequency.value = freq;
+                    requestAnimationFrame(sweep);
+                };
+                sweep();
+            } else {
+                filterNode.frequency.value = 20000;
+            }
+        };
+
+        // Event listeners
+        document.getElementById('playBtn').onclick = async () => {
+            await initAudio();
+            togglePlay();
+        };
+
+        document.getElementById('fallbackBtn').onclick = async () => {
+            await initAudio();
+            document.getElementById('loadingStatus').textContent = 'PURE SYNTH CHAOS';
+            document.getElementById('fallbackBtn').style.display = 'none';
+        };
+
+        document.getElementById('tempo').oninput = (e) => {
+            tempo = parseInt(e.target.value);
+            document.getElementById('tempoValue').textContent = tempo;
+        };
+
+        document.getElementById('swing').oninput = (e) => {
+            swing = parseInt(e.target.value);
+            document.getElementById('swingValue').textContent = `${swing}%`;
+        };
+
+        document.getElementById('chaos').oninput = (e) => {
+            chaosAmount = parseInt(e.target.value);
+            document.getElementById('chaosValue').textContent = `${chaosAmount}%`;
+        };
+
+        document.addEventListener('touchstart', async () => { await initAudio(); }, { once: true });
+        document.addEventListener('click', async () => { await initAudio(); }, { once: true });
+
+        async function init() {
+            buildSampleIndicators();
+            createVisualizer();
+            buildPatternButtons();
+            buildStepSelector();
+            buildTracks();
+            await loadSamples();
+        }
+
+        init();
+    </script>
+</body>
+</html>
