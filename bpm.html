@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIDI CC70 Rhythm Machine</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-top: 0;
+            font-size: 28px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .midi-status {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        
+        .midi-status.connected {
+            background: rgba(76, 175, 80, 0.3);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button.playing {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .tempo-display {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .tempo-value {
+            font-size: 48px;
+            font-weight: bold;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+        }
+        
+        .tempo-label {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        .cc-value {
+            font-size: 12px;
+            opacity: 0.6;
+        }
+        
+        .pattern-grid {
+            display: grid;
+            grid-template-columns: auto repeat(16, 1fr);
+            gap: 5px;
+            margin-top: 20px;
+        }
+        
+        .pattern-label {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .step {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .step:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .step.active {
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        
+        .step.current {
+            border-color: #f5576c;
+            animation: pulse 0.1s;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎛️ MIDI CC70 Rhythm Machine</h1>
+        
+        <div class="midi-status" id="midiStatus">
+            MIDI未接続 - MIDIデバイスを接続してください
+        </div>
+        
+        <div class="tempo-display">
+            <div class="tempo-value" id="tempoValue">120</div>
+            <div class="tempo-label">BPM</div>
+            <div class="cc-value" id="ccValue">CC70: 64</div>
+        </div>
+        
+        <div class="controls">
+            <button id="playButton">▶ 再生</button>
+            <button id="stopButton">⏹ 停止</button>
+            <button id="clearButton">🗑️ クリア</button>
+        </div>
+        
+        <div class="pattern-grid" id="patternGrid"></div>
+        
+        <div class="info">
+            <strong>使い方:</strong><br>
+            • グリッドをクリックしてパターンを作成<br>
+            • 外部MIDIデバイスのCC#70 (0-127) でテンポを制御 (60-180 BPM)<br>
+            • Kick, Snare, Hi-hat, Clapの4トラック × 16ステップ
+        </div>
+    </div>
+
+    <script>
+        // Web Audio API setup
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // MIDI setup
+        let midiAccess = null;
+        let currentCCValue = 64;
+        
+        // Sequencer state
+        let isPlaying = false;
+        let currentStep = 0;
+        let tempoInterval = null;
+        let currentBPM = 120;
+        
+        // Drum sounds
+        const drums = {
+            kick: { name: 'Kick', freq: 60, decay: 0.5 },
+            snare: { name: 'Snare', freq: 200, decay: 0.2 },
+            hihat: { name: 'Hi-hat', freq: 8000, decay: 0.05 },
+            clap: { name: 'Clap', freq: 1000, decay: 0.15 }
+        };
+        
+        // Pattern data (16 steps for each drum)
+        const pattern = {
+            kick: new Array(16).fill(false),
+            snare: new Array(16).fill(false),
+            hihat: new Array(16).fill(false),
+            clap: new Array(16).fill(false)
+        };
+        
+        // Initialize MIDI
+        async function initMIDI() {
+            try {
+                midiAccess = await navigator.requestMIDIAccess();
+                updateMIDIStatus(true);
+                
+                // Listen to all MIDI inputs
+                for (let input of midiAccess.inputs.values()) {
+                    input.onmidimessage = handleMIDIMessage;
+                }
+            } catch (error) {
+                console.error('MIDI access failed:', error);
+                updateMIDIStatus(false, 'MIDI access denied');
+            }
+        }
+        
+        function handleMIDIMessage(message) {
+            const [status, data1, data2] = message.data;
+            
+            // CC message (0xB0-0xBF)
+            if ((status & 0xF0) === 0xB0) {
+                // CC#70
+                if (data1 === 70) {
+                    currentCCValue = data2;
+                    updateTempoFromCC(data2);
+                }
+            }
+        }
+        
+        function updateTempoFromCC(ccValue) {
+            // CC 0-127 -> BPM 60-180
+            currentBPM = Math.round(60 + (ccValue / 127) * 120);
+            updateTempoDisplay();
+            
+            if (isPlaying) {
+                updateSequencerTempo();
+            }
+        }
+        
+        function updateSequencerTempo() {
+            // リアルタイムでテンポを更新（再起動なし）
+            if (tempoInterval) {
+                clearInterval(tempoInterval);
+                const interval = (60 / currentBPM / 4) * 1000; // 16th note
+                tempoInterval = setInterval(step, interval);
+            }
+        }
+        
+        function updateTempoDisplay() {
+            document.getElementById('tempoValue').textContent = currentBPM;
+            document.getElementById('ccValue').textContent = `CC70: ${currentCCValue}`;
+        }
+        
+        function updateMIDIStatus(connected, message = '') {
+            const statusEl = document.getElementById('midiStatus');
+            if (connected) {
+                statusEl.textContent = 'MIDI接続済み - CC#70でテンポをコントロール';
+                statusEl.classList.add('connected');
+            } else {
+                statusEl.textContent = message || 'MIDI未接続';
+                statusEl.classList.remove('connected');
+            }
+        }
+        
+        // Create drum sound
+        function playDrum(drumType) {
+            const drum = drums[drumType];
+            const now = audioContext.currentTime;
+            
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            
+            if (drumType === 'kick') {
+                osc.frequency.setValueAtTime(drum.freq, now);
+                osc.frequency.exponentialRampToValueAtTime(0.01, now + drum.decay);
+                osc.type = 'sine';
+            } else if (drumType === 'snare') {
+                osc.type = 'triangle';
+                osc.frequency.value = drum.freq;
+                const noise = createNoiseBuffer();
+                const noiseSource = audioContext.createBufferSource();
+                noiseSource.buffer = noise;
+                const noiseGain = audioContext.createGain();
+                noiseGain.gain.setValueAtTime(0.3, now);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, now + drum.decay);
+                noiseSource.connect(noiseGain);
+                noiseGain.connect(audioContext.destination);
+                noiseSource.start(now);
+                noiseSource.stop(now + drum.decay);
+            } else if (drumType === 'hihat') {
+                osc.type = 'square';
+                osc.frequency.value = drum.freq;
+            } else if (drumType === 'clap') {
+                const noise = createNoiseBuffer();
+                const noiseSource = audioContext.createBufferSource();
+                noiseSource.buffer = noise;
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + drum.decay);
+                noiseSource.connect(gain);
+                gain.connect(audioContext.destination);
+                noiseSource.start(now);
+                noiseSource.stop(now + drum.decay);
+                return;
+            }
+            
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + drum.decay);
+            
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            
+            osc.start(now);
+            osc.stop(now + drum.decay);
+        }
+        
+        function createNoiseBuffer() {
+            const bufferSize = audioContext.sampleRate * 0.5;
+            const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+            const output = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+            return buffer;
+        }
+        
+        // Sequencer
+        function step() {
+            // Remove current step highlight
+            document.querySelectorAll('.step.current').forEach(el => {
+                el.classList.remove('current');
+            });
+            
+            // Play active steps
+            Object.keys(pattern).forEach(drumType => {
+                if (pattern[drumType][currentStep]) {
+                    playDrum(drumType);
+                }
+            });
+            
+            // Highlight current step
+            Object.keys(pattern).forEach((drumType, trackIndex) => {
+                const stepEl = document.querySelector(`[data-track="${trackIndex}"][data-step="${currentStep}"]`);
+                if (stepEl) {
+                    stepEl.classList.add('current');
+                }
+            });
+            
+            currentStep = (currentStep + 1) % 16;
+        }
+        
+        function startSequencer() {
+            if (isPlaying) return;
+            isPlaying = true;
+            currentStep = 0;
+            
+            const interval = (60 / currentBPM / 4) * 1000; // 16th note
+            tempoInterval = setInterval(step, interval);
+            
+            document.getElementById('playButton').classList.add('playing');
+        }
+        
+        function stopSequencer() {
+            if (!isPlaying) return;
+            isPlaying = false;
+            
+            if (tempoInterval) {
+                clearInterval(tempoInterval);
+                tempoInterval = null;
+            }
+            
+            currentStep = 0;
+            document.querySelectorAll('.step.current').forEach(el => {
+                el.classList.remove('current');
+            });
+            
+            document.getElementById('playButton').classList.remove('playing');
+        }
+        
+        function restartSequencer() {
+            if (isPlaying) {
+                stopSequencer();
+                setTimeout(() => startSequencer(), 10);
+            }
+        }
+        
+        // UI
+        function createPatternGrid() {
+            const grid = document.getElementById('patternGrid');
+            grid.innerHTML = '';
+            
+            Object.keys(drums).forEach((drumType, trackIndex) => {
+                // Label
+                const label = document.createElement('div');
+                label.className = 'pattern-label';
+                label.textContent = drums[drumType].name;
+                grid.appendChild(label);
+                
+                // Steps
+                for (let i = 0; i < 16; i++) {
+                    const step = document.createElement('div');
+                    step.className = 'step';
+                    step.dataset.track = trackIndex;
+                    step.dataset.step = i;
+                    
+                    if (pattern[drumType][i]) {
+                        step.classList.add('active');
+                    }
+                    
+                    step.addEventListener('click', () => {
+                        pattern[drumType][i] = !pattern[drumType][i];
+                        step.classList.toggle('active');
+                        
+                        // Preview sound
+                        if (pattern[drumType][i]) {
+                            playDrum(drumType);
+                        }
+                    });
+                    
+                    grid.appendChild(step);
+                }
+            });
+        }
+        
+        function clearPattern() {
+            Object.keys(pattern).forEach(drumType => {
+                pattern[drumType].fill(false);
+            });
+            createPatternGrid();
+        }
+        
+        // Event listeners
+        document.getElementById('playButton').addEventListener('click', startSequencer);
+        document.getElementById('stopButton').addEventListener('click', stopSequencer);
+        document.getElementById('clearButton').addEventListener('click', clearPattern);
+        
+        // Initialize
+        initMIDI();
+        createPatternGrid();
+        updateTempoDisplay();
+        
+        // Set default pattern
+        pattern.kick[0] = true;
+        pattern.kick[8] = true;
+        pattern.snare[4] = true;
+        pattern.snare[12] = true;
+        pattern.hihat[0] = true;
+        pattern.hihat[2] = true;
+        pattern.hihat[4] = true;
+        pattern.hihat[6] = true;
+        pattern.hihat[8] = true;
+        pattern.hihat[10] = true;
+        pattern.hihat[12] = true;
+        pattern.hihat[14] = true;
+        createPatternGrid();
+    </script>
+</body>
+</html>
