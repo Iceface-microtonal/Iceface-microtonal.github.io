@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>PuppeTwin Town - 散歩シミュレーター</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@300;400;500;700&family=Shippori+Mincho:wght@400;600&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { 
+  width: 100%; height: 100%; overflow: hidden; 
+  font-family: 'Zen Maru Gothic', sans-serif;
+  touch-action: none;
+}
+
+#loading-screen {
+  position: fixed; inset: 0; z-index: 1000;
+  background: #1a1510;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: opacity 1.5s ease;
+}
+#loading-screen.fade-out { opacity: 0; pointer-events: none; }
+
+.loading-title {
+  font-family: 'Shippori Mincho', serif;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  color: #e8dcc8;
+  letter-spacing: 0.3em;
+  margin-bottom: 0.3em;
+  text-shadow: 0 0 30px rgba(200, 180, 140, 0.3);
+}
+.loading-subtitle {
+  font-family: 'Shippori Mincho', serif;
+  font-size: clamp(0.75rem, 2vw, 1rem);
+  color: #a09080;
+  letter-spacing: 0.5em;
+  margin-bottom: 2em;
+}
+.loading-bar-container {
+  width: min(60%, 300px); height: 2px;
+  background: rgba(160, 144, 128, 0.2);
+  border-radius: 1px; overflow: hidden;
+}
+.loading-bar {
+  height: 100%; width: 0%; 
+  background: linear-gradient(90deg, #c8b48c, #e8dcc8);
+  transition: width 0.3s ease;
+}
+.loading-hint {
+  margin-top: 2em;
+  font-size: clamp(0.65rem, 1.5vw, 0.8rem);
+  color: #706050;
+  letter-spacing: 0.1em;
+}
+
+canvas { display: block; }
+
+#hud {
+  position: fixed; top: 0; left: 0; right: 0;
+  padding: 16px 20px;
+  display: flex; justify-content: space-between; align-items: flex-start;
+  pointer-events: none; z-index: 10;
+}
+
+#location-name {
+  font-family: 'Shippori Mincho', serif;
+  font-size: clamp(0.85rem, 2.5vw, 1.1rem);
+  color: #f0e8d8;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.6), 0 0 20px rgba(0,0,0,0.3);
+  letter-spacing: 0.15em;
+  opacity: 0; transition: opacity 0.8s ease;
+  max-width: 60%;
+}
+#location-name.visible { opacity: 1; }
+
+#time-display {
+  font-family: 'Shippori Mincho', serif;
+  font-size: clamp(0.7rem, 2vw, 0.85rem);
+  color: rgba(240, 232, 216, 0.7);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+  letter-spacing: 0.1em;
+}
+
+#info-panel {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(to top, rgba(20, 16, 10, 0.9) 0%, rgba(20, 16, 10, 0.6) 60%, transparent 100%);
+  padding: 60px 24px 24px;
+  transform: translateY(100%);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 20; pointer-events: none;
+  max-height: 45vh; overflow-y: auto;
+}
+#info-panel.visible { transform: translateY(0); pointer-events: auto; }
+#info-panel h3 {
+  font-family: 'Shippori Mincho', serif;
+  font-size: clamp(1rem, 3vw, 1.3rem);
+  color: #e8dcc8; letter-spacing: 0.2em;
+  margin-bottom: 8px;
+}
+#info-panel p {
+  font-size: clamp(0.72rem, 1.8vw, 0.85rem);
+  color: #b0a090; line-height: 1.8;
+  letter-spacing: 0.04em;
+}
+#info-close {
+  position: absolute; top: 16px; right: 20px;
+  background: none; border: 1px solid rgba(200,180,140,0.3);
+  color: #c8b48c; padding: 4px 14px;
+  font-family: 'Zen Maru Gothic', sans-serif; font-size: 0.75rem;
+  border-radius: 2px; cursor: pointer; pointer-events: auto;
+}
+
+#mobile-controls {
+  position: fixed; bottom: 20px; left: 0; right: 0;
+  display: none; justify-content: space-between; align-items: flex-end;
+  padding: 0 20px; z-index: 15; pointer-events: none;
+}
+@media (max-width: 768px), (pointer: coarse) {
+  #mobile-controls { display: flex; }
+}
+
+#joystick-area {
+  width: 120px; height: 120px; position: relative;
+  pointer-events: auto; touch-action: none;
+}
+#joystick-base {
+  width: 100%; height: 100%; border-radius: 50%;
+  background: rgba(200, 180, 140, 0.1);
+  border: 1px solid rgba(200, 180, 140, 0.2);
+  position: relative;
+}
+#joystick-stick {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(200, 180, 140, 0.3);
+  border: 1px solid rgba(200, 180, 140, 0.4);
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  transition: background 0.2s;
+}
+
+#look-area {
+  width: 80px; display: flex; flex-direction: column; gap: 8px;
+  align-items: center; pointer-events: auto;
+}
+.look-btn {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(200, 180, 140, 0.1);
+  border: 1px solid rgba(200, 180, 140, 0.25);
+  color: rgba(200, 180, 140, 0.6);
+  font-size: 18px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; touch-action: none;
+  -webkit-user-select: none; user-select: none;
+}
+.look-btn:active { background: rgba(200, 180, 140, 0.25); }
+
+#minimap-container {
+  position: fixed; top: 50px; right: 16px;
+  width: clamp(80px, 20vw, 120px); height: clamp(80px, 20vw, 120px);
+  z-index: 10; pointer-events: auto; cursor: pointer;
+}
+#minimap {
+  width: 100%; height: 100%;
+  border: 1px solid rgba(200, 180, 140, 0.3);
+  border-radius: 4px; overflow: hidden;
+  background: #2a2418;
+}
+#minimap-canvas { width: 100%; height: 100%; }
+
+#compass {
+  position: fixed; top: 54px; right: calc(clamp(80px, 20vw, 120px) + 24px);
+  font-family: 'Shippori Mincho', serif;
+  font-size: 0.7rem; color: rgba(200,180,140,0.5);
+  z-index: 10; letter-spacing: 0.1em;
+}
+
+#season-indicator {
+  position: fixed; top: 16px; left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Shippori Mincho', serif;
+  font-size: clamp(0.65rem, 1.5vw, 0.75rem);
+  color: rgba(200,180,140,0.5);
+  letter-spacing: 0.3em; z-index: 10;
+}
+
+#interaction-hint {
+  position: fixed; bottom: 150px; left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Shippori Mincho', serif;
+  font-size: clamp(0.7rem, 1.8vw, 0.85rem);
+  color: rgba(232, 220, 200, 0.8);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+  letter-spacing: 0.15em;
+  opacity: 0; transition: opacity 0.5s ease;
+  pointer-events: none; z-index: 10;
+  text-align: center;
+}
+#interaction-hint.visible { opacity: 1; }
+
+/* Butterfly particles */
+.butterfly {
+  position: fixed; pointer-events: none; z-index: 5;
+  font-size: 14px; opacity: 0;
+  animation: flutter 8s ease-in-out infinite;
+}
+@keyframes flutter {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0deg); }
+  10% { opacity: 0.6; }
+  50% { transform: translate(30px, -50px) rotate(15deg); }
+  90% { opacity: 0.6; }
+  100% { opacity: 0; transform: translate(-20px, -100px) rotate(-10deg); }
+}
+</style>
+</head>
+<body>
+
+<div id="loading-screen">
+  <div class="loading-title">パペトゥイン・タウン</div>
+  <div class="loading-subtitle">散歩シミュレーター</div>
+  <div class="loading-bar-container"><div class="loading-bar" id="loading-bar"></div></div>
+  <div class="loading-hint">〜 "消えない"まちへようこそ 〜</div>
+</div>
+
+<div id="hud">
+  <div id="location-name"></div>
+  <div id="time-display"></div>
+</div>
+
+<div id="season-indicator"></div>
+
+<div id="minimap-container">
+  <div id="minimap">
+    <canvas id="minimap-canvas"></canvas>
+  </div>
+</div>
+<div id="compass">北</div>
+
+<div id="interaction-hint"></div>
+
+<div id="info-panel">
+  <button id="info-close" onclick="closeInfo()">閉じる</button>
+  <h3 id="info-title"></h3>
+  <p id="info-text"></p>
+</div>
+
+<div id="mobile-controls">
+  <div id="joystick-area">
+    <div id="joystick-base">
+      <div id="joystick-stick"></div>
+    </div>
+  </div>
+  <div id="look-area">
+    <div class="look-btn" id="look-up">↑</div>
+    <div style="display:flex;gap:8px;">
+      <div class="look-btn" id="look-left">←</div>
+      <div class="look-btn" id="look-right">→</div>
+    </div>
+    <div class="look-btn" id="look-down">↓</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ========== CORE SETUP ==========
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 500);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.body.appendChild(renderer.domElement);
+
+// Time system - accelerated day/night
+let gameTime = 8 * 3600; // Start at 8:00 AM
+const TIME_SPEED = 60; // 1 real second = 1 game minute
+
+// Fog
+scene.fog = new THREE.FogExp2(0xc8b8a0, 0.008);
+
+// ========== LIGHTING ==========
+const ambientLight = new THREE.AmbientLight(0x8090a0, 0.4);
+scene.add(ambientLight);
+
+const sunLight = new THREE.DirectionalLight(0xffeedd, 1.0);
+sunLight.position.set(50, 80, 30);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.set(2048, 2048);
+sunLight.shadow.camera.near = 1;
+sunLight.shadow.camera.far = 200;
+sunLight.shadow.camera.left = -80;
+sunLight.shadow.camera.right = 80;
+sunLight.shadow.camera.top = 80;
+sunLight.shadow.camera.bottom = -80;
+scene.add(sunLight);
+
+const fillLight = new THREE.DirectionalLight(0x6688aa, 0.3);
+fillLight.position.set(-30, 20, -30);
+scene.add(fillLight);
+
+// ========== MATERIALS ==========
+const mat = {
+  grass: new THREE.MeshLambertMaterial({ color: 0x5a7a3a }),
+  darkGrass: new THREE.MeshLambertMaterial({ color: 0x4a6a2a }),
+  water: new THREE.MeshPhongMaterial({ color: 0x3a6888, transparent: true, opacity: 0.7, shininess: 80 }),
+  sand: new THREE.MeshLambertMaterial({ color: 0xd4c4a0 }),
+  path: new THREE.MeshLambertMaterial({ color: 0xb0a080 }),
+  wood: new THREE.MeshLambertMaterial({ color: 0x8B6914 }),
+  darkWood: new THREE.MeshLambertMaterial({ color: 0x5a3a1a }),
+  stone: new THREE.MeshLambertMaterial({ color: 0x888880 }),
+  roof: new THREE.MeshLambertMaterial({ color: 0x6a3a2a }),
+  blueRoof: new THREE.MeshLambertMaterial({ color: 0x3a4a6a }),
+  whiteWall: new THREE.MeshLambertMaterial({ color: 0xe8e0d0 }),
+  rice: new THREE.MeshLambertMaterial({ color: 0x7aaa4a }),
+  flower1: new THREE.MeshLambertMaterial({ color: 0xff6688 }),
+  flower2: new THREE.MeshLambertMaterial({ color: 0xffaa44 }),
+  flower3: new THREE.MeshLambertMaterial({ color: 0xaa66ff }),
+  flower4: new THREE.MeshLambertMaterial({ color: 0xff4466 }),
+  leaf: new THREE.MeshLambertMaterial({ color: 0x3a8a3a }),
+  darkLeaf: new THREE.MeshLambertMaterial({ color: 0x2a6a2a }),
+  trunk: new THREE.MeshLambertMaterial({ color: 0x6a4a2a }),
+  rock: new THREE.MeshLambertMaterial({ color: 0x707068 }),
+  torii: new THREE.MeshLambertMaterial({ color: 0xcc3333 }),
+  lantern: new THREE.MeshLambertMaterial({ color: 0xd0c0a0 }),
+  glow: new THREE.MeshBasicMaterial({ color: 0xffdd88 }),
+  runway: new THREE.MeshLambertMaterial({ color: 0x909090 }),
+};
+
+// ========== WORLD GEOMETRY ==========
+// Ground plane
+const groundGeo = new THREE.PlaneGeometry(300, 300, 32, 32);
+const groundMat = new THREE.MeshLambertMaterial({ color: 0x5a7a3a });
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// Ocean
+const oceanGeo = new THREE.PlaneGeometry(300, 100);
+const ocean = new THREE.Mesh(oceanGeo, mat.water);
+ocean.rotation.x = -Math.PI / 2;
+ocean.position.set(0, -0.3, -100);
+scene.add(ocean);
+
+// Beach
+const beachGeo = new THREE.PlaneGeometry(120, 20);
+const beach = new THREE.Mesh(beachGeo, mat.sand);
+beach.rotation.x = -Math.PI / 2;
+beach.position.set(0, 0.02, -48);
+scene.add(beach);
+
+// ========== BUILDING HELPERS ==========
+function createBuilding(x, z, w, h, d, wallMat, roofMat, roofType = 'gable') {
+  const group = new THREE.Group();
+  
+  // Walls
+  const wallGeo = new THREE.BoxGeometry(w, h, d);
+  const walls = new THREE.Mesh(wallGeo, wallMat);
+  walls.position.y = h / 2;
+  walls.castShadow = true;
+  walls.receiveShadow = true;
+  group.add(walls);
+  
+  // Roof
+  if (roofType === 'gable') {
+    const roofH = h * 0.5;
+    const roofGeo = new THREE.ConeGeometry(Math.max(w, d) * 0.75, roofH, 4);
+    const roof = new THREE.Mesh(roofGeo, roofMat);
+    roof.position.y = h + roofH / 2;
+    roof.rotation.y = Math.PI / 4;
+    roof.castShadow = true;
+    group.add(roof);
+  } else if (roofType === 'flat') {
+    const roofGeo = new THREE.BoxGeometry(w + 0.5, 0.3, d + 0.5);
+    const roof = new THREE.Mesh(roofGeo, roofMat);
+    roof.position.y = h + 0.15;
+    roof.castShadow = true;
+    group.add(roof);
+  }
+  
+  group.position.set(x, 0, z);
+  scene.add(group);
+  return group;
+}
+
+function createTree(x, z, scale = 1, leafMat = mat.leaf) {
+  const group = new THREE.Group();
+  const trunkH = 2 * scale;
+  const trunkGeo = new THREE.CylinderGeometry(0.15 * scale, 0.25 * scale, trunkH, 6);
+  const trunk = new THREE.Mesh(trunkGeo, mat.trunk);
+  trunk.position.y = trunkH / 2;
+  trunk.castShadow = true;
+  group.add(trunk);
+  
+  const sizes = [1.8, 1.3, 0.8];
+  const ys = [trunkH, trunkH + 1 * scale, trunkH + 1.8 * scale];
+  sizes.forEach((s, i) => {
+    const geo = new THREE.SphereGeometry(s * scale, 7, 5);
+    const leaf = new THREE.Mesh(geo, leafMat);
+    leaf.position.y = ys[i];
+    leaf.castShadow = true;
+    group.add(leaf);
+  });
+  
+  group.position.set(x, 0, z);
+  scene.add(group);
+  return group;
+}
+
+function createPineTree(x, z, scale = 1) {
+  const group = new THREE.Group();
+  const trunkH = 3 * scale;
+  const trunkGeo = new THREE.CylinderGeometry(0.1 * scale, 0.2 * scale, trunkH, 6);
+  const trunk = new THREE.Mesh(trunkGeo, mat.trunk);
+  trunk.position.y = trunkH / 2;
+  trunk.castShadow = true;
+  group.add(trunk);
+  
+  for (let i = 0; i < 4; i++) {
+    const r = (2.0 - i * 0.4) * scale;
+    const h = 1.2 * scale;
+    const geo = new THREE.ConeGeometry(r, h, 7);
+    const cone = new THREE.Mesh(geo, mat.darkLeaf);
+    cone.position.y = trunkH * 0.5 + i * 0.9 * scale;
+    cone.castShadow = true;
+    group.add(cone);
+  }
+  
+  group.position.set(x, 0, z);
+  scene.add(group);
+  return group;
+}
+
+function createFlowerPatch(x, z, count = 8) {
+  const flowerMats = [mat.flower1, mat.flower2, mat.flower3, mat.flower4];
+  for (let i = 0; i < count; i++) {
+    const fx = x + (Math.random() - 0.5) * 3;
+    const fz = z + (Math.random() - 0.5) * 3;
+    const geo = new THREE.SphereGeometry(0.15, 5, 4);
+    const flower = new THREE.Mesh(geo, flowerMats[i % flowerMats.length]);
+    flower.position.set(fx, 0.15, fz);
+    scene.add(flower);
+    
+    const stemGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.15, 4);
+    const stem = new THREE.Mesh(stemGeo, mat.leaf);
+    stem.position.set(fx, 0.07, fz);
+    scene.add(stem);
+  }
+}
+
+function createPath(points, width = 1.5) {
+  for (let i = 0; i < points.length - 1; i++) {
+    const [x1, z1] = points[i];
+    const [x2, z2] = points[i + 1];
+    const dx = x2 - x1, dz = z2 - z1;
+    const len = Math.sqrt(dx * dx + dz * dz);
+    const angle = Math.atan2(dx, dz);
+    
+    const pathGeo = new THREE.PlaneGeometry(width, len);
+    const pathMesh = new THREE.Mesh(pathGeo, mat.path);
+    pathMesh.rotation.x = -Math.PI / 2;
+    pathMesh.rotation.z = -angle;
+    pathMesh.position.set((x1 + x2) / 2, 0.03, (z1 + z2) / 2);
+    pathMesh.receiveShadow = true;
+    scene.add(pathMesh);
+  }
+}
+
+function createLantern(x, z) {
+  const group = new THREE.Group();
+  
+  const poleGeo = new THREE.CylinderGeometry(0.08, 0.08, 2, 6);
+  const pole = new THREE.Mesh(poleGeo, mat.stone);
+  pole.position.y = 1;
+  group.add(pole);
+  
+  const lampGeo = new THREE.BoxGeometry(0.5, 0.6, 0.5);
+  const lamp = new THREE.Mesh(lampGeo, mat.lantern);
+  lamp.position.y = 2.2;
+  group.add(lamp);
+  
+  const glowGeo = new THREE.SphereGeometry(0.15, 6, 4);
+  const glow = new THREE.Mesh(glowGeo, mat.glow);
+  glow.position.y = 2.2;
+  group.add(glow);
+  
+  const light = new THREE.PointLight(0xffdd88, 0.5, 8);
+  light.position.y = 2.2;
+  group.add(light);
+  
+  group.position.set(x, 0, z);
+  scene.add(group);
+  return group;
+}
+
+// ========== BUILD THE TOWN ==========
+
+// --- Paths ---
+// Main road through town
+createPath([[0, 40], [0, 20], [0, 0], [0, -20], [0, -40]], 2);
+// Side paths
+createPath([[0, 0], [20, 0], [35, 0]], 1.5);
+createPath([[0, 0], [-20, 0], [-35, 0]], 1.5);
+createPath([[0, 20], [-15, 25], [-25, 30]], 1.2);
+createPath([[0, 20], [15, 25], [25, 30]], 1.2);
+createPath([[0, -20], [15, -25]], 1.2);
+createPath([[0, -20], [-15, -25], [-25, -35]], 1.2);
+// Path to beach
+createPath([[0, -40], [0, -48]], 1.5);
+
+// --- Rice Paddies (田んぼ) ---
+for (let rx = -3; rx <= 3; rx++) {
+  for (let rz = 0; rz < 3; rz++) {
+    const px = 30 + rx * 5;
+    const pz = 15 + rz * 5;
+    
+    const paddyGeo = new THREE.PlaneGeometry(4.5, 4.5);
+    const paddyMat = new THREE.MeshLambertMaterial({ 
+      color: rz === 0 ? 0x557733 : 0x6a9944 
+    });
+    const paddy = new THREE.Mesh(paddyGeo, paddyMat);
+    paddy.rotation.x = -Math.PI / 2;
+    paddy.position.set(px, 0.04, pz);
+    paddy.receiveShadow = true;
+    scene.add(paddy);
+    
+    // Water reflection in paddies
+    const waterGeo = new THREE.PlaneGeometry(4.2, 4.2);
+    const waterPad = new THREE.Mesh(waterGeo, new THREE.MeshPhongMaterial({
+      color: 0x5588aa, transparent: true, opacity: 0.3, shininess: 100
+    }));
+    waterPad.rotation.x = -Math.PI / 2;
+    waterPad.position.set(px, 0.05, pz);
+    scene.add(waterPad);
+  }
+}
+
+// --- 蝶の祠 (Butterfly Shrine) ---
+const shrineGroup = new THREE.Group();
+// Torii gate
+const toriiLeft = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 4, 8), mat.torii);
+toriiLeft.position.set(-1.5, 2, 0);
+shrineGroup.add(toriiLeft);
+const toriiRight = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 4, 8), mat.torii);
+toriiRight.position.set(1.5, 2, 0);
+shrineGroup.add(toriiRight);
+const toriiTop = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.25, 0.4), mat.torii);
+toriiTop.position.set(0, 3.8, 0);
+shrineGroup.add(toriiTop);
+const toriiMid = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.15, 0.3), mat.torii);
+toriiMid.position.set(0, 3.2, 0);
+shrineGroup.add(toriiMid);
+
+// Shrine building behind torii
+const shrineBuilding = createBuilding(0, -4, 3, 2.5, 3, mat.wood, mat.darkWood, 'gable');
+// Remove from scene and add to group
+scene.remove(shrineBuilding);
+shrineGroup.add(shrineBuilding);
+
+shrineGroup.position.set(-25, 0, 30);
+scene.add(shrineGroup);
+
+// Shrine lanterns
+createLantern(-27, 27);
+createLantern(-23, 27);
+
+// --- 花灯り空港 (Hanatamori Airport Runway) ---
+const runwayGeo = new THREE.PlaneGeometry(6, 50);
+const runway = new THREE.Mesh(runwayGeo, mat.runway);
+runway.rotation.x = -Math.PI / 2;
+runway.position.set(50, 0.04, 0);
+runway.receiveShadow = true;
+scene.add(runway);
+
+// Runway markings
+for (let i = -20; i <= 20; i += 3) {
+  const markGeo = new THREE.PlaneGeometry(0.3, 1.5);
+  const mark = new THREE.Mesh(markGeo, new THREE.MeshLambertMaterial({ color: 0xffffff }));
+  mark.rotation.x = -Math.PI / 2;
+  mark.position.set(50, 0.05, i);
+  scene.add(mark);
+}
+
+// Flowers along runway
+for (let i = -24; i <= 24; i += 1.5) {
+  createFlowerPatch(54 + Math.random() * 2, i);
+  createFlowerPatch(45 - Math.random() * 2, i);
+}
+
+// --- PuppeTwinの作業場所 (蟻塚) ---
+const moundGeo = new THREE.SphereGeometry(3, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+const mound = new THREE.Mesh(moundGeo, new THREE.MeshLambertMaterial({ color: 0x8a7050 }));
+mound.position.set(-30, 0, -10);
+mound.castShadow = true;
+scene.add(mound);
+// Little entrance
+const entrGeo = new THREE.SphereGeometry(0.6, 8, 6);
+const entrance = new THREE.Mesh(entrGeo, new THREE.MeshLambertMaterial({ color: 0x2a1a0a }));
+entrance.position.set(-28.5, 0.5, -8.5);
+scene.add(entrance);
+
+// --- どんぐり書房 ---
+const bookstore = createBuilding(-15, -10, 4, 3, 4, mat.wood, mat.roof, 'gable');
+
+// --- しろみみ薬草堂 ---
+const herbShop = createBuilding(15, -15, 4, 2.8, 3.5, mat.whiteWall, mat.blueRoof, 'gable');
+
+// --- 洞窟茶屋 ---
+const caveGeo = new THREE.SphereGeometry(4, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+const cave = new THREE.Mesh(caveGeo, mat.rock);
+cave.position.set(-35, 0, -25);
+cave.castShadow = true;
+scene.add(cave);
+const caveEntrance = new THREE.Mesh(new THREE.SphereGeometry(1.2, 8, 6), new THREE.MeshLambertMaterial({ color: 0x1a1208 }));
+caveEntrance.position.set(-33, 1, -22.5);
+scene.add(caveEntrance);
+// Lantern by cave
+createLantern(-32, -21);
+
+// --- ぷっぺツイン信用金庫 ---
+const bank = createBuilding(20, -5, 5, 3.5, 4, mat.stone, mat.darkWood, 'flat');
+
+// --- 湯守さるの湯 (Bathhouse) ---
+const bathhouse = createBuilding(-20, -25, 6, 3, 5, mat.wood, mat.roof, 'gable');
+// Steam effect (simple floating spheres)
+const steamGroup = new THREE.Group();
+for (let i = 0; i < 5; i++) {
+  const steamGeo = new THREE.SphereGeometry(0.3 + Math.random() * 0.3, 6, 4);
+  const steam = new THREE.Mesh(steamGeo, new THREE.MeshBasicMaterial({
+    color: 0xffffff, transparent: true, opacity: 0.15
+  }));
+  steam.position.set(-20 + (Math.random() - 0.5) * 3, 4 + Math.random() * 2, -25 + (Math.random() - 0.5) * 2);
+  steam.userData.baseY = steam.position.y;
+  steam.userData.speed = 0.3 + Math.random() * 0.5;
+  steamGroup.add(steam);
+}
+scene.add(steamGroup);
+
+// --- Koh Shimanakaの部屋 ---
+const kohRoom = createBuilding(10, 15, 3.5, 2.5, 3.5, mat.whiteWall, mat.roof, 'gable');
+
+// --- Icefaceの部屋 ---
+const iceRoom = createBuilding(-10, 15, 3.5, 2.5, 3.5, mat.whiteWall, mat.blueRoof, 'gable');
+
+// --- 読み魚 (Yomiuo) - a fish in the water near beach ---
+const fishGeo = new THREE.ConeGeometry(0.5, 2, 6);
+const fish = new THREE.Mesh(fishGeo, new THREE.MeshLambertMaterial({ color: 0x3366aa }));
+fish.rotation.z = Math.PI / 2;
+fish.position.set(8, 0.3, -50);
+scene.add(fish);
+
+// --- Forest areas ---
+// West forest
+for (let i = 0; i < 25; i++) {
+  const x = -40 + Math.random() * 15 - 10;
+  const z = 5 + Math.random() * 40;
+  if (Math.random() > 0.4) {
+    createTree(x, z, 0.7 + Math.random() * 0.5);
+  } else {
+    createPineTree(x, z, 0.7 + Math.random() * 0.4);
+  }
+}
+// East forest  
+for (let i = 0; i < 15; i++) {
+  const x = 60 + Math.random() * 20;
+  const z = -20 + Math.random() * 50;
+  createPineTree(x, z, 0.8 + Math.random() * 0.5);
+}
+// Scattered trees
+for (let i = 0; i < 20; i++) {
+  const x = (Math.random() - 0.5) * 80;
+  const z = (Math.random() - 0.5) * 60;
+  // Avoid building areas
+  const d = Math.sqrt(x * x + z * z);
+  if (d > 12 && Math.abs(x) > 8) {
+    createTree(x, z, 0.5 + Math.random() * 0.4, Math.random() > 0.5 ? mat.leaf : mat.darkLeaf);
+  }
+}
+
+// --- Rocks along beach ---
+for (let i = 0; i < 10; i++) {
+  const rx = -20 + Math.random() * 40;
+  const rz = -44 + Math.random() * 4;
+  const geo = new THREE.SphereGeometry(0.5 + Math.random() * 0.8, 6, 4);
+  const rock = new THREE.Mesh(geo, mat.rock);
+  rock.position.set(rx, 0.2, rz);
+  rock.scale.y = 0.5 + Math.random() * 0.3;
+  rock.castShadow = true;
+  scene.add(rock);
+}
+
+// --- 用水路 (Irrigation channel) ---
+for (let i = 0; i < 8; i++) {
+  const channelGeo = new THREE.PlaneGeometry(1, 5);
+  const channel = new THREE.Mesh(channelGeo, mat.water);
+  channel.rotation.x = -Math.PI / 2;
+  channel.position.set(25, 0.03, 15 + i * 5 - 15);
+  scene.add(channel);
+}
+
+// --- Lanterns along main path ---
+for (let z = -35; z <= 35; z += 10) {
+  createLantern(2, z);
+  createLantern(-2, z);
+}
+
+// --- Sunflowers (ひまわり) at intersections ---
+function createSunflower(x, z) {
+  const group = new THREE.Group();
+  const stemGeo = new THREE.CylinderGeometry(0.04, 0.06, 1.5, 5);
+  const stem = new THREE.Mesh(stemGeo, mat.leaf);
+  stem.position.y = 0.75;
+  group.add(stem);
+  
+  const headGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.1, 10);
+  const head = new THREE.Mesh(headGeo, new THREE.MeshLambertMaterial({ color: 0xffcc00 }));
+  head.position.y = 1.5;
+  head.rotation.x = -0.3;
+  group.add(head);
+  
+  const centerGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.12, 8);
+  const center = new THREE.Mesh(centerGeo, new THREE.MeshLambertMaterial({ color: 0x664400 }));
+  center.position.y = 1.52;
+  center.rotation.x = -0.3;
+  group.add(center);
+  
+  group.position.set(x, 0, z);
+  scene.add(group);
+}
+createSunflower(1.5, 0);
+createSunflower(-1.5, 0);
+createSunflower(1.5, 20);
+
+// ========== LOCATIONS / POIs ==========
+const locations = [
+  { name: '蝶の祠', desc: '祠を覗くと中はがらんどうに見えたが、中で一匹の蝶々が、差し込む光に舞っていた。開けようかやめようか迷っていたら、扉が開いて、蝶々が出てきた。', x: -25, z: 30, r: 6 },
+  { name: '花灯り空港', desc: '四季の花が咲き誇り、空からも花の彩りを見ることができる滑走路。散歩道としても楽しめます。しらさぎAirlinesが到着する時には、立ち止まってスペースをお空けください。', x: 50, z: 0, r: 8 },
+  { name: 'PuppeTwinの作業場所', desc: 'しろあり工務店の職人さんに建てて頂いた蟻塚。一年を通して内部の温度は一定に保たれ、快適な環境を提供して頂いています。', x: -30, z: -10, r: 5 },
+  { name: 'どんぐり書房', desc: 'PuppeTwinの本や楽譜、街の方々の手形や、しおりなどを、手づくりで販売しています。', x: -15, z: -10, r: 5 },
+  { name: 'しろみみ薬草堂', desc: 'さまざまな生き物に合う調合を続けています。渡り鳥の目を潤す為の雨水の目薬や、森の声が枯れた時の為の飴も常備されています。', x: 15, z: -15, r: 5 },
+  { name: '洞窟茶屋', desc: 'いつも動物の皆さんで賑わっています。Icefaceのフリーズドライ製法を使って、お食事を提供して頂いています。', x: -35, z: -25, r: 6 },
+  { name: 'ぷっぺツイン信用金庫', desc: 'ほこり集めで集めたほこりや宝物を預けることができます。タウンの皆様の信用で成り立っています。', x: 20, z: -5, r: 5 },
+  { name: '湯守さるの湯', desc: 'タウンの皆さんが利用される銭湯。毎日、多くの方で賑わいます。銭湯の残り湯も販売しています。', x: -20, z: -25, r: 6 },
+  { name: 'Koh Shimanakaの作業部屋', desc: '今現在の風の向き、晴れているのか雨が降っているのか、鳥は何匹飛んでいるのかなどを、窓から観察し記録しています。', x: 10, z: 15, r: 4 },
+  { name: 'Icefaceの作業部屋', desc: '動物の目を覗き込んで天文学の情報を得る研究をしています。天文学の難しい計算は、たぬきの皆さんに手伝って頂いています。', x: -10, z: 15, r: 4 },
+  { name: '読み魚（よみうお）', desc: 'PuppeTwin Townの海情報を伝える一匹の魚がいます。', x: 8, z: -50, r: 5 },
+  { name: '田んぼ', desc: '春にはいのこ田おこし、代掻き、田植え。秋にはすずめの収穫祭。黄金の稲穂がくれたひと粒に秋がやって来ます。', x: 30, z: 20, r: 12 },
+  { name: '海辺', desc: '8月、海開きをしています。昆布の浮き輪の貸し出しも行っています。', x: 0, z: -50, r: 10 },
+];
+
+// ========== ANIMAL CHARACTERS ==========
+const animals = [];
+function createAnimal(type, x, z, color) {
+  const group = new THREE.Group();
+  const bodyMat = new THREE.MeshLambertMaterial({ color });
+  
+  if (type === 'squirrel' || type === 'tanuki') {
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.3, 7, 5), bodyMat);
+    body.position.y = 0.5;
+    body.scale.y = 1.2;
+    group.add(body);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 6, 5), bodyMat);
+    head.position.y = 0.9;
+    group.add(head);
+  } else if (type === 'bird') {
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.2, 6, 5), bodyMat);
+    body.position.y = 0.4;
+    body.scale.set(1, 0.8, 1.3);
+    group.add(body);
+    const beak = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.15, 4), new THREE.MeshLambertMaterial({ color: 0xffaa00 }));
+    beak.rotation.x = Math.PI / 2;
+    beak.position.set(0, 0.45, 0.2);
+    group.add(beak);
+  } else if (type === 'bear') {
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.5, 7, 5), bodyMat);
+    body.position.y = 0.7;
+    body.scale.y = 1.1;
+    group.add(body);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 6, 5), bodyMat);
+    head.position.y = 1.3;
+    group.add(head);
+    // Ears
+    const ear = new THREE.Mesh(new THREE.SphereGeometry(0.1, 5, 4), bodyMat);
+    ear.position.set(0.2, 1.5, 0);
+    group.add(ear);
+    const ear2 = ear.clone();
+    ear2.position.x = -0.2;
+    group.add(ear2);
+  } else if (type === 'frog') {
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.25, 7, 5), bodyMat);
+    body.position.y = 0.25;
+    group.add(body);
+    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.08, 5, 4), new THREE.MeshLambertMaterial({ color: 0xffffff }));
+    eyeL.position.set(0.12, 0.45, 0.1);
+    group.add(eyeL);
+    const eyeR = eyeL.clone();
+    eyeR.position.x = -0.12;
+    group.add(eyeR);
+  }
+  
+  group.position.set(x, 0, z);
+  scene.add(group);
+  
+  const animal = {
+    mesh: group, type,
+    baseX: x, baseZ: z,
+    wanderRadius: 3 + Math.random() * 4,
+    speed: 0.2 + Math.random() * 0.3,
+    angle: Math.random() * Math.PI * 2,
+    targetAngle: Math.random() * Math.PI * 2,
+    timer: Math.random() * 5
+  };
+  animals.push(animal);
+  return animal;
+}
+
+// Place animals around town
+createAnimal('squirrel', -14, -8, 0xaa6633);
+createAnimal('squirrel', -16, -11, 0x996622);
+createAnimal('bird', 30, 22, 0xeeeedd); // Sparrows near rice
+createAnimal('bird', 32, 18, 0xddccbb);
+createAnimal('bird', 28, 25, 0xeeddcc);
+createAnimal('bear', -18, -23, 0x664422); // Bear near bathhouse
+createAnimal('tanuki', -8, 14, 0x885533); // Tanuki near Iceface's room
+createAnimal('tanuki', -11, 16, 0x774422);
+createAnimal('frog', 26, 17, 0x44aa44); // Frogs near rice paddies
+createAnimal('frog', 24, 14, 0x338833);
+createAnimal('bird', -24, 32, 0xffffff); // White bird (shirasagi) near shrine
+createAnimal('bird', 48, 5, 0xffffff); // Bird near airport
+createAnimal('bird', 52, -3, 0xffffff);
+
+// ========== BUTTERFLIES (3D) ==========
+const butterflies = [];
+for (let i = 0; i < 8; i++) {
+  const bGroup = new THREE.Group();
+  const wingMat = new THREE.MeshBasicMaterial({ 
+    color: [0xffaacc, 0xaaddff, 0xffddaa, 0xddaaff][i % 4],
+    transparent: true, opacity: 0.7, side: THREE.DoubleSide
+  });
+  const wingGeo = new THREE.PlaneGeometry(0.2, 0.15);
+  const wingL = new THREE.Mesh(wingGeo, wingMat);
+  wingL.position.x = 0.1;
+  bGroup.add(wingL);
+  const wingR = new THREE.Mesh(wingGeo, wingMat);
+  wingR.position.x = -0.1;
+  bGroup.add(wingR);
+  
+  bGroup.position.set(
+    -25 + Math.random() * 10,
+    1.5 + Math.random() * 2,
+    28 + Math.random() * 6
+  );
+  scene.add(bGroup);
+  butterflies.push({
+    mesh: bGroup, wingL, wingR,
+    baseX: bGroup.position.x, baseZ: bGroup.position.z,
+    phase: Math.random() * Math.PI * 2,
+    radius: 2 + Math.random() * 3
+  });
+}
+
+// ========== PLAYER CONTROLS ==========
+const player = { x: 0, z: 5, yaw: 0, pitch: 0 };
+const keys = {};
+let moveX = 0, moveZ = 0;
+let lookDx = 0, lookDy = 0;
+
+camera.position.set(player.x, 1.6, player.z);
+
+// Keyboard
+document.addEventListener('keydown', e => keys[e.code] = true);
+document.addEventListener('keyup', e => keys[e.code] = false);
+
+// Mouse look (desktop)
+let mouseLocked = false;
+renderer.domElement.addEventListener('click', () => {
+  if (window.innerWidth > 768 && !('ontouchstart' in window)) {
+    renderer.domElement.requestPointerLock();
+  } else {
+    // Check for interaction on mobile
+    checkInteraction();
+  }
+});
+document.addEventListener('pointerlockchange', () => {
+  mouseLocked = document.pointerLockElement === renderer.domElement;
+});
+document.addEventListener('mousemove', e => {
+  if (mouseLocked) {
+    player.yaw -= e.movementX * 0.002;
+    player.pitch -= e.movementY * 0.002;
+    player.pitch = Math.max(-1.2, Math.min(1.2, player.pitch));
+  }
+});
+
+// Joystick (mobile)
+const joystickArea = document.getElementById('joystick-area');
+const joystickStick = document.getElementById('joystick-stick');
+let joystickActive = false;
+let joystickCenter = { x: 0, y: 0 };
+
+joystickArea.addEventListener('touchstart', e => {
+  e.preventDefault();
+  joystickActive = true;
+  const rect = joystickArea.getBoundingClientRect();
+  joystickCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  updateJoystick(e.touches[0]);
+}, { passive: false });
+
+joystickArea.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (joystickActive) updateJoystick(e.touches[0]);
+}, { passive: false });
+
+joystickArea.addEventListener('touchend', e => {
+  e.preventDefault();
+  joystickActive = false;
+  moveX = 0; moveZ = 0;
+  joystickStick.style.transform = 'translate(-50%, -50%)';
+}, { passive: false });
+
+function updateJoystick(touch) {
+  const dx = touch.clientX - joystickCenter.x;
+  const dy = touch.clientY - joystickCenter.y;
+  const maxDist = 50;
+  const dist = Math.min(Math.sqrt(dx * dx + dy * dy), maxDist);
+  const angle = Math.atan2(dy, dx);
+  
+  const nx = Math.cos(angle) * dist;
+  const ny = Math.sin(angle) * dist;
+  joystickStick.style.transform = `translate(calc(-50% + ${nx}px), calc(-50% + ${ny}px))`;
+  
+  const norm = dist / maxDist;
+  moveX = Math.cos(angle) * norm;
+  moveZ = Math.sin(angle) * norm;
+}
+
+// Look buttons (mobile)
+function setupLookButton(id, dx, dy) {
+  const btn = document.getElementById(id);
+  let interval = null;
+  const start = (e) => {
+    e.preventDefault();
+    lookDx = dx; lookDy = dy;
+  };
+  const stop = (e) => {
+    e.preventDefault();
+    lookDx = 0; lookDy = 0;
+  };
+  btn.addEventListener('touchstart', start, { passive: false });
+  btn.addEventListener('touchend', stop, { passive: false });
+  btn.addEventListener('touchcancel', stop, { passive: false });
+}
+setupLookButton('look-up', 0, 1);
+setupLookButton('look-down', 0, -1);
+setupLookButton('look-left', 1, 0);
+setupLookButton('look-right', -1, 0);
+
+// ========== MINIMAP ==========
+const minimapCanvas = document.getElementById('minimap-canvas');
+const minimapCtx = minimapCanvas.getContext('2d');
+minimapCanvas.width = 120;
+minimapCanvas.height = 120;
+
+function drawMinimap() {
+  const ctx = minimapCtx;
+  const w = minimapCanvas.width, h = minimapCanvas.height;
+  const scale = 0.8;
+  const cx = w / 2, cy = h / 2;
+  
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#2a3020';
+  ctx.fillRect(0, 0, w, h);
+  
+  // Water
+  ctx.fillStyle = '#1a3040';
+  ctx.fillRect(0, cy + 40 * scale, w, h);
+  
+  // Beach
+  ctx.fillStyle = '#6a5a40';
+  ctx.fillRect(cx - 40 * scale, cy + 35 * scale, 80 * scale, 6 * scale);
+  
+  // Rice paddies
+  ctx.fillStyle = '#4a6a2a';
+  ctx.fillRect(cx + 18 * scale, cy - 22 * scale, 25 * scale, 18 * scale);
+  
+  // Runway
+  ctx.fillStyle = '#555';
+  ctx.fillRect(cx + 47 * scale, cy - 20 * scale, 4 * scale, 35 * scale);
+  
+  // Buildings
+  const buildings = [
+    { x: -25, z: 30, c: '#cc3333', s: 3 }, // Shrine
+    { x: -15, z: -10, c: '#8B6914', s: 2 }, // Bookstore
+    { x: 15, z: -15, c: '#e8e0d0', s: 2 }, // Herb shop
+    { x: 20, z: -5, c: '#888', s: 2.5 }, // Bank
+    { x: -20, z: -25, c: '#8B6914', s: 3 }, // Bathhouse
+    { x: 10, z: 15, c: '#e8e0d0', s: 2 }, // Koh's room
+    { x: -10, z: 15, c: '#e8e0d0', s: 2 }, // Ice's room
+    { x: -30, z: -10, c: '#8a7050', s: 2.5 }, // Mound
+    { x: -35, z: -25, c: '#707068', s: 3 }, // Cave
+  ];
+  
+  buildings.forEach(b => {
+    ctx.fillStyle = b.c;
+    const bx = cx + b.x * scale - b.s * scale / 2;
+    const by = cy - b.z * scale - b.s * scale / 2;
+    ctx.fillRect(bx, by, b.s * scale, b.s * scale);
+  });
+  
+  // Player
+  ctx.fillStyle = '#ffdd44';
+  const px = cx + player.x * scale;
+  const py = cy - player.z * scale;
+  ctx.beginPath();
+  ctx.arc(px, py, 3, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Direction indicator
+  ctx.strokeStyle = '#ffdd44';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(px, py);
+  ctx.lineTo(px + Math.sin(player.yaw) * -8, py + Math.cos(player.yaw) * 8);
+  ctx.stroke();
+}
+
+// ========== INTERACTION ==========
+let currentLocation = null;
+let interactionTarget = null;
+
+function checkInteraction() {
+  if (interactionTarget) {
+    document.getElementById('info-title').textContent = interactionTarget.name;
+    document.getElementById('info-text').textContent = interactionTarget.desc;
+    document.getElementById('info-panel').classList.add('visible');
+  }
+}
+
+function closeInfo() {
+  document.getElementById('info-panel').classList.remove('visible');
+}
+
+// Also allow keyboard interaction
+document.addEventListener('keydown', e => {
+  if (e.code === 'KeyE' || e.code === 'Space') {
+    if (document.getElementById('info-panel').classList.contains('visible')) {
+      closeInfo();
+    } else {
+      checkInteraction();
+    }
+  }
+});
+
+// ========== SKY ==========
+const skyGeo = new THREE.SphereGeometry(200, 16, 12);
+const skyMat = new THREE.MeshBasicMaterial({ 
+  color: 0x87CEEB, side: THREE.BackSide 
+});
+const sky = new THREE.Mesh(skyGeo, skyMat);
+scene.add(sky);
+
+// Clouds
+const clouds = [];
+for (let i = 0; i < 12; i++) {
+  const cloudGroup = new THREE.Group();
+  const count = 3 + Math.floor(Math.random() * 3);
+  for (let j = 0; j < count; j++) {
+    const cGeo = new THREE.SphereGeometry(2 + Math.random() * 3, 7, 5);
+    const cMesh = new THREE.Mesh(cGeo, new THREE.MeshBasicMaterial({
+      color: 0xffffff, transparent: true, opacity: 0.6
+    }));
+    cMesh.position.set(j * 2.5 - count, Math.random() * 0.5, Math.random() * 1.5);
+    cMesh.scale.y = 0.4;
+    cloudGroup.add(cMesh);
+  }
+  cloudGroup.position.set(
+    (Math.random() - 0.5) * 200,
+    30 + Math.random() * 20,
+    (Math.random() - 0.5) * 200
+  );
+  scene.add(cloudGroup);
+  clouds.push(cloudGroup);
+}
+
+// ========== UPDATE TIME/LIGHTING ==========
+function updateTimeOfDay(dt) {
+  gameTime += dt * TIME_SPEED;
+  if (gameTime >= 86400) gameTime -= 86400;
+  
+  const hours = gameTime / 3600;
+  const h = Math.floor(hours);
+  const m = Math.floor((hours - h) * 60);
+  document.getElementById('time-display').textContent = 
+    `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  
+  // Season (based on real-ish cycle, 1 full cycle = 4 minutes)
+  const seasonPhase = (gameTime / 60) % 4;
+  const seasons = ['春', '夏', '秋', '冬'];
+  const seasonNames = ['🌸 春', '☀️ 夏', '🍂 秋', '❄️ 冬'];
+  document.getElementById('season-indicator').textContent = seasonNames[Math.floor(seasonPhase)];
+  
+  // Sky color based on time
+  let skyColor, fogColor, sunIntensity, ambientIntensity;
+  
+  if (hours >= 5 && hours < 7) { // Dawn
+    const t = (hours - 5) / 2;
+    skyColor = new THREE.Color(0x1a1a3a).lerp(new THREE.Color(0xffaa66), t);
+    fogColor = new THREE.Color(0x2a2020).lerp(new THREE.Color(0xddaa88), t);
+    sunIntensity = 0.2 + t * 0.6;
+    ambientIntensity = 0.15 + t * 0.2;
+  } else if (hours >= 7 && hours < 17) { // Day
+    skyColor = new THREE.Color(0x87CEEB);
+    fogColor = new THREE.Color(0xc8b8a0);
+    sunIntensity = 1.0;
+    ambientIntensity = 0.4;
+  } else if (hours >= 17 && hours < 19.5) { // Sunset
+    const t = (hours - 17) / 2.5;
+    skyColor = new THREE.Color(0x87CEEB).lerp(new THREE.Color(0xff6633), t);
+    fogColor = new THREE.Color(0xc8b8a0).lerp(new THREE.Color(0x443322), t);
+    sunIntensity = 1.0 - t * 0.6;
+    ambientIntensity = 0.4 - t * 0.25;
+  } else { // Night
+    skyColor = new THREE.Color(0x0a0a1a);
+    fogColor = new THREE.Color(0x0a0a10);
+    sunIntensity = 0.05;
+    ambientIntensity = 0.1;
+  }
+  
+  skyMat.color.copy(skyColor);
+  scene.fog.color.copy(fogColor);
+  sunLight.intensity = sunIntensity;
+  ambientLight.intensity = ambientIntensity;
+  
+  // Sun position
+  const sunAngle = ((hours - 6) / 12) * Math.PI;
+  sunLight.position.set(
+    Math.cos(sunAngle) * 60,
+    Math.sin(sunAngle) * 80,
+    30
+  );
+}
+
+// ========== COLLISION BOUNDS ==========
+const colliders = [
+  { x: -25, z: 30, r: 2.5 },  // Shrine
+  { x: -15, z: -10, r: 2.5 }, // Bookstore
+  { x: 15, z: -15, r: 2.5 },  // Herb shop
+  { x: 20, z: -5, r: 3 },     // Bank
+  { x: -20, z: -25, r: 3.5 }, // Bathhouse
+  { x: 10, z: 15, r: 2.5 },   // Koh room
+  { x: -10, z: 15, r: 2.5 },  // Ice room
+  { x: -30, z: -10, r: 3 },   // Mound
+  { x: -35, z: -25, r: 4 },   // Cave
+];
+
+function checkCollision(nx, nz) {
+  for (const c of colliders) {
+    const dx = nx - c.x, dz = nz - c.z;
+    if (Math.sqrt(dx * dx + dz * dz) < c.r) return true;
+  }
+  // World bounds
+  if (Math.abs(nx) > 80 || nz > 55 || nz < -55) return true;
+  return false;
+}
+
+// ========== GAME LOOP ==========
+const clock = new THREE.Clock();
+let loadProgress = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  
+  // Loading
+  if (loadProgress < 100) {
+    loadProgress += dt * 40;
+    document.getElementById('loading-bar').style.width = Math.min(loadProgress, 100) + '%';
+    if (loadProgress >= 100) {
+      setTimeout(() => document.getElementById('loading-screen').classList.add('fade-out'), 300);
+    }
+    renderer.render(scene, camera);
+    return;
+  }
+  
+  // Mobile look
+  if (lookDx !== 0 || lookDy !== 0) {
+    player.yaw += lookDx * 2 * dt;
+    player.pitch += lookDy * 1.5 * dt;
+    player.pitch = Math.max(-1.2, Math.min(1.2, player.pitch));
+  }
+  
+  // Movement
+  const speed = 6;
+  let dx = 0, dz = 0;
+  
+  // Keyboard movement
+  if (keys['KeyW'] || keys['ArrowUp']) dz -= 1;
+  if (keys['KeyS'] || keys['ArrowDown']) dz += 1;
+  if (keys['KeyA'] || keys['ArrowLeft']) dx -= 1;
+  if (keys['KeyD'] || keys['ArrowRight']) dx += 1;
+  
+  // Joystick movement
+  if (joystickActive) {
+    dx += moveX;
+    dz += moveZ;
+  }
+  
+  if (dx !== 0 || dz !== 0) {
+    const len = Math.sqrt(dx * dx + dz * dz);
+    dx /= len; dz /= len;
+    
+    const sin = Math.sin(player.yaw);
+    const cos = Math.cos(player.yaw);
+    
+    const worldDx = (dx * cos - dz * sin) * speed * dt;
+    const worldDz = (dx * sin + dz * cos) * speed * dt;
+    
+    const nx = player.x + worldDx;
+    const nz = player.z + worldDz;
+    
+    if (!checkCollision(nx, player.z)) player.x = nx;
+    if (!checkCollision(player.x, nz)) player.z = nz;
+  }
+  
+  // Camera
+  camera.position.set(player.x, 1.6, player.z);
+  camera.rotation.order = 'YXZ';
+  camera.rotation.y = player.yaw;
+  camera.rotation.x = player.pitch;
+  
+  // Update time
+  updateTimeOfDay(dt);
+  
+  // Location detection
+  interactionTarget = null;
+  let closestDist = Infinity;
+  let closestLoc = null;
+  
+  for (const loc of locations) {
+    const ldx = player.x - loc.x;
+    const ldz = player.z - loc.z;
+    const dist = Math.sqrt(ldx * ldx + ldz * ldz);
+    if (dist < loc.r && dist < closestDist) {
+      closestDist = dist;
+      closestLoc = loc;
+    }
+  }
+  
+  const nameEl = document.getElementById('location-name');
+  const hintEl = document.getElementById('interaction-hint');
+  
+  if (closestLoc) {
+    if (currentLocation !== closestLoc.name) {
+      currentLocation = closestLoc.name;
+      nameEl.textContent = closestLoc.name;
+      nameEl.classList.add('visible');
+    }
+    interactionTarget = closestLoc;
+    hintEl.textContent = window.innerWidth > 768 ? 'クリックまたは [E] で詳細を見る' : 'タップで詳細を見る';
+    hintEl.classList.add('visible');
+  } else {
+    if (currentLocation !== null) {
+      currentLocation = null;
+      nameEl.classList.remove('visible');
+    }
+    hintEl.classList.remove('visible');
+  }
+  
+  // Animate animals
+  animals.forEach(a => {
+    a.timer -= dt;
+    if (a.timer <= 0) {
+      a.targetAngle = Math.random() * Math.PI * 2;
+      a.timer = 2 + Math.random() * 5;
+    }
+    
+    // Smoothly turn
+    let da = a.targetAngle - a.angle;
+    while (da > Math.PI) da -= Math.PI * 2;
+    while (da < -Math.PI) da += Math.PI * 2;
+    a.angle += da * dt * 2;
+    
+    const nx = a.baseX + Math.cos(a.angle) * a.wanderRadius * Math.sin(Date.now() * 0.0003 + a.phase);
+    const nz = a.baseZ + Math.sin(a.angle) * a.wanderRadius * Math.sin(Date.now() * 0.0003 + a.phase);
+    
+    a.mesh.position.x += (nx - a.mesh.position.x) * dt * 0.5;
+    a.mesh.position.z += (nz - a.mesh.position.z) * dt * 0.5;
+    a.mesh.rotation.y = a.angle;
+    
+    // Bird bob
+    if (a.type === 'bird') {
+      a.mesh.position.y = Math.sin(Date.now() * 0.005 + a.phase) * 0.05;
+    }
+  });
+  
+  // Animate butterflies
+  butterflies.forEach((b, i) => {
+    const t = Date.now() * 0.001 + b.phase;
+    b.mesh.position.x = b.baseX + Math.sin(t * 0.7) * b.radius;
+    b.mesh.position.z = b.baseZ + Math.cos(t * 0.5) * b.radius;
+    b.mesh.position.y = 1.5 + Math.sin(t * 1.3) * 0.8;
+    
+    // Wing flap
+    const flap = Math.sin(t * 8) * 0.5;
+    b.wingL.rotation.y = flap;
+    b.wingR.rotation.y = -flap;
+  });
+  
+  // Animate steam
+  steamGroup.children.forEach(s => {
+    s.position.y = s.userData.baseY + Math.sin(Date.now() * 0.001 * s.userData.speed) * 0.5;
+    s.material.opacity = 0.08 + Math.sin(Date.now() * 0.0008 * s.userData.speed) * 0.06;
+  });
+  
+  // Move clouds
+  clouds.forEach(c => {
+    c.position.x += dt * 0.5;
+    if (c.position.x > 120) c.position.x = -120;
+  });
+  
+  // Animate fish
+  fish.position.y = 0.3 + Math.sin(Date.now() * 0.002) * 0.15;
+  fish.rotation.y = Math.sin(Date.now() * 0.001) * 0.3;
+  
+  // Compass
+  const dirs = ['北', '北東', '東', '南東', '南', '南西', '西', '北西'];
+  const compassIdx = Math.round(((player.yaw % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) / (Math.PI / 4)) % 8;
+  document.getElementById('compass').textContent = dirs[compassIdx];
+  
+  // Minimap
+  drawMinimap();
+  
+  renderer.render(scene, camera);
+}
+
+// ========== RESIZE ==========
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ========== START ==========
+animate();
+</script>
+</body>
+</html>
