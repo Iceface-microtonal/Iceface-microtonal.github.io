@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEMPHIS FLIGHT — 幻想飛行</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Righteous&family=Fredoka:wght@400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    overflow: hidden;
+    background: #1a1a2e;
+    font-family: 'Fredoka', sans-serif;
+    cursor: none;
+  }
+
+  #canvas3d {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 1;
+  }
+
+  .hud {
+    position: fixed;
+    z-index: 10;
+    pointer-events: none;
+    color: #fff;
+  }
+
+  .hud-title {
+    top: 24px; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Righteous', sans-serif;
+    font-size: 28px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: #FFE156;
+    text-shadow: 3px 3px 0 #E84393, 6px 6px 0 #00B894;
+    opacity: 0.9;
+  }
+
+  .hud-speed {
+    bottom: 40px; left: 40px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+
+  .hud-speed .label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: #FF6B6B;
+    text-transform: uppercase;
+  }
+
+  .hud-speed .value {
+    font-family: 'Righteous', sans-serif;
+    font-size: 42px;
+    color: #FFE156;
+    text-shadow: 2px 2px 0 #E84393;
+  }
+
+  .hud-alt {
+    bottom: 40px; right: 40px;
+    text-align: right;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+
+  .hud-alt .label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: #74B9FF;
+    text-transform: uppercase;
+  }
+
+  .hud-alt .value {
+    font-family: 'Righteous', sans-serif;
+    font-size: 42px;
+    color: #55EFC4;
+    text-shadow: 2px 2px 0 #6C5CE7;
+  }
+
+  .hud-music {
+    bottom: 40px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 4px; align-items: flex-end;
+    height: 40px;
+  }
+
+  .music-bar {
+    width: 4px;
+    background: #E84393;
+    border-radius: 2px;
+    transition: height 0.1s;
+  }
+
+  .crosshair {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .crosshair svg {
+    width: 60px; height: 60px;
+    filter: drop-shadow(0 0 8px rgba(255,225,86,0.5));
+  }
+
+  .corner-deco {
+    position: fixed;
+    z-index: 5;
+    pointer-events: none;
+    opacity: 0.3;
+  }
+
+  .corner-deco.tl { top: 12px; left: 12px; }
+  .corner-deco.tr { top: 12px; right: 12px; transform: scaleX(-1); }
+  .corner-deco.bl { bottom: 12px; left: 12px; transform: scaleY(-1); }
+  .corner-deco.br { bottom: 12px; right: 12px; transform: scale(-1,-1); }
+
+  .intro-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 100;
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    transition: opacity 0.8s, visibility 0.8s;
+  }
+
+  .intro-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .intro-overlay h1 {
+    font-family: 'Righteous', sans-serif;
+    font-size: 64px;
+    color: #FFE156;
+    text-shadow: 4px 4px 0 #E84393, 8px 8px 0 #00B894, 12px 12px 0 #6C5CE7;
+    letter-spacing: 8px;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .intro-overlay p {
+    color: #dfe6e9;
+    font-size: 16px;
+    letter-spacing: 2px;
+    text-align: center;
+    line-height: 2;
+  }
+
+  .start-btn {
+    font-family: 'Righteous', sans-serif;
+    font-size: 22px;
+    padding: 16px 48px;
+    background: #E84393;
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    box-shadow: 4px 4px 0 #6C5CE7, 8px 8px 0 #00B894;
+    transition: transform 0.2s, box-shadow 0.2s;
+    pointer-events: all;
+  }
+
+  .start-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 #6C5CE7, 10px 10px 0 #00B894;
+  }
+
+  .memphis-shapes {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 99;
+    overflow: hidden;
+  }
+
+  .memphis-shapes .shape {
+    position: absolute;
+    opacity: 0.15;
+    animation: drift 20s linear infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  @keyframes drift {
+    0% { transform: translateY(100vh) rotate(0deg); }
+    100% { transform: translateY(-200px) rotate(360deg); }
+  }
+
+  .controls-hint {
+    position: fixed;
+    top: 70px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    pointer-events: none;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+    transition: opacity 2s;
+  }
+</style>
+</head>
+<body>
+
+<div class="intro-overlay" id="intro">
+  <div class="memphis-shapes" id="introShapes"></div>
+  <h1>MEMPHIS FLIGHT</h1>
+  <p>
+    幻想的な世界を飛び回ろう<br>
+    マウスで操縦 ・ スクロールで速度調整
+  </p>
+  <button class="start-btn" onclick="startFlight()">▶ TAKE OFF</button>
+</div>
+
+<canvas id="canvas3d"></canvas>
+
+<div class="crosshair">
+  <svg viewBox="0 0 60 60">
+    <circle cx="30" cy="30" r="18" fill="none" stroke="#FFE156" stroke-width="1.5" opacity="0.7"/>
+    <circle cx="30" cy="30" r="3" fill="#FFE156" opacity="0.8"/>
+    <line x1="30" y1="6" x2="30" y2="16" stroke="#FFE156" stroke-width="1.5" opacity="0.5"/>
+    <line x1="30" y1="44" x2="30" y2="54" stroke="#FFE156" stroke-width="1.5" opacity="0.5"/>
+    <line x1="6" y1="30" x2="16" y2="30" stroke="#FFE156" stroke-width="1.5" opacity="0.5"/>
+    <line x1="44" y1="30" x2="54" y2="30" stroke="#FFE156" stroke-width="1.5" opacity="0.5"/>
+    <polygon points="30,2 27,8 33,8" fill="#E84393" opacity="0.6"/>
+  </svg>
+</div>
+
+<div class="hud hud-title">MEMPHIS FLIGHT</div>
+
+<div class="hud hud-speed">
+  <span class="label">Speed</span>
+  <span class="value" id="speedVal">120</span>
+</div>
+
+<div class="hud hud-alt">
+  <span class="label">Altitude</span>
+  <span class="value" id="altVal">500</span>
+</div>
+
+<div class="hud hud-music" id="musicVis"></div>
+
+<div class="controls-hint" id="hint">MOUSE: 操縦　SCROLL: 速度　SPACE: ブースト</div>
+
+<!-- Corner decorations -->
+<svg class="corner-deco tl" width="80" height="80" viewBox="0 0 80 80">
+  <path d="M0,0 L80,0 L80,8 L8,8 L8,80 L0,80 Z" fill="#E84393"/>
+  <circle cx="24" cy="24" r="6" fill="#FFE156"/>
+</svg>
+<svg class="corner-deco tr" width="80" height="80" viewBox="0 0 80 80">
+  <path d="M0,0 L80,0 L80,8 L8,8 L8,80 L0,80 Z" fill="#00B894"/>
+  <circle cx="24" cy="24" r="6" fill="#74B9FF"/>
+</svg>
+<svg class="corner-deco bl" width="80" height="80" viewBox="0 0 80 80">
+  <path d="M0,0 L80,0 L80,8 L8,8 L8,80 L0,80 Z" fill="#6C5CE7"/>
+  <circle cx="24" cy="24" r="6" fill="#55EFC4"/>
+</svg>
+<svg class="corner-deco br" width="80" height="80" viewBox="0 0 80 80">
+  <path d="M0,0 L80,0 L80,8 L8,8 L8,80 L0,80 Z" fill="#FFE156"/>
+  <circle cx="24" cy="24" r="6" fill="#E84393"/>
+</svg>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ============================================
+// MEMPHIS FLIGHT SIMULATOR
+// ============================================
+
+// --- Intro shapes ---
+const introShapes = document.getElementById('introShapes');
+const shapeColors = ['#E84393','#FFE156','#00B894','#6C5CE7','#74B9FF','#FF6B6B','#55EFC4','#FD79A8'];
+for (let i = 0; i < 20; i++) {
+  const el = document.createElement('div');
+  el.className = 'shape';
+  const size = 20 + Math.random() * 60;
+  const color = shapeColors[Math.floor(Math.random() * shapeColors.length)];
+  const left = Math.random() * 100;
+  const delay = Math.random() * 20;
+  const shapes = ['border-radius:50%', 'border-radius:0', 'border-radius:50% 0 50% 0', 'clip-path:polygon(50% 0%,0% 100%,100% 100%)'];
+  const shape = shapes[Math.floor(Math.random() * shapes.length)];
+  el.style.cssText = `width:${size}px;height:${size}px;background:${color};left:${left}%;${shape};animation-delay:${delay}s;animation-duration:${15+Math.random()*15}s;`;
+  introShapes.appendChild(el);
+}
+
+// --- Music visualizer bars ---
+const musicVis = document.getElementById('musicVis');
+const NUM_BARS = 24;
+const bars = [];
+for (let i = 0; i < NUM_BARS; i++) {
+  const bar = document.createElement('div');
+  bar.className = 'music-bar';
+  bar.style.height = '4px';
+  const colors = ['#E84393','#FFE156','#00B894','#6C5CE7','#74B9FF','#FF6B6B'];
+  bar.style.background = colors[i % colors.length];
+  musicVis.appendChild(bar);
+  bars.push(bar);
+}
+
+// ============================================
+// THREE.JS SCENE
+// ============================================
+const canvas = document.getElementById('canvas3d');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 8000);
+camera.position.set(0, 200, 0);
+
+// Fog for depth
+scene.fog = new THREE.FogExp2(0x1a1a2e, 0.00025);
+scene.background = new THREE.Color(0x1a1a2e);
+
+// Lights
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+scene.add(ambientLight);
+
+const dirLight = new THREE.DirectionalLight(0xFFE156, 0.8);
+dirLight.position.set(200, 400, 100);
+scene.add(dirLight);
+
+const pointLight1 = new THREE.PointLight(0xE84393, 1.5, 2000);
+pointLight1.position.set(-500, 300, -500);
+scene.add(pointLight1);
+
+const pointLight2 = new THREE.PointLight(0x6C5CE7, 1.5, 2000);
+pointLight2.position.set(500, 200, 500);
+scene.add(pointLight2);
+
+// ============================================
+// MEMPHIS WORLD GENERATION
+// ============================================
+const MEMPHIS_COLORS = [0xE84393, 0xFFE156, 0x00B894, 0x6C5CE7, 0x74B9FF, 0xFF6B6B, 0x55EFC4, 0xFD79A8, 0xFAB1A0, 0x81ECEC];
+
+function createMemphisMaterial(color) {
+  return new THREE.MeshPhongMaterial({
+    color,
+    shininess: 80,
+    emissive: new THREE.Color(color).multiplyScalar(0.15),
+    flatShading: true
+  });
+}
+
+// Ground plane - terrazzo-style
+const groundGeo = new THREE.PlaneGeometry(10000, 10000);
+const groundMat = new THREE.MeshPhongMaterial({ color: 0x2d3436, shininess: 10 });
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -50;
+scene.add(ground);
+
+// Grid on ground
+const gridHelper = new THREE.GridHelper(10000, 100, 0xE84393, 0x6C5CE7);
+gridHelper.position.y = -49;
+gridHelper.material.opacity = 0.15;
+gridHelper.material.transparent = true;
+scene.add(gridHelper);
+
+// Object pools
+const worldObjects = [];
+const WORLD_RADIUS = 3500;
+
+function randomInRange(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+function spawnMemphisObject(px, pz) {
+  const type = Math.floor(Math.random() * 10);
+  const color = MEMPHIS_COLORS[Math.floor(Math.random() * MEMPHIS_COLORS.length)];
+  const mat = createMemphisMaterial(color);
+  let mesh;
+
+  const baseY = randomInRange(-30, 50);
+
+  if (type <= 1) {
+    // Tall columns
+    const h = randomInRange(100, 600);
+    const r = randomInRange(15, 50);
+    const geo = new THREE.CylinderGeometry(r, r, h, 8);
+    mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(px, baseY + h / 2, pz);
+  } else if (type <= 3) {
+    // Giant cubes
+    const s = randomInRange(40, 200);
+    const geo = new THREE.BoxGeometry(s, s, s);
+    mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(px, baseY + s / 2, pz);
+    mesh.rotation.y = Math.random() * Math.PI;
+  } else if (type === 4) {
+    // Spheres
+    const r = randomInRange(30, 120);
+    const geo = new THREE.SphereGeometry(r, 12, 8);
+    mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(px, baseY + r + 50, pz);
+  } else if (type === 5) {
+    // Cones
+    const r = randomInRange(30, 80);
+    const h = randomInRange(80, 300);
+    const geo = new THREE.ConeGeometry(r, h, 6);
+    mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(px, baseY + h / 2, pz);
+  } else if (type === 6) {
+    // Torus
+    const r = randomInRange(40, 100);
+    const geo = new THREE.TorusGeometry(r, r * 0.3, 8, 12);
+    mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(px, baseY + r + 80, pz);
+    mesh.rotation.x = Math.random() * Math.PI;
+    mesh.rotation.z = Math.random() * Math.PI;
+  } else if (type === 7) {
+    // Zigzag walls (squiggle approximation)
+    const group = new THREE.Group();
+    const segs = 5 + Math.floor(Math.random() * 5);
+    const segH = randomInRange(20, 50);
+    const segW = randomInRange(8, 20);
+    for (let i = 0; i < segs; i++) {
+      const geo = new THREE.BoxGeometry(segW, segH, segW);
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set((i % 2 === 0 ? -1 : 1) * segW, i * segH, 0);
+      group.add(m);
+    }
+    group.position.set(px, baseY, pz);
+    group.rotation.y = Math.random() * Math.PI;
+    scene.add(group);
+    worldObjects.push({ mesh: group, type: 'zigzag', baseY, rotSpeed: randomInRange(-0.003, 0.003) });
+    return;
+  } else if (type === 8) {
+    // Floating ring
+    const r = randomInRange(60, 180);
+    const geo = new THREE.TorusGeometry(r, 6, 6, 24);
+    mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(px, randomInRange(100, 500), pz);
+    mesh.rotation.x = Math.PI / 2;
+  } else {
+    // Tetrahedron
+    const r = randomInRange(30, 100);
+    const geo = new THREE.TetrahedronGeometry(r);
+    mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(px, baseY + r + 60, pz);
+  }
+
+  if (mesh) {
+    mesh.castShadow = true;
+    scene.add(mesh);
+    worldObjects.push({
+      mesh,
+      type: 'shape',
+      baseY: mesh.position.y,
+      floatOffset: Math.random() * Math.PI * 2,
+      floatAmp: randomInRange(5, 30),
+      floatSpeed: randomInRange(0.3, 1.2),
+      rotSpeed: randomInRange(-0.005, 0.005)
+    });
+  }
+}
+
+// Spawn objects
+for (let i = 0; i < 300; i++) {
+  const angle = Math.random() * Math.PI * 2;
+  const dist = 100 + Math.random() * WORLD_RADIUS;
+  spawnMemphisObject(Math.cos(angle) * dist, Math.sin(angle) * dist);
+}
+
+// Floating Memphis squiggles (lines in the sky)
+for (let i = 0; i < 60; i++) {
+  const points = [];
+  const segs = 8 + Math.floor(Math.random() * 12);
+  const sx = randomInRange(-WORLD_RADIUS, WORLD_RADIUS);
+  const sy = randomInRange(200, 800);
+  const sz = randomInRange(-WORLD_RADIUS, WORLD_RADIUS);
+  for (let j = 0; j < segs; j++) {
+    points.push(new THREE.Vector3(
+      sx + j * randomInRange(10, 40),
+      sy + Math.sin(j * 0.8) * randomInRange(20, 80),
+      sz + Math.cos(j * 0.5) * randomInRange(10, 40)
+    ));
+  }
+  const curve = new THREE.CatmullRomCurve3(points);
+  const geo = new THREE.TubeGeometry(curve, 20, randomInRange(2, 8), 6, false);
+  const color = MEMPHIS_COLORS[Math.floor(Math.random() * MEMPHIS_COLORS.length)];
+  const mat = createMemphisMaterial(color);
+  const mesh = new THREE.Mesh(geo, mat);
+  scene.add(mesh);
+}
+
+// Terrazzo dots on ground
+for (let i = 0; i < 500; i++) {
+  const r = randomInRange(3, 15);
+  const geo = new THREE.CircleGeometry(r, 6);
+  const color = MEMPHIS_COLORS[Math.floor(Math.random() * MEMPHIS_COLORS.length)];
+  const mat = new THREE.MeshBasicMaterial({ color });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.position.set(
+    randomInRange(-WORLD_RADIUS, WORLD_RADIUS),
+    -48,
+    randomInRange(-WORLD_RADIUS, WORLD_RADIUS)
+  );
+  scene.add(mesh);
+}
+
+// Starfield / confetti particles
+const starCount = 1500;
+const starGeo = new THREE.BufferGeometry();
+const starPos = new Float32Array(starCount * 3);
+const starColors = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount; i++) {
+  starPos[i * 3] = randomInRange(-WORLD_RADIUS * 1.5, WORLD_RADIUS * 1.5);
+  starPos[i * 3 + 1] = randomInRange(50, 1500);
+  starPos[i * 3 + 2] = randomInRange(-WORLD_RADIUS * 1.5, WORLD_RADIUS * 1.5);
+  const c = new THREE.Color(MEMPHIS_COLORS[Math.floor(Math.random() * MEMPHIS_COLORS.length)]);
+  starColors[i * 3] = c.r;
+  starColors[i * 3 + 1] = c.g;
+  starColors[i * 3 + 2] = c.b;
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+const starMat = new THREE.PointsMaterial({ size: 5, vertexColors: true, transparent: true, opacity: 0.7 });
+const stars = new THREE.Points(starGeo, starMat);
+scene.add(stars);
+
+// ============================================
+// FLIGHT CONTROLS
+// ============================================
+let mouseX = 0, mouseY = 0;
+let targetPitch = 0, targetYaw = 0;
+let pitch = 0, yaw = 0, roll = 0;
+let speed = 2;
+let targetSpeed = 2;
+let boost = false;
+let flightStarted = false;
+
+const flightDir = new THREE.Vector3(0, 0, -1);
+const flightPos = new THREE.Vector3(0, 300, 0);
+const euler = new THREE.Euler(0, 0, 0, 'YXZ');
+
+document.addEventListener('mousemove', (e) => {
+  mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+  mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+
+document.addEventListener('wheel', (e) => {
+  targetSpeed = Math.max(0.5, Math.min(12, targetSpeed - e.deltaY * 0.003));
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') boost = true;
+});
+document.addEventListener('keyup', (e) => {
+  if (e.code === 'Space') boost = false;
+});
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ============================================
+// AMBIENT MUSIC ENGINE
+// ============================================
+let audioCtx, masterGain, reverbNode;
+let musicStarted = false;
+
+const SCALES = {
+  pentatonic: [0, 2, 4, 7, 9],
+  dorian: [0, 2, 3, 5, 7, 9, 10],
+  mixolydian: [0, 2, 4, 5, 7, 9, 10],
+  lydian: [0, 2, 4, 6, 7, 9, 11]
+};
+
+let currentScale = SCALES.pentatonic;
+let baseFreq = 110; // A2
+let musicIntensity = 0.5;
+let lastChordTime = 0;
+let lastMelodyTime = 0;
+let analyserNode;
+let analyserData;
+
+function initAudio() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.35;
+  masterGain.connect(audioCtx.destination);
+
+  // Analyser for visualizer
+  analyserNode = audioCtx.createAnalyser();
+  analyserNode.fftSize = 64;
+  analyserData = new Uint8Array(analyserNode.frequencyBinCount);
+  masterGain.connect(analyserNode);
+
+  // Convolver reverb
+  const reverbLen = 3;
+  const sampleRate = audioCtx.sampleRate;
+  const impulse = audioCtx.createBuffer(2, sampleRate * reverbLen, sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = impulse.getChannelData(ch);
+    for (let i = 0; i < data.length; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 2.5);
+    }
+  }
+  reverbNode = audioCtx.createConvolver();
+  reverbNode.buffer = impulse;
+  reverbNode.connect(masterGain);
+
+  musicStarted = true;
+  startDrone();
+}
+
+function startDrone() {
+  // Base drone layer
+  const drones = [1, 1.5, 2, 3];
+  drones.forEach((mult, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = baseFreq * mult;
+    gain.gain.value = 0.04 / (i + 1);
+    osc.connect(gain);
+    gain.connect(reverbNode);
+    gain.connect(masterGain);
+    osc.start();
+
+    // Slow LFO on frequency
+    const lfo = audioCtx.createOscillator();
+    const lfoGain = audioCtx.createGain();
+    lfo.frequency.value = 0.05 + i * 0.02;
+    lfoGain.gain.value = mult * 0.5;
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc.frequency);
+    lfo.start();
+  });
+}
+
+function playTone(freq, duration, volume, delay, type = 'sine') {
+  if (!musicStarted) return;
+  const now = audioCtx.currentTime + delay;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+
+  osc.type = type;
+  osc.frequency.value = freq;
+
+  filter.type = 'lowpass';
+  filter.frequency.value = 1500 + musicIntensity * 3000;
+  filter.Q.value = 1;
+
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(volume, now + 0.05);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(reverbNode);
+
+  osc.start(now);
+  osc.stop(now + duration + 0.1);
+}
+
+function scaleFreq(degree, octave = 0) {
+  const idx = ((degree % currentScale.length) + currentScale.length) % currentScale.length;
+  const octaveShift = Math.floor(degree / currentScale.length);
+  return baseFreq * Math.pow(2, (currentScale[idx] + (octave + octaveShift) * 12) / 12);
+}
+
+function playChord() {
+  const root = Math.floor(Math.random() * currentScale.length);
+  const notes = [root, root + 2, root + 4];
+  const octave = Math.random() > 0.5 ? 1 : 2;
+  const dur = 3 + Math.random() * 4;
+  const vol = 0.03 + musicIntensity * 0.04;
+
+  notes.forEach((n, i) => {
+    playTone(scaleFreq(n, octave), dur, vol, i * 0.1, 'triangle');
+  });
+}
+
+function playMelody() {
+  const noteCount = 2 + Math.floor(Math.random() * 4 * musicIntensity);
+  const octave = 2 + Math.floor(Math.random() * 2);
+  let degree = Math.floor(Math.random() * currentScale.length);
+
+  for (let i = 0; i < noteCount; i++) {
+    degree += Math.floor(Math.random() * 3) - 1;
+    const freq = scaleFreq(degree, octave);
+    const dur = 0.5 + Math.random() * 2;
+    const vol = 0.02 + musicIntensity * 0.03;
+    const delay = i * (0.3 + Math.random() * 0.5);
+    playTone(freq, dur, vol, delay, Math.random() > 0.6 ? 'sine' : 'triangle');
+  }
+}
+
+function playTexture() {
+  if (!musicStarted || Math.random() > musicIntensity * 0.6) return;
+  const freq = scaleFreq(Math.floor(Math.random() * 7), 3 + Math.floor(Math.random() * 2));
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const pan = audioCtx.createStereoPanner();
+
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  pan.pan.value = Math.random() * 2 - 1;
+
+  const dur = 1 + Math.random() * 3;
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.01 + musicIntensity * 0.015, now + dur * 0.3);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+  osc.connect(gain);
+  gain.connect(pan);
+  pan.connect(reverbNode);
+  osc.start(now);
+  osc.stop(now + dur + 0.1);
+}
+
+// ============================================
+// MAIN LOOP
+// ============================================
+let time = 0;
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  time += dt;
+
+  if (!flightStarted) {
+    renderer.render(scene, camera);
+    return;
+  }
+
+  // Flight dynamics
+  targetYaw = -mouseX * 1.5;
+  targetPitch = -mouseY * 1.0;
+
+  const lerpFactor = 2.5 * dt;
+  yaw += (targetYaw - yaw) * lerpFactor;
+  pitch += (targetPitch - pitch) * lerpFactor;
+  roll += (-mouseX * 0.8 - roll) * lerpFactor * 0.8;
+
+  const effectiveSpeed = boost ? Math.min(speed * 3, 20) : speed;
+  speed += (targetSpeed - speed) * 2 * dt;
+
+  euler.set(pitch * 0.6, yaw * dt * 2, 0, 'YXZ');
+  const quat = new THREE.Quaternion().setFromEuler(euler);
+  camera.quaternion.multiply(quat);
+
+  // Apply roll
+  const rollQuat = new THREE.Quaternion().setFromAxisAngle(
+    new THREE.Vector3(0, 0, 1), roll * 0.3 * dt
+  );
+  camera.quaternion.multiply(rollQuat);
+
+  // Move forward
+  flightDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
+  flightPos.addScaledVector(flightDir, effectiveSpeed * 60 * dt);
+
+  // Keep in bounds (wrap around)
+  if (flightPos.x > WORLD_RADIUS * 1.5) flightPos.x -= WORLD_RADIUS * 3;
+  if (flightPos.x < -WORLD_RADIUS * 1.5) flightPos.x += WORLD_RADIUS * 3;
+  if (flightPos.z > WORLD_RADIUS * 1.5) flightPos.z -= WORLD_RADIUS * 3;
+  if (flightPos.z < -WORLD_RADIUS * 1.5) flightPos.z += WORLD_RADIUS * 3;
+  flightPos.y = Math.max(20, Math.min(1200, flightPos.y));
+
+  camera.position.copy(flightPos);
+
+  // Animate world objects
+  worldObjects.forEach(obj => {
+    if (obj.type === 'shape' && obj.mesh) {
+      obj.mesh.position.y = obj.baseY + Math.sin(time * obj.floatSpeed + obj.floatOffset) * obj.floatAmp;
+      obj.mesh.rotation.y += obj.rotSpeed;
+    } else if (obj.type === 'zigzag' && obj.mesh) {
+      obj.mesh.rotation.y += obj.rotSpeed;
+    }
+  });
+
+  // Animate stars
+  stars.rotation.y += dt * 0.005;
+
+  // Moving lights
+  pointLight1.position.x = Math.sin(time * 0.1) * 1000;
+  pointLight1.position.z = Math.cos(time * 0.1) * 1000;
+  pointLight2.position.x = Math.cos(time * 0.08) * 800;
+  pointLight2.position.z = Math.sin(time * 0.12) * 800;
+
+  // Dynamic fog color based on altitude
+  const altNorm = flightPos.y / 1200;
+  const fogColor = new THREE.Color(0x1a1a2e).lerp(new THREE.Color(0x2d1b69), altNorm * 0.5);
+  scene.fog.color.copy(fogColor);
+  scene.background.copy(fogColor);
+
+  // Update HUD
+  document.getElementById('speedVal').textContent = Math.round(effectiveSpeed * 60);
+  document.getElementById('altVal').textContent = Math.round(flightPos.y);
+
+  // Music logic
+  if (musicStarted) {
+    // Music intensity based on speed and altitude
+    musicIntensity = 0.2 + (effectiveSpeed / 12) * 0.4 + altNorm * 0.3;
+    musicIntensity = Math.min(1, musicIntensity);
+
+    // Scale changes based on altitude
+    if (altNorm < 0.25) currentScale = SCALES.dorian;
+    else if (altNorm < 0.5) currentScale = SCALES.pentatonic;
+    else if (altNorm < 0.75) currentScale = SCALES.lydian;
+    else currentScale = SCALES.mixolydian;
+
+    // Base frequency shifts slightly with position
+    baseFreq = 110 + Math.sin(time * 0.02) * 10;
+
+    // Trigger chords
+    const chordInterval = 4 - musicIntensity * 2;
+    if (time - lastChordTime > chordInterval) {
+      playChord();
+      lastChordTime = time;
+    }
+
+    // Trigger melody
+    const melodyInterval = 2 - musicIntensity;
+    if (time - lastMelodyTime > melodyInterval) {
+      if (Math.random() < 0.6 + musicIntensity * 0.3) {
+        playMelody();
+      }
+      lastMelodyTime = time;
+    }
+
+    // Texture sounds
+    if (Math.random() < 0.03 * musicIntensity) {
+      playTexture();
+    }
+
+    // Update visualizer
+    analyserNode.getByteFrequencyData(analyserData);
+    for (let i = 0; i < NUM_BARS; i++) {
+      const idx = Math.floor(i * analyserData.length / NUM_BARS);
+      const val = analyserData[idx] / 255;
+      bars[i].style.height = (4 + val * 36) + 'px';
+    }
+  }
+
+  renderer.render(scene, camera);
+}
+
+// ============================================
+// START
+// ============================================
+function startFlight() {
+  document.getElementById('intro').classList.add('hidden');
+  flightStarted = true;
+  initAudio();
+
+  setTimeout(() => {
+    document.getElementById('hint').style.opacity = '0';
+  }, 5000);
+}
+
+animate();
+</script>
+</body>
+</html>
