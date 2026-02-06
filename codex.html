@@ -1,0 +1,1035 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Memphis Dream Flight Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #101325;
+      --panel: rgba(255, 252, 242, 0.9);
+      --panel-strong: rgba(255, 255, 255, 0.94);
+      --cyan: #00e5ff;
+      --pink: #ff4aa5;
+      --yellow: #ffe56b;
+      --orange: #ff8d33;
+      --violet: #3f2d90;
+      --mint: #b9ff8a;
+      --shadow: rgba(5, 6, 22, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      font-family: "Space Grotesk", "Avenir Next", "Trebuchet MS", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 16% 14%, rgba(255, 210, 91, 0.85) 0%, rgba(255, 210, 91, 0) 32%),
+        radial-gradient(circle at 86% 10%, rgba(0, 229, 255, 0.58) 0%, rgba(0, 229, 255, 0) 40%),
+        radial-gradient(circle at 14% 83%, rgba(255, 74, 165, 0.62) 0%, rgba(255, 74, 165, 0) 35%),
+        linear-gradient(125deg, #fff6d0 0%, #ffd5ec 38%, #c9f6ff 74%, #f8ffca 100%);
+      overflow: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::before {
+      background:
+        repeating-linear-gradient(-28deg, rgba(255, 255, 255, 0.25) 0 11px, rgba(255, 255, 255, 0) 11px 24px),
+        repeating-linear-gradient(58deg, rgba(0, 0, 0, 0.04) 0 6px, rgba(0, 0, 0, 0) 6px 23px);
+      mix-blend-mode: soft-light;
+    }
+
+    body::after {
+      background:
+        radial-gradient(circle at 20% 22%, rgba(255, 74, 165, 0.24) 0 3px, rgba(255, 74, 165, 0) 4px),
+        radial-gradient(circle at 74% 25%, rgba(0, 229, 255, 0.3) 0 2px, rgba(0, 229, 255, 0) 3px),
+        radial-gradient(circle at 33% 77%, rgba(255, 229, 107, 0.28) 0 3px, rgba(255, 229, 107, 0) 4px);
+      background-size: 140px 140px, 180px 180px, 160px 160px;
+      opacity: 0.8;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 318px;
+      gap: 14px;
+      height: 100dvh;
+      padding: 14px;
+    }
+
+    .stage {
+      position: relative;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 4px solid var(--ink);
+      box-shadow: 0 16px 35px var(--shadow);
+      background: #000;
+      min-height: 430px;
+    }
+
+    #flightCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(145deg, rgba(255, 245, 190, 0.95), rgba(198, 246, 255, 0.92)),
+        repeating-linear-gradient(-45deg, rgba(255, 74, 165, 0.16) 0 15px, rgba(255, 74, 165, 0) 15px 30px);
+      transition: opacity 250ms ease;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .overlay-card {
+      width: min(650px, 100%);
+      border: 4px solid var(--ink);
+      border-radius: 22px;
+      background: var(--panel-strong);
+      box-shadow: 8px 8px 0 #000;
+      padding: 22px 18px;
+    }
+
+    .title {
+      margin: 0;
+      font-family: "Bungee", "Trebuchet MS", sans-serif;
+      letter-spacing: 1.4px;
+      line-height: 1.1;
+      font-size: clamp(28px, 4.7vw, 48px);
+      color: #ff3074;
+      text-shadow: 3px 3px 0 #ffe56b;
+    }
+
+    .subtitle {
+      margin: 12px auto 15px;
+      max-width: 40ch;
+      font-size: clamp(15px, 2.2vw, 18px);
+      font-weight: 500;
+      line-height: 1.45;
+    }
+
+    .start-btn {
+      border: 3px solid var(--ink);
+      background: linear-gradient(122deg, #ffe56b 0%, #ff8d33 42%, #ff4aa5 100%);
+      color: #101325;
+      font: 700 16px/1 "Space Grotesk", sans-serif;
+      border-radius: 999px;
+      padding: 13px 22px;
+      cursor: pointer;
+      box-shadow: 4px 4px 0 #111;
+      transition: transform 90ms ease, box-shadow 90ms ease;
+    }
+
+    .start-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 #111;
+    }
+
+    .help {
+      margin: 14px 0 0;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #2d365f;
+    }
+
+    .sidebar {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .panel {
+      border: 3px solid var(--ink);
+      border-radius: 20px;
+      background: var(--panel);
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.26);
+      padding: 12px 13px;
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-family: "Bungee", "Trebuchet MS", sans-serif;
+      font-size: 17px;
+      letter-spacing: 0.6px;
+      color: #283282;
+    }
+
+    .stat {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 9px;
+      font-size: 13px;
+      margin: 7px 0;
+    }
+
+    .stat span:last-child {
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: #02193f;
+    }
+
+    .mood {
+      margin-top: 11px;
+      border: 2px dashed var(--ink);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.82);
+      padding: 9px 10px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      flex: 1;
+      border: 2px solid var(--ink);
+      border-radius: 12px;
+      background: #fff;
+      font: 700 13px/1 "Space Grotesk", sans-serif;
+      padding: 9px 11px;
+      cursor: pointer;
+      box-shadow: 2px 2px 0 #111;
+    }
+
+    .action-btn:active,
+    .action-btn.active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 #111;
+    }
+
+    .touch-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .touch-btn {
+      border: 2px solid var(--ink);
+      border-radius: 11px;
+      background: linear-gradient(135deg, #f3f4ff, #ffffff);
+      min-height: 44px;
+      font: 700 12px/1 "Space Grotesk", sans-serif;
+      color: #263172;
+      cursor: pointer;
+      box-shadow: 2px 2px 0 #111;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .touch-btn.active {
+      transform: translate(2px, 2px);
+      box-shadow: 0 0 0 #111;
+      background: linear-gradient(135deg, #ffe56b, #ff9d3b);
+    }
+
+    .hint {
+      margin-top: 9px;
+      font-size: 12px;
+      line-height: 1.35;
+      color: #2f3d79;
+    }
+
+    @media (max-width: 980px) {
+      body {
+        overflow: auto;
+      }
+
+      .app {
+        grid-template-columns: minmax(0, 1fr);
+        height: auto;
+        min-height: 100dvh;
+      }
+
+      .stage {
+        min-height: 54dvh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="stage">
+      <canvas id="flightCanvas"></canvas>
+      <div id="overlay" class="overlay">
+        <div class="overlay-card">
+          <h1 class="title">Memphis Dream Flight</h1>
+          <p class="subtitle">
+            Steer a surreal sky filled with Memphis shapes. Ambient music grows and shifts with your climb,
+            turns, and acceleration.
+          </p>
+          <button id="startBtn" class="start-btn" type="button">Start Flight + Ambient BGM</button>
+          <p class="help">
+            Keyboard: Arrow keys pitch/bank, W/S throttle, A/D yaw<br>
+            Touch: hold the control pads in the side panel
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <aside class="sidebar">
+      <section class="panel">
+        <h2>Flight Console</h2>
+        <div class="stat"><span>Speed</span><span id="speedValue">0 kt</span></div>
+        <div class="stat"><span>Altitude</span><span id="altitudeValue">0 m</span></div>
+        <div class="stat"><span>Heading</span><span id="headingValue">000 deg</span></div>
+        <div class="stat"><span>Pitch / Roll</span><span id="attitudeValue">0 deg / 0 deg</span></div>
+        <div class="stat"><span>Throttle</span><span id="throttleValue">0 %</span></div>
+        <div class="mood" id="moodText">Ambient mode: press Start Flight + Ambient BGM</div>
+      </section>
+
+      <section class="panel">
+        <h2>Audio + Reset</h2>
+        <div class="actions">
+          <button id="muteBtn" class="action-btn" type="button">Mute</button>
+          <button id="resetBtn" class="action-btn" type="button">Reset</button>
+        </div>
+        <p class="hint">Audio starts after one click due to browser autoplay policy.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Touch Controls</h2>
+        <div class="touch-grid" id="touchGrid">
+          <button class="touch-btn" type="button" data-control="throttleUp">THR +</button>
+          <button class="touch-btn" type="button" data-control="pitchUp">PITCH +</button>
+          <button class="touch-btn" type="button" data-control="yawLeft">YAW L</button>
+          <button class="touch-btn" type="button" data-control="bankLeft">BANK L</button>
+          <button class="touch-btn" type="button" data-control="pitchDown">PITCH -</button>
+          <button class="touch-btn" type="button" data-control="bankRight">BANK R</button>
+          <button class="touch-btn" type="button" data-control="yawRight">YAW R</button>
+          <button class="touch-btn" type="button" data-control="throttleDown">THR -</button>
+          <button class="touch-btn" type="button" data-control="stabilize">STAB</button>
+        </div>
+        <p class="hint">Hold buttons to keep input active. STAB quickly levels pitch and roll.</p>
+      </section>
+    </aside>
+  </main>
+
+  <script>
+    "use strict";
+
+    const canvas = document.getElementById("flightCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const speedValue = document.getElementById("speedValue");
+    const altitudeValue = document.getElementById("altitudeValue");
+    const headingValue = document.getElementById("headingValue");
+    const attitudeValue = document.getElementById("attitudeValue");
+    const throttleValue = document.getElementById("throttleValue");
+    const moodText = document.getElementById("moodText");
+
+    const overlay = document.getElementById("overlay");
+    const startBtn = document.getElementById("startBtn");
+    const muteBtn = document.getElementById("muteBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const state = {
+      x: 0,
+      y: 0,
+      speed: 125,
+      altitude: 2400,
+      heading: 40,
+      pitch: 0,
+      pitchTarget: 0,
+      roll: 0,
+      rollTarget: 0,
+      throttle: 0.52,
+      verticalSpeed: 0,
+      turnRate: 0,
+      distance: 0,
+      time: 0
+    };
+
+    const controls = {
+      pitchUp: false,
+      pitchDown: false,
+      bankLeft: false,
+      bankRight: false,
+      throttleUp: false,
+      throttleDown: false,
+      yawLeft: false,
+      yawRight: false,
+      stabilize: false
+    };
+
+    const stars = [];
+    const memphisShapes = [];
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function toRad(degrees) {
+      return (degrees * Math.PI) / 180;
+    }
+
+    function wrapHeading(degrees) {
+      let value = degrees % 360;
+      if (value < 0) value += 360;
+      return value;
+    }
+
+    function resizeCanvas() {
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const width = Math.floor(canvas.clientWidth * dpr);
+      const height = Math.floor(canvas.clientHeight * dpr);
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        seedScene();
+      }
+    }
+
+    function seedScene() {
+      stars.length = 0;
+      memphisShapes.length = 0;
+
+      const width = canvas.width;
+      const height = canvas.height;
+      const area = width * height;
+      const starCount = clamp(Math.floor(area / 9000), 70, 220);
+      const shapeCount = clamp(Math.floor(area / 26000), 16, 48);
+
+      for (let i = 0; i < starCount; i += 1) {
+        stars.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          size: 0.6 + Math.random() * 2.6,
+          depth: 0.3 + Math.random() * 1.2,
+          twinkle: Math.random() * Math.PI * 2,
+          hue: Math.floor(180 + Math.random() * 120)
+        });
+      }
+
+      const shapeTypes = ["circle", "triangle", "arc", "squiggle", "burst"];
+      const palette = ["#ff4aa5", "#00e5ff", "#ffe56b", "#ff8d33", "#b9ff8a", "#fffbf0"];
+
+      for (let i = 0; i < shapeCount; i += 1) {
+        memphisShapes.push({
+          type: shapeTypes[Math.floor(Math.random() * shapeTypes.length)],
+          color: palette[Math.floor(Math.random() * palette.length)],
+          x: Math.random() * width,
+          y: Math.random() * height,
+          size: 8 + Math.random() * 26,
+          drift: 8 + Math.random() * 30,
+          sway: Math.random() * 60,
+          phase: Math.random() * Math.PI * 2,
+          rotation: Math.random() * Math.PI * 2,
+          rotSpeed: (Math.random() - 0.5) * 0.9
+        });
+      }
+    }
+
+    function drawMemphisShape(shape, t) {
+      ctx.save();
+      ctx.translate(shape.x, shape.y);
+      ctx.rotate(shape.rotation + t * shape.rotSpeed * 0.18);
+      ctx.lineWidth = Math.max(2, shape.size * 0.13);
+      ctx.strokeStyle = shape.color;
+      ctx.fillStyle = shape.color;
+
+      if (shape.type === "circle") {
+        ctx.globalAlpha = 0.36;
+        ctx.beginPath();
+        ctx.arc(0, 0, shape.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 0.92;
+        ctx.beginPath();
+        ctx.arc(0, 0, shape.size * 0.6, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (shape.type === "triangle") {
+        ctx.globalAlpha = 0.86;
+        ctx.beginPath();
+        ctx.moveTo(0, -shape.size);
+        ctx.lineTo(shape.size * 0.96, shape.size * 0.85);
+        ctx.lineTo(-shape.size * 0.96, shape.size * 0.85);
+        ctx.closePath();
+        ctx.stroke();
+      } else if (shape.type === "arc") {
+        ctx.globalAlpha = 0.8;
+        ctx.beginPath();
+        ctx.arc(0, 0, shape.size, 0.25, Math.PI + 0.35);
+        ctx.stroke();
+      } else if (shape.type === "squiggle") {
+        ctx.globalAlpha = 0.82;
+        ctx.beginPath();
+        ctx.moveTo(-shape.size, 0);
+        for (let i = 0; i <= 6; i += 1) {
+          const x = -shape.size + (i / 6) * shape.size * 2;
+          const y = Math.sin(i * 1.5) * shape.size * 0.42;
+          ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      } else {
+        ctx.globalAlpha = 0.84;
+        ctx.beginPath();
+        for (let i = 0; i < 9; i += 1) {
+          const angle = (i / 9) * Math.PI * 2;
+          const radius = i % 2 === 0 ? shape.size : shape.size * 0.42;
+          ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function updateScene(dt) {
+      const headingRad = toRad(state.heading);
+      const driftX = Math.sin(headingRad) * state.speed * 0.06;
+      const driftY = Math.cos(headingRad) * state.speed * 0.04;
+      const width = canvas.width;
+      const height = canvas.height;
+
+      for (const star of stars) {
+        star.x -= driftX * star.depth * dt;
+        star.y += driftY * star.depth * dt;
+        if (star.x < -10) star.x = width + 10;
+        if (star.x > width + 10) star.x = -10;
+        if (star.y < -10) star.y = height + 10;
+        if (star.y > height + 10) star.y = -10;
+      }
+
+      for (const shape of memphisShapes) {
+        shape.y += shape.drift * dt * (0.24 + state.speed / 260);
+        shape.x += Math.sin(state.time * 0.3 + shape.phase) * dt * shape.sway;
+        if (shape.y > height + 40) {
+          shape.y = -40;
+          shape.x = Math.random() * width;
+        }
+        if (shape.x < -55) shape.x = width + 55;
+        if (shape.x > width + 55) shape.x = -55;
+      }
+    }
+
+    function drawStars(time) {
+      for (const star of stars) {
+        const glow = 0.5 + Math.sin(time * 1.3 + star.twinkle) * 0.5;
+        const alpha = 0.18 + glow * 0.7;
+        ctx.fillStyle = "hsla(" + star.hue + ", 95%, 78%, " + alpha.toFixed(3) + ")";
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size * (0.75 + glow * 0.35), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawWorld(time) {
+      const width = canvas.width;
+      const height = canvas.height;
+      const altNorm = clamp(state.altitude / 16000, 0, 1);
+      const hueA = 214 + altNorm * 48;
+      const hueB = 194 + altNorm * 24;
+      const hueC = 322 - altNorm * 44;
+
+      const skyGradient = ctx.createLinearGradient(0, 0, 0, height);
+      skyGradient.addColorStop(0, "hsl(" + hueA.toFixed(1) + ", 86%, 14%)");
+      skyGradient.addColorStop(0.52, "hsl(" + hueB.toFixed(1) + ", 88%, 30%)");
+      skyGradient.addColorStop(1, "hsl(" + hueC.toFixed(1) + ", 90%, 57%)");
+      ctx.fillStyle = skyGradient;
+      ctx.fillRect(0, 0, width, height);
+
+      drawStars(time);
+
+      ctx.save();
+      ctx.translate(width * 0.5, height * 0.5);
+      ctx.rotate(toRad(-state.roll * 0.68));
+      const horizon = height * 0.06 + state.pitch * 7.2;
+
+      const sunGradient = ctx.createRadialGradient(width * 0.13, horizon - height * 0.12, 0, width * 0.13, horizon - height * 0.12, width * 0.28);
+      sunGradient.addColorStop(0, "rgba(255, 250, 186, 0.95)");
+      sunGradient.addColorStop(0.52, "rgba(255, 211, 102, 0.42)");
+      sunGradient.addColorStop(1, "rgba(255, 211, 102, 0)");
+      ctx.fillStyle = sunGradient;
+      ctx.beginPath();
+      ctx.arc(width * 0.13, horizon - height * 0.12, width * 0.28, 0, Math.PI * 2);
+      ctx.fill();
+
+      const groundGradient = ctx.createLinearGradient(0, horizon, 0, height * 0.7);
+      groundGradient.addColorStop(0, "rgba(255, 89, 190, 0.72)");
+      groundGradient.addColorStop(0.38, "rgba(83, 41, 126, 0.9)");
+      groundGradient.addColorStop(1, "rgba(12, 6, 29, 0.98)");
+      ctx.fillStyle = groundGradient;
+      ctx.fillRect(-width, horizon, width * 2, height * 1.3);
+
+      ctx.strokeStyle = "rgba(255, 232, 144, 0.5)";
+      ctx.lineWidth = 1.8;
+      for (let i = 0; i < 18; i += 1) {
+        const t = ((i + state.distance * 0.024) % 18) / 18;
+        const y = horizon + Math.pow(t, 2.15) * (height * 0.92);
+        ctx.beginPath();
+        ctx.moveTo(-width, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      for (let i = -13; i <= 13; i += 1) {
+        const x = i * (width / 18);
+        ctx.beginPath();
+        ctx.moveTo(x, height * 0.96);
+        ctx.lineTo(0, horizon);
+        ctx.stroke();
+      }
+
+      for (let i = 0; i < 6; i += 1) {
+        const shift = Math.sin(time * 0.13 + i * 1.08 + toRad(state.heading)) * width * 0.35;
+        const size = 18 + i * 14;
+        ctx.fillStyle = i % 2 ? "rgba(0, 229, 255, 0.38)" : "rgba(255, 229, 107, 0.32)";
+        ctx.beginPath();
+        ctx.moveTo(shift, horizon - size * 1.1);
+        ctx.lineTo(shift + size * 1.2, horizon + size * 0.7);
+        ctx.lineTo(shift - size * 1.2, horizon + size * 0.7);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawOverlayElements() {
+      const width = canvas.width;
+      const height = canvas.height;
+
+      for (const shape of memphisShapes) {
+        drawMemphisShape(shape, state.time);
+      }
+
+      const centerX = width * 0.5;
+      const centerY = height * 0.5;
+      ctx.save();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.88)";
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, Math.min(width, height) * 0.055, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(centerX - 24, centerY);
+      ctx.lineTo(centerX + 24, centerY);
+      ctx.moveTo(centerX, centerY - 24);
+      ctx.lineTo(centerX, centerY + 24);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(255, 74, 165, 0.92)";
+      ctx.beginPath();
+      ctx.moveTo(centerX, height * 0.93);
+      ctx.lineTo(centerX - 36, height * 0.98);
+      ctx.lineTo(centerX + 36, height * 0.98);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function updateHud() {
+      const headingRounded = Math.round(wrapHeading(state.heading));
+      speedValue.textContent = Math.round(state.speed) + " kt";
+      altitudeValue.textContent = Math.round(state.altitude) + " m";
+      headingValue.textContent = String(headingRounded).padStart(3, "0") + " deg";
+      attitudeValue.textContent = Math.round(state.pitch) + " deg / " + Math.round(state.roll) + " deg";
+      throttleValue.textContent = Math.round(state.throttle * 100) + " %";
+
+      const speedNorm = clamp((state.speed - 60) / 220, 0, 1);
+      const altNorm = clamp(state.altitude / 16000, 0, 1);
+      const turnNorm = clamp(Math.abs(state.roll) / 55, 0, 1);
+
+      let mode = "Low cloud drift";
+      if (altNorm > 0.75) mode = "High-altitude shimmer";
+      else if (speedNorm > 0.65) mode = "Deep cruise drone";
+      if (turnNorm > 0.5) mode = "Spiral neon swirl";
+
+      moodText.textContent = "Ambient mode: " + mode;
+    }
+
+    function updateFlight(dt) {
+      const pitchInput = (controls.pitchUp ? 1 : 0) - (controls.pitchDown ? 1 : 0);
+      const bankInput = (controls.bankRight ? 1 : 0) - (controls.bankLeft ? 1 : 0);
+      const yawInput = (controls.yawRight ? 1 : 0) - (controls.yawLeft ? 1 : 0);
+      const throttleInput = (controls.throttleUp ? 1 : 0) - (controls.throttleDown ? 1 : 0);
+
+      state.pitchTarget = clamp(state.pitchTarget + pitchInput * 54 * dt, -36, 36);
+      state.rollTarget = clamp(state.rollTarget + bankInput * 120 * dt, -56, 56);
+      state.throttle = clamp(state.throttle + throttleInput * dt * 0.42, 0.08, 1);
+
+      if (!controls.pitchUp && !controls.pitchDown) state.pitchTarget *= Math.max(0, 1 - dt * 1.7);
+      if (!controls.bankLeft && !controls.bankRight) state.rollTarget *= Math.max(0, 1 - dt * 2.2);
+      if (controls.stabilize) {
+        state.pitchTarget *= Math.max(0, 1 - dt * 8);
+        state.rollTarget *= Math.max(0, 1 - dt * 8);
+      }
+
+      state.pitch += (state.pitchTarget - state.pitch) * Math.min(1, dt * 3.2);
+      state.roll += (state.rollTarget - state.roll) * Math.min(1, dt * 4.5);
+
+      const desiredSpeed = 62 + state.throttle * 220;
+      state.speed += (desiredSpeed - state.speed) * Math.min(1, dt * (0.72 + state.throttle));
+      state.speed -= Math.abs(state.pitch) * dt * 0.21;
+      state.speed = clamp(state.speed, 35, 320);
+
+      state.turnRate = state.roll * 0.74 + yawInput * 28;
+      state.heading = wrapHeading(state.heading + state.turnRate * dt);
+
+      state.verticalSpeed = Math.sin(toRad(state.pitch)) * state.speed * 1.9;
+      state.altitude = clamp(state.altitude + state.verticalSpeed * dt, 120, 16000);
+
+      const headingRad = toRad(state.heading);
+      const horizontalSpeed = Math.cos(toRad(state.pitch)) * state.speed;
+      state.x += Math.sin(headingRad) * horizontalSpeed * dt * 1.8;
+      state.y += Math.cos(headingRad) * horizontalSpeed * dt * 1.8;
+      state.distance += horizontalSpeed * dt * 0.26;
+    }
+
+    class AmbientEngine {
+      constructor() {
+        this.ctx = null;
+        this.master = null;
+        this.toneFilter = null;
+        this.delay = null;
+        this.feedback = null;
+        this.noiseFilter = null;
+        this.noiseGain = null;
+        this.droneAGain = null;
+        this.droneBGain = null;
+        this.shimmerGain = null;
+        this.droneA = null;
+        this.droneB = null;
+        this.shimmer = null;
+        this.lfo = null;
+        this.running = false;
+        this.muted = false;
+      }
+
+      makeNoiseBuffer(seconds) {
+        const length = Math.floor(this.ctx.sampleRate * seconds);
+        const buffer = this.ctx.createBuffer(1, length, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        let value = 0;
+        for (let i = 0; i < length; i += 1) {
+          const white = Math.random() * 2 - 1;
+          value = (value + 0.03 * white) / 1.03;
+          data[i] = value * 2.2;
+        }
+        return buffer;
+      }
+
+      makeImpulse(seconds, decay) {
+        const length = Math.floor(this.ctx.sampleRate * seconds);
+        const impulse = this.ctx.createBuffer(2, length, this.ctx.sampleRate);
+        for (let channel = 0; channel < 2; channel += 1) {
+          const data = impulse.getChannelData(channel);
+          for (let i = 0; i < length; i += 1) {
+            const t = i / length;
+            data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, decay);
+          }
+        }
+        return impulse;
+      }
+
+      async start() {
+        if (this.running && this.ctx) {
+          await this.ctx.resume();
+          return;
+        }
+
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioCtx();
+
+        this.master = this.ctx.createGain();
+        this.master.gain.value = 0.0001;
+        this.master.connect(this.ctx.destination);
+
+        const scene = this.ctx.createGain();
+        scene.gain.value = 0.72;
+
+        this.toneFilter = this.ctx.createBiquadFilter();
+        this.toneFilter.type = "lowpass";
+        this.toneFilter.frequency.value = 980;
+        this.toneFilter.Q.value = 0.8;
+
+        this.delay = this.ctx.createDelay(1.2);
+        this.delay.delayTime.value = 0.34;
+        this.feedback = this.ctx.createGain();
+        this.feedback.gain.value = 0.3;
+        const wet = this.ctx.createGain();
+        wet.gain.value = 0.17;
+        const dry = this.ctx.createGain();
+        dry.gain.value = 0.72;
+
+        this.delay.connect(this.feedback);
+        this.feedback.connect(this.delay);
+        this.delay.connect(wet);
+        wet.connect(this.master);
+
+        const convolver = this.ctx.createConvolver();
+        convolver.buffer = this.makeImpulse(2.8, 2.5);
+        const reverbGain = this.ctx.createGain();
+        reverbGain.gain.value = 0.16;
+
+        scene.connect(this.toneFilter);
+        this.toneFilter.connect(dry);
+        dry.connect(this.master);
+        this.toneFilter.connect(this.delay);
+        this.toneFilter.connect(convolver);
+        convolver.connect(reverbGain);
+        reverbGain.connect(this.master);
+
+        this.droneA = this.ctx.createOscillator();
+        this.droneA.type = "triangle";
+        this.droneAGain = this.ctx.createGain();
+        this.droneAGain.gain.value = 0.18;
+        this.droneA.connect(this.droneAGain);
+        this.droneAGain.connect(scene);
+
+        this.droneB = this.ctx.createOscillator();
+        this.droneB.type = "sine";
+        this.droneBGain = this.ctx.createGain();
+        this.droneBGain.gain.value = 0.16;
+        this.droneB.connect(this.droneBGain);
+        this.droneBGain.connect(scene);
+
+        this.shimmer = this.ctx.createOscillator();
+        this.shimmer.type = "sawtooth";
+        const shimmerFilter = this.ctx.createBiquadFilter();
+        shimmerFilter.type = "highpass";
+        shimmerFilter.frequency.value = 200;
+        this.shimmerGain = this.ctx.createGain();
+        this.shimmerGain.gain.value = 0.028;
+        this.shimmer.connect(shimmerFilter);
+        shimmerFilter.connect(this.shimmerGain);
+        this.shimmerGain.connect(scene);
+
+        const noiseSource = this.ctx.createBufferSource();
+        noiseSource.loop = true;
+        noiseSource.buffer = this.makeNoiseBuffer(2);
+        this.noiseFilter = this.ctx.createBiquadFilter();
+        this.noiseFilter.type = "bandpass";
+        this.noiseFilter.frequency.value = 480;
+        this.noiseFilter.Q.value = 0.25;
+        this.noiseGain = this.ctx.createGain();
+        this.noiseGain.gain.value = 0.013;
+        noiseSource.connect(this.noiseFilter);
+        this.noiseFilter.connect(this.noiseGain);
+        this.noiseGain.connect(scene);
+
+        this.lfo = this.ctx.createOscillator();
+        this.lfo.type = "sine";
+        this.lfo.frequency.value = 0.07;
+        const lfoGain = this.ctx.createGain();
+        lfoGain.gain.value = 430;
+        this.lfo.connect(lfoGain);
+        lfoGain.connect(this.toneFilter.frequency);
+
+        this.droneA.start();
+        this.droneB.start();
+        this.shimmer.start();
+        noiseSource.start();
+        this.lfo.start();
+
+        const now = this.ctx.currentTime;
+        this.master.gain.setTargetAtTime(0.2, now, 1.2);
+        this.running = true;
+      }
+
+      setMuted(nextMuted) {
+        this.muted = nextMuted;
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const target = this.muted ? 0.0001 : 0.2;
+        this.master.gain.setTargetAtTime(target, now, 0.25);
+      }
+
+      updateFromFlight(flightState) {
+        if (!this.running || !this.ctx) return;
+
+        const speedNorm = clamp((flightState.speed - 52) / 250, 0, 1);
+        const altNorm = clamp(flightState.altitude / 16000, 0, 1);
+        const turnNorm = clamp(Math.abs(flightState.roll) / 56, 0, 1);
+        const climbNorm = clamp((flightState.verticalSpeed + 340) / 680, 0, 1);
+
+        const now = this.ctx.currentTime;
+        const energy = clamp(speedNorm * 0.45 + altNorm * 0.35 + turnNorm * 0.2, 0, 1);
+
+        this.droneA.frequency.setTargetAtTime(46 + altNorm * 24 + climbNorm * 8, now, 0.9);
+        this.droneB.frequency.setTargetAtTime(71 + speedNorm * 33 + altNorm * 17, now, 0.9);
+        this.shimmer.frequency.setTargetAtTime(164 + altNorm * 196 + turnNorm * 140, now, 0.75);
+        this.noiseFilter.frequency.setTargetAtTime(340 + speedNorm * 1650 + turnNorm * 900, now, 0.7);
+        this.toneFilter.frequency.setTargetAtTime(420 + altNorm * 2800 + speedNorm * 1200, now, 0.95);
+        this.delay.delayTime.setTargetAtTime(0.23 + altNorm * 0.34, now, 1.1);
+        this.feedback.gain.setTargetAtTime(0.2 + altNorm * 0.24, now, 1.1);
+
+        this.droneAGain.gain.setTargetAtTime(0.12 + energy * 0.11, now, 0.7);
+        this.droneBGain.gain.setTargetAtTime(0.09 + speedNorm * 0.1, now, 0.7);
+        this.shimmerGain.gain.setTargetAtTime(0.012 + energy * 0.07, now, 0.6);
+        this.noiseGain.gain.setTargetAtTime(0.004 + speedNorm * 0.05 + turnNorm * 0.026, now, 0.55);
+        this.lfo.frequency.setTargetAtTime(0.05 + turnNorm * 0.1 + speedNorm * 0.04, now, 1.2);
+
+        if (!this.muted) {
+          this.master.gain.setTargetAtTime(0.12 + energy * 0.16, now, 0.85);
+        }
+      }
+    }
+
+    const ambient = new AmbientEngine();
+
+    function resetFlight() {
+      state.x = 0;
+      state.y = 0;
+      state.speed = 125;
+      state.altitude = 2400;
+      state.heading = 40;
+      state.pitch = 0;
+      state.pitchTarget = 0;
+      state.roll = 0;
+      state.rollTarget = 0;
+      state.throttle = 0.52;
+      state.verticalSpeed = 0;
+      state.turnRate = 0;
+      state.distance = 0;
+      state.time = 0;
+    }
+
+    function renderFrame(timeSeconds) {
+      drawWorld(timeSeconds);
+      drawOverlayElements();
+    }
+
+    function animate(now) {
+      const dt = Math.min(0.05, (now - animate.last) / 1000 || 0.016);
+      animate.last = now;
+      state.time += dt;
+
+      resizeCanvas();
+      updateFlight(dt);
+      updateScene(dt);
+      renderFrame(state.time);
+      updateHud();
+      ambient.updateFromFlight(state);
+
+      requestAnimationFrame(animate);
+    }
+    animate.last = performance.now();
+
+    const keyToControl = {
+      ArrowUp: "pitchUp",
+      ArrowDown: "pitchDown",
+      ArrowLeft: "bankLeft",
+      ArrowRight: "bankRight",
+      KeyW: "throttleUp",
+      KeyS: "throttleDown",
+      KeyA: "yawLeft",
+      KeyD: "yawRight"
+    };
+
+    window.addEventListener("keydown", (event) => {
+      const controlName = keyToControl[event.code];
+      if (controlName) {
+        controls[controlName] = true;
+        event.preventDefault();
+      } else if (event.code === "Space") {
+        controls.stabilize = true;
+        event.preventDefault();
+      }
+    });
+
+    window.addEventListener("keyup", (event) => {
+      const controlName = keyToControl[event.code];
+      if (controlName) {
+        controls[controlName] = false;
+        event.preventDefault();
+      } else if (event.code === "Space") {
+        controls.stabilize = false;
+      }
+    });
+
+    window.addEventListener("blur", () => {
+      for (const key of Object.keys(controls)) controls[key] = false;
+      for (const button of document.querySelectorAll(".touch-btn")) button.classList.remove("active");
+    });
+
+    function bindTouchButtons() {
+      for (const button of document.querySelectorAll(".touch-btn")) {
+        const controlName = button.dataset.control;
+
+        const activate = (event) => {
+          controls[controlName] = true;
+          button.classList.add("active");
+          if (event.pointerId !== undefined) button.setPointerCapture(event.pointerId);
+          event.preventDefault();
+        };
+
+        const release = (event) => {
+          controls[controlName] = false;
+          button.classList.remove("active");
+          event.preventDefault();
+        };
+
+        button.addEventListener("pointerdown", activate);
+        button.addEventListener("pointerup", release);
+        button.addEventListener("pointercancel", release);
+        button.addEventListener("pointerleave", (event) => {
+          if (event.buttons === 0) release(event);
+        });
+      }
+    }
+
+    bindTouchButtons();
+
+    startBtn.addEventListener("click", async () => {
+      await ambient.start();
+      overlay.classList.add("hidden");
+      updateHud();
+    });
+
+    muteBtn.addEventListener("click", () => {
+      ambient.setMuted(!ambient.muted);
+      muteBtn.textContent = ambient.muted ? "Unmute" : "Mute";
+      muteBtn.classList.toggle("active", ambient.muted);
+    });
+
+    resetBtn.addEventListener("click", () => {
+      resetFlight();
+      updateHud();
+    });
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+    updateHud();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
