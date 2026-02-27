@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>隠されたマイクロトーンの世界</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pink: #f5a0c8;
+  --pink-light: #fce4f0;
+  --pink-hot: #ff6eb4;
+  --blue: #a8d8ea;
+  --blue-light: #e0f2fa;
+  --mint: #b8e6d0;
+  --yellow: #fff3b0;
+  --yellow-strong: #ffe066;
+  --lavender: #d5c6f0;
+  --lavender-light: #ede4fa;
+  --cream: #fff9f0;
+  --text: #3a3a4a;
+  --text-light: #6a6a7a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-snap-type: y proximity;
+}
+
+body {
+  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
+  color: var(--text);
+  background: var(--cream);
+  overflow-x: hidden;
+  line-height: 1.8;
+}
+
+/* ===== HERO ===== */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #fff 0%, var(--pink-light) 40%, var(--lavender-light) 100%);
+  position: relative;
+  overflow: hidden;
+  scroll-snap-align: start;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(168, 216, 234, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 60%, rgba(245, 160, 200, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 50% 90%, rgba(184, 230, 208, 0.2) 0%, transparent 40%);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 2rem;
+  animation: fadeUp 1s ease-out;
+}
+
+.hero-image {
+  width: min(90vw, 700px);
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(245, 160, 200, 0.3), 0 8px 20px rgba(0,0,0,0.06);
+  margin-bottom: 2rem;
+  animation: float 4s ease-in-out infinite;
+}
+
+.hero h1 {
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-size: clamp(1.6rem, 5vw, 3rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--pink-hot), #8b5cf6, var(--pink-hot));
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s ease-in-out infinite;
+  margin-bottom: 0.5rem;
+}
+
+.hero .subtitle {
+  font-size: clamp(1rem, 2.5vw, 1.3rem);
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: bounce 2s ease-in-out infinite;
+  font-size: 0.9rem;
+  color: var(--pink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.scroll-hint .arrow {
+  font-size: 1.5rem;
+}
+
+/* ===== NOTES DECORATION ===== */
+.note {
+  position: absolute;
+  font-size: 2rem;
+  opacity: 0.15;
+  animation: drift 8s ease-in-out infinite;
+}
+
+.note:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; }
+.note:nth-child(2) { top: 20%; right: 8%; animation-delay: 1.5s; font-size: 1.5rem; }
+.note:nth-child(3) { top: 60%; left: 10%; animation-delay: 3s; font-size: 2.5rem; }
+.note:nth-child(4) { top: 75%; right: 12%; animation-delay: 4.5s; }
+.note:nth-child(5) { top: 40%; left: 85%; animation-delay: 2s; font-size: 1.8rem; }
+
+/* ===== SECTIONS ===== */
+section {
+  scroll-snap-align: start;
+}
+
+.chapter {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1.5rem;
+  position: relative;
+}
+
+/* Chapter Number Badge */
+.chapter-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-weight: 900;
+  font-size: 1.8rem;
+  color: #fff;
+  margin-bottom: 1rem;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.chapter-title {
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-size: clamp(1.5rem, 4vw, 2.4rem);
+  font-weight: 900;
+  text-align: center;
+  margin-bottom: 0.4rem;
+}
+
+.chapter-sub {
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  color: var(--text-light);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* ===== CONTENT CARDS ===== */
+.card {
+  background: #fff;
+  border-radius: 24px;
+  padding: 2rem;
+  max-width: 680px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+  margin: 1rem 0;
+}
+
+.card img {
+  width: 100%;
+  border-radius: 16px;
+  margin-bottom: 1.2rem;
+}
+
+.card p {
+  font-size: clamp(1rem, 2.2vw, 1.15rem);
+  line-height: 2;
+}
+
+.highlight {
+  background: var(--yellow-strong);
+  padding: 0.1em 0.4em;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+.highlight-pink {
+  background: var(--pink-light);
+  padding: 0.1em 0.4em;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+.highlight-blue {
+  background: var(--blue-light);
+  padding: 0.1em 0.4em;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+/* ===== SPECIFIC SECTIONS ===== */
+
+/* Section 1 - Stairs */
+.sec-stairs {
+  background: linear-gradient(180deg, var(--cream) 0%, var(--pink-light) 50%, var(--lavender-light) 100%);
+}
+.sec-stairs .chapter-num { background: linear-gradient(135deg, var(--pink), #d580b0); }
+
+/* Section 2 - Between Keys */
+.sec-between {
+  background: linear-gradient(180deg, var(--lavender-light) 0%, var(--blue-light) 50%, #fff 100%);
+}
+.sec-between .chapter-num { background: linear-gradient(135deg, #8b9cf6, var(--lavender)); }
+
+/* Section 3 - Slopes */
+.sec-slopes {
+  background: linear-gradient(180deg, #fff 0%, var(--yellow) 50%, #fff5e0 100%);
+}
+.sec-slopes .chapter-num { background: linear-gradient(135deg, #f0a050, #e8c040); }
+
+/* Section 4 - Intentional */
+.sec-intent {
+  background: linear-gradient(180deg, #fff5e0 0%, var(--blue-light) 50%, var(--mint) 100%);
+}
+.sec-intent .chapter-num { background: linear-gradient(135deg, #60b0d0, var(--blue)); }
+
+/* Section 5 - Magic */
+.sec-magic {
+  background: linear-gradient(180deg, var(--mint) 0%, var(--pink-light) 50%, var(--lavender-light) 100%);
+}
+.sec-magic .chapter-num { background: linear-gradient(135deg, var(--pink-hot), #c060d0); }
+
+/* ===== COMPARISON LAYOUT ===== */
+.comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  max-width: 720px;
+  width: 100%;
+}
+
+.compare-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 1.8rem;
+  text-align: center;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease;
+}
+
+.compare-card:hover {
+  transform: translateY(-4px);
+}
+
+.compare-card.stairs {
+  border-top: 4px solid var(--blue);
+}
+
+.compare-card.slope {
+  border-top: 4px solid var(--pink);
+}
+
+.compare-icon {
+  font-size: 3rem;
+  margin-bottom: 0.8rem;
+}
+
+.compare-card h3 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.compare-card p {
+  font-size: 0.95rem;
+  color: var(--text-light);
+  line-height: 1.7;
+}
+
+/* ===== TABLE ===== */
+.table-wrapper {
+  max-width: 600px;
+  width: 100%;
+  margin: 1rem 0;
+}
+
+.styled-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.06);
+  font-size: clamp(0.9rem, 2vw, 1.05rem);
+}
+
+.styled-table thead {
+  background: linear-gradient(135deg, var(--pink-light), var(--lavender-light));
+}
+
+.styled-table th {
+  padding: 1rem 1.2rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.styled-table td {
+  padding: 1rem 1.2rem;
+  background: #fff;
+  text-align: center;
+  border-top: 1px solid #f0e8f0;
+}
+
+.styled-table .row-label {
+  background: var(--yellow);
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 0.2em 0.6em;
+  font-size: 0.85em;
+}
+
+/* ===== IMAGE GALLERY ===== */
+.slide-img {
+  width: 100%;
+  max-width: 640px;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+  margin: 1rem 0;
+  transition: transform 0.3s ease;
+}
+
+.slide-img:hover {
+  transform: scale(1.02);
+}
+
+/* ===== CLOSING ===== */
+.closing {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1.5rem;
+  background: linear-gradient(180deg, var(--lavender-light), var(--cream));
+  text-align: center;
+}
+
+.closing-question {
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-size: clamp(1.3rem, 4vw, 2.2rem);
+  font-weight: 900;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, var(--pink-hot), #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.closing p {
+  font-size: 1.1rem;
+  color: var(--text-light);
+  max-width: 500px;
+  line-height: 2;
+}
+
+/* ===== NAVIGATION DOTS ===== */
+.nav-dots {
+  position: fixed;
+  right: 1.2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 100;
+}
+
+.nav-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--pink);
+  opacity: 0.3;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.nav-dot.active {
+  opacity: 1;
+  transform: scale(1.3);
+  box-shadow: 0 0 10px rgba(245, 160, 200, 0.5);
+}
+
+.nav-dot:hover {
+  opacity: 0.7;
+  transform: scale(1.2);
+}
+
+/* ===== INLINE EXAMPLES ===== */
+.example-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 580px;
+  width: 100%;
+  margin: 1rem 0;
+}
+
+.example-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #fff;
+  padding: 1.2rem 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+  transition: transform 0.2s ease;
+}
+
+.example-item:hover {
+  transform: translateX(6px);
+}
+
+.example-emoji {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.example-text h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 0.15rem;
+}
+
+.example-text p {
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(10px, -15px) rotate(10deg); }
+  66% { transform: translate(-8px, 8px) rotate(-5deg); }
+}
+
+/* Scroll-triggered animations */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-1 { transition-delay: 0.15s; }
+.reveal-delay-2 { transition-delay: 0.3s; }
+.reveal-delay-3 { transition-delay: 0.45s; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+  .comparison {
+    grid-template-columns: 1fr;
+  }
+  
+  .nav-dots {
+    right: 0.6rem;
+    gap: 8px;
+  }
+  
+  .nav-dot {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .card {
+    padding: 1.5rem;
+  }
+  
+  .chapter {
+    padding: 3rem 1rem;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Navigation Dots -->
+<nav class="nav-dots" aria-label="セクションナビゲーション">
+  <button class="nav-dot active" data-section="0" title="はじめに"></button>
+  <button class="nav-dot" data-section="1" title="1. 階段の世界"></button>
+  <button class="nav-dot" data-section="2" title="2. 鍵盤の間の音"></button>
+  <button class="nav-dot" data-section="3" title="3. 坂道"></button>
+  <button class="nav-dot" data-section="4" title="4. 意図的か偶然か"></button>
+  <button class="nav-dot" data-section="5" title="5. スキマの魔法"></button>
+  <button class="nav-dot" data-section="6" title="おわりに"></button>
+</nav>
+
+<!-- Floating Notes -->
+<div class="note">♪</div>
+<div class="note">♫</div>
+<div class="note">♩</div>
+<div class="note">♬</div>
+<div class="note">♪</div>
+
+<!-- ===== HERO ===== -->
+<section class="hero" data-index="0">
+  <div class="hero-content">
+    <img src="images/mt1.png" alt="隠されたマイクロトーンの世界" class="hero-image">
+    <h1>隠されたマイクロトーンの世界</h1>
+    <p class="subtitle">音楽理論ゼロでわかる、音のスキマの話</p>
+  </div>
+  <div class="scroll-hint">
+    <span>スクロールして読む</span>
+    <span class="arrow">↓</span>
+  </div>
+</section>
+
+<!-- ===== CHAPTER 1: 階段の世界 ===== -->
+<section class="chapter sec-stairs" data-index="1">
+  <div class="chapter-num reveal">1</div>
+  <h2 class="chapter-title reveal">階段の世界</h2>
+  <p class="chapter-sub reveal">ふだんの音楽は「階段」でできている</p>
+
+  <img src="images/mt2.png" alt="階段の世界" class="slide-img reveal reveal-delay-1">
+
+  <div class="card reveal reveal-delay-2">
+    <img src="images/mt3.png" alt="スイッチのような音">
+    <p>
+      ピアノの鍵盤やギターのフレットは、押せば<span class="highlight">必ず決まった音</span>が出る
+      <span class="highlight">スイッチ</span>のようなもの。
+    </p>
+  </div>
+
+  <div class="card reveal reveal-delay-3" style="margin-top:1.5rem;">
+    <img src="images/mt4.png" alt="1.5段目はない">
+    <p>
+      ドとレの間に「ド.5」はない。<br>
+      1段目と2段目の間に、<span class="highlight">1.5段目はありません</span>。<br>
+      これが普通の音楽の世界です。
+    </p>
+  </div>
+</section>
+
+<!-- ===== CHAPTER 2: 鍵盤の間の音 ===== -->
+<section class="chapter sec-between" data-index="2">
+  <div class="chapter-num reveal">2</div>
+  <h2 class="chapter-title reveal">鍵盤の間の音</h2>
+  <p class="chapter-sub reveal">スキマに隠された世界</p>
+
+  <img src="images/mt5.png" alt="鍵盤の間の音" class="slide-img reveal reveal-delay-1">
+
+  <div class="card reveal reveal-delay-2">
+    <img src="images/mt6.png" alt="微分音の定義">
+    <p>
+      <span class="highlight-pink">微分音（マイクロトーン）</span>とは、<br>
+      ピアノの鍵盤やギターのフレットの<br>
+      「スキマ」にある<span class="highlight">無数の音</span>のこと。<br><br>
+      階段の<strong>隙間</strong>に、実はたくさんの音が眠っています。
+    </p>
+  </div>
+</section>
+
+<!-- ===== CHAPTER 3: 坂道 ===== -->
+<section class="chapter sec-slopes" data-index="3">
+  <div class="chapter-num reveal">3</div>
+  <h2 class="chapter-title reveal">あなたが使う「坂道」</h2>
+  <p class="chapter-sub reveal">あなたは微分音の使い手</p>
+
+  <img src="images/mt7.png" alt="あなたが使う坂道" class="slide-img reveal reveal-delay-1">
+
+  <div class="comparison reveal reveal-delay-2">
+    <div class="compare-card stairs">
+      <div class="compare-icon">🎹</div>
+      <h3>階段</h3>
+      <p>ピアノやギターのように、<span class="highlight-blue">決められた場所</span>にある音。</p>
+    </div>
+    <div class="compare-card slope">
+      <div class="compare-icon">🎤</div>
+      <h3>坂道</h3>
+      <p>人の声や二胡のように、<span class="highlight-pink">なめらか</span>で連続的な音。</p>
+    </div>
+  </div>
+
+  <img src="images/mt8.png" alt="階段と坂道" class="slide-img reveal reveal-delay-2" style="margin-top:1.5rem;">
+
+  <div class="example-list reveal reveal-delay-3">
+    <div class="example-item">
+      <span class="example-emoji">🗣️</span>
+      <div class="example-text">
+        <h4>人の声</h4>
+        <p>話す・歌う時、自然に音の間を滑っている</p>
+      </div>
+    </div>
+    <div class="example-item">
+      <span class="example-emoji">🎻</span>
+      <div class="example-text">
+        <h4>二胡</h4>
+        <p>フレットがなく、音程を滑らかに移動できる</p>
+      </div>
+    </div>
+  </div>
+
+  <img src="images/mt9.png" alt="身近な坂道の音" class="slide-img reveal" style="margin-top:1.5rem;">
+</section>
+
+<!-- ===== CHAPTER 4: 意図的か偶然か ===== -->
+<section class="chapter sec-intent" data-index="4">
+  <div class="chapter-num reveal">4</div>
+  <h2 class="chapter-title reveal">意図的か、偶然か</h2>
+  <p class="chapter-sub reveal">間違い？ それとも音楽？</p>
+
+  <img src="images/mt13.png" alt="意図的か偶然か" class="slide-img reveal reveal-delay-1">
+
+  <div class="table-wrapper reveal reveal-delay-2">
+    <table class="styled-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>音痴（ミストーン）</th>
+          <th>微分音（表現）</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="row-label">意図</span></td>
+          <td>意図しないズレ</td>
+          <td>意図的なコントロール</td>
+        </tr>
+        <tr>
+          <td><span class="row-label">効果</span></td>
+          <td>間違いに聞こえる</td>
+          <td>独特の感情を生む</td>
+        </tr>
+        <tr>
+          <td><span class="row-label">例え</span></td>
+          <td>坂道でつまずく</td>
+          <td>坂道を滑り降りる</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <img src="images/mt12.png" alt="音痴と微分音の違い" class="slide-img reveal reveal-delay-3" style="margin-top:1.5rem;">
+
+  <div class="card reveal" style="margin-top:1.5rem;">
+    <p>
+      同じ「階段から外れた音」でも、<br>
+      <span class="highlight">意図があるかどうか</span>で意味が変わる。<br><br>
+      坂道で<strong>つまずく</strong>のと、<br>
+      坂道を<strong>滑り降りる</strong>のは、<br>
+      まったく違うことですよね。
+    </p>
+  </div>
+</section>
+
+<!-- ===== CHAPTER 5: スキマの魔法 ===== -->
+<section class="chapter sec-magic" data-index="5">
+  <div class="chapter-num reveal">5</div>
+  <h2 class="chapter-title reveal">「スキマ」の魔法</h2>
+  <p class="chapter-sub reveal">なぜこの音を使うのか？</p>
+
+  <img src="images/mt11.png" alt="スキマの魔法" class="slide-img reveal reveal-delay-1">
+
+  <div class="example-list reveal reveal-delay-2">
+    <div class="example-item">
+      <span class="example-emoji">🎸</span>
+      <div class="example-text">
+        <h4>ブルースギターの「チョーキング」</h4>
+        <p>弦を押し上げて音程を滑らせ、魂を揺さぶる</p>
+      </div>
+    </div>
+    <div class="example-item">
+      <span class="example-emoji">🎻</span>
+      <div class="example-text">
+        <h4>二胡の「ポルタメント」</h4>
+        <p>なめらかに音と音をつなぐ、美しい響き</p>
+      </div>
+    </div>
+    <div class="example-item">
+      <span class="example-emoji">🌙</span>
+      <div class="example-text">
+        <h4>中東やインドの音楽</h4>
+        <p>ミステリアスで異国的な響きの正体</p>
+      </div>
+    </div>
+  </div>
+
+  <img src="images/mt10.png" alt="微分音が作る表現" class="slide-img reveal reveal-delay-3" style="margin-top:1.5rem;">
+</section>
+
+<!-- ===== CLOSING ===== -->
+<section class="closing" data-index="6">
+  <img src="images/mt14.png" alt="坂道が聞こえるようになった今" class="slide-img reveal" style="margin-bottom:2rem;">
+  
+  <div class="closing-question reveal reveal-delay-1">
+    坂道が聞こえるようになった今、<br>
+    あなたはどこで見つけますか？
+  </div>
+  
+  <p class="reveal reveal-delay-2">
+    ふだん聴いている音楽の中にも、<br>
+    きっと「スキマの音」が隠れています。<br>
+    耳を澄ませてみてください。
+  </p>
+</section>
+
+<script>
+// Scroll reveal
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+reveals.forEach(el => observer.observe(el));
+
+// Nav dots
+const sections = document.querySelectorAll('section[data-index]');
+const dots = document.querySelectorAll('.nav-dot');
+
+const sectionObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const idx = entry.target.dataset.index;
+      dots.forEach(d => d.classList.remove('active'));
+      dots[idx]?.classList.add('active');
+    }
+  });
+}, { threshold: 0.4 });
+
+sections.forEach(s => sectionObserver.observe(s));
+
+dots.forEach(dot => {
+  dot.addEventListener('click', () => {
+    const idx = dot.dataset.section;
+    sections[idx]?.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+</script>
+</body>
+</html>
