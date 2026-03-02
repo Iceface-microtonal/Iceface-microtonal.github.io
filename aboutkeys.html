@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>キーってなに？ 階段でわかる作曲の基本</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --lemon: #ffe870;
+  --lemon-soft: #fff4b8;
+  --mint: #c8f0de;
+  --sky: #cde9ff;
+  --peach: #ffd7bf;
+  --paper: #fffef7;
+  --text: #2f3342;
+  --text-soft: #5f6578;
+  --line: #e8ebf2;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-snap-type: y proximity;
+}
+
+body {
+  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
+  background: var(--paper);
+  color: var(--text);
+  line-height: 1.8;
+  overflow-x: hidden;
+}
+
+section {
+  scroll-snap-align: start;
+}
+
+.hero,
+.chapter,
+.closing {
+  min-height: 100vh;
+  padding: 4rem 1.2rem;
+  position: relative;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background:
+    radial-gradient(circle at 12% 20%, rgba(255, 255, 255, 0.8) 0, transparent 45%),
+    radial-gradient(circle at 80% 70%, rgba(205, 233, 255, 0.45) 0, transparent 45%),
+    linear-gradient(180deg, #fffbe6 0%, #fff7cc 55%, #fffdf0 100%);
+}
+
+.hero-content {
+  max-width: 1040px;
+  width: 100%;
+  text-align: center;
+}
+
+.hero h1 {
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-weight: 900;
+  font-size: clamp(1.8rem, 5vw, 3.1rem);
+  margin-top: 1.2rem;
+  margin-bottom: 0.4rem;
+}
+
+.hero p {
+  color: var(--text-soft);
+  font-size: clamp(0.96rem, 2.2vw, 1.2rem);
+}
+
+.media {
+  width: min(92vw, 1040px);
+  border-radius: 24px;
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.12);
+  display: block;
+  margin: 0 auto;
+}
+
+.scroll-hint {
+  margin-top: 1.5rem;
+  color: #7c7f8f;
+  font-size: 0.92rem;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+.chapter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.chapter-inner {
+  width: min(1100px, 100%);
+}
+
+.chapter-head {
+  text-align: center;
+  margin-bottom: 1.8rem;
+}
+
+.badge {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin: 0 auto 0.9rem;
+  display: grid;
+  place-items: center;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-size: 1.7rem;
+  font-weight: 900;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.chapter h2 {
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-size: clamp(1.45rem, 3.7vw, 2.4rem);
+  font-weight: 900;
+}
+
+.chapter-sub {
+  color: var(--text-soft);
+  font-size: clamp(0.95rem, 2vw, 1.12rem);
+}
+
+.sec-1 {
+  background: linear-gradient(180deg, #fffef7 0%, #fff6cb 55%, #fffef7 100%);
+}
+
+.sec-1 .badge {
+  background: linear-gradient(135deg, #ffbe45, #ff8a3d);
+}
+
+.sec-2 {
+  background: linear-gradient(180deg, #f8fbff 0%, #eef7ff 55%, #fffdf6 100%);
+}
+
+.sec-2 .badge {
+  background: linear-gradient(135deg, #76a9ff, #5f77f8);
+}
+
+.sec-3 {
+  background: linear-gradient(180deg, #fffef3 0%, #f1f9ff 50%, #fffef8 100%);
+}
+
+.sec-3 .badge {
+  background: linear-gradient(135deg, #5dbfd3, #4a88d7);
+}
+
+.sec-4 {
+  background: linear-gradient(180deg, #fffef3 0%, #fff8d8 60%, #fffef7 100%);
+}
+
+.sec-4 .badge {
+  background: linear-gradient(135deg, #ffcb4f, #fca83b);
+}
+
+.deck {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.info-card {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 1.2rem 1.35rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.info-card p {
+  font-size: clamp(0.95rem, 2vw, 1.08rem);
+}
+
+.hi {
+  background: var(--lemon);
+  padding: 0.08em 0.42em;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.hi-blue {
+  background: #d7e8ff;
+  padding: 0.08em 0.42em;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.stairs-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.melody-box {
+  border-radius: 18px;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.melody-box h3 {
+  font-size: 1rem;
+  font-weight: 800;
+  margin-bottom: 0.65rem;
+}
+
+.steps {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+  min-height: 112px;
+}
+
+.step {
+  flex: 1;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.82rem;
+  padding-top: 0.38rem;
+  color: #25314a;
+}
+
+.step:nth-child(1) { background: #ffc8c0; height: 44px; }
+.step:nth-child(2) { background: #ffe2ad; height: 58px; }
+.step:nth-child(3) { background: #d3f2c8; height: 72px; }
+.step:nth-child(4) { background: #cde8ff; height: 86px; }
+.step:nth-child(5) { background: #d7d8ff; height: 100px; }
+
+.summary {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: clamp(0.98rem, 2vw, 1.1rem);
+  font-weight: 700;
+}
+
+.closing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #fffef5 0%, #fff8c7 60%, #fffef7 100%);
+  text-align: center;
+}
+
+.closing-box {
+  width: min(840px, 100%);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 2rem 1.4rem;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
+}
+
+.closing h2 {
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-weight: 900;
+  font-size: clamp(1.4rem, 3.8vw, 2.3rem);
+  margin-bottom: 0.9rem;
+}
+
+.closing p {
+  color: var(--text-soft);
+  font-size: clamp(0.96rem, 2.1vw, 1.08rem);
+}
+
+.note {
+  position: fixed;
+  font-size: 1.9rem;
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+  animation: drift 10s ease-in-out infinite;
+}
+
+.note.n1 { top: 12%; left: 4%; }
+.note.n2 { top: 30%; right: 6%; animation-delay: 1.4s; }
+.note.n3 { top: 68%; left: 8%; animation-delay: 2.6s; }
+.note.n4 { top: 80%; right: 12%; animation-delay: 3.8s; }
+
+.nav-dots {
+  position: fixed;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nav-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: none;
+  background: #a6adc4;
+  opacity: 0.35;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.nav-dot.active {
+  opacity: 1;
+  background: #f6b913;
+  transform: scale(1.24);
+  box-shadow: 0 0 0 5px rgba(246, 185, 19, 0.2);
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal.delay-1 { transition-delay: 0.12s; }
+.reveal.delay-2 { transition-delay: 0.24s; }
+.reveal.delay-3 { transition-delay: 0.36s; }
+
+@keyframes drift {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-16px) rotate(7deg); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+@media (max-width: 780px) {
+  .hero,
+  .chapter,
+  .closing {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+
+  .stairs-compare {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-dots {
+    right: 0.55rem;
+    gap: 8px;
+  }
+
+  .nav-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .note {
+    display: none;
+  }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav-dots" aria-label="ページ内ナビゲーション">
+  <button class="nav-dot active" data-section="0" title="はじめに"></button>
+  <button class="nav-dot" data-section="1" title="1. 階段の発想"></button>
+  <button class="nav-dot" data-section="2" title="2. 同じメロディー"></button>
+  <button class="nav-dot" data-section="3" title="3. キーの例"></button>
+  <button class="nav-dot" data-section="4" title="4. キー変更"></button>
+  <button class="nav-dot" data-section="5" title="まとめ"></button>
+</nav>
+
+<div class="note n1">♪</div>
+<div class="note n2">♫</div>
+<div class="note n3">♩</div>
+<div class="note n4">♬</div>
+
+<section class="hero" data-index="0">
+  <div class="hero-content">
+    <img class="media reveal visible" src="images/slide01.png" alt="キーは階段のスタート地点を示す画像">
+    <h1 class="reveal delay-1 visible">キーってなに？ 作曲の基本を階段で理解しよう</h1>
+    <p class="reveal delay-2 visible">ドレミファソとソラシドレは、実は同じ形のメロディーです。</p>
+    <p class="scroll-hint">スクロールして読む ↓</p>
+  </div>
+</section>
+
+<section class="chapter sec-1" data-index="1">
+  <div class="chapter-inner">
+    <div class="chapter-head">
+      <div class="badge reveal">1</div>
+      <h2 class="reveal">音楽を「階段」で見る</h2>
+      <p class="chapter-sub reveal">どの音から始まったかより、音と音の距離が大切</p>
+    </div>
+
+    <div class="deck">
+      <img class="media reveal delay-1" src="images/slide02.png" alt="音楽は階段であると説明する画像">
+      <img class="media reveal delay-2" src="images/slide03.png" alt="メロディーの本質は音と音の間の距離という画像">
+      <div class="info-card reveal delay-3">
+        <p>
+          メロディーの本質は、<span class="hi">音程の並び方</span>です。<br>
+          つまり「どこから登り始めたか」ではなく、
+          <span class="hi">何段進んだか</span>で同じメロディーかどうかが決まります。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter sec-2" data-index="2">
+  <div class="chapter-inner">
+    <div class="chapter-head">
+      <div class="badge reveal">2</div>
+      <h2 class="reveal">ドレミファソ と ソラシドレ</h2>
+      <p class="chapter-sub reveal">スタートは違っても、階段の上がり方が同じなら同じメロディー</p>
+    </div>
+
+    <div class="deck">
+      <img class="media reveal delay-1" src="images/slide04.png" alt="ドレミファとソラシドは同じ曲に聞こえるかという画像">
+
+      <div class="info-card reveal delay-2">
+        <div class="stairs-compare">
+          <div class="melody-box">
+            <h3>キー C で歌う: ドレミファソ</h3>
+            <div class="steps" aria-hidden="true">
+              <div class="step">ド</div>
+              <div class="step">レ</div>
+              <div class="step">ミ</div>
+              <div class="step">ファ</div>
+              <div class="step">ソ</div>
+            </div>
+          </div>
+          <div class="melody-box">
+            <h3>キー G で歌う: ソラシドレ</h3>
+            <div class="steps" aria-hidden="true">
+              <div class="step">ソ</div>
+              <div class="step">ラ</div>
+              <div class="step">シ</div>
+              <div class="step">ド</div>
+              <div class="step">レ</div>
+            </div>
+          </div>
+        </div>
+        <p class="summary">
+          どちらも <span class="hi-blue">1段ずつ上がる</span> 形なので、
+          <span class="hi">同じメロディー</span>です。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter sec-3" data-index="3">
+  <div class="chapter-inner">
+    <div class="chapter-head">
+      <div class="badge reveal">3</div>
+      <h2 class="reveal">キーの例を見てみよう</h2>
+      <p class="chapter-sub reveal">「どの音を1段目にするか」がキー</p>
+    </div>
+
+    <div class="deck">
+      <img class="media reveal delay-1" src="images/slide05.png" alt="ド始まりはキーC、ソ始まりはキーGの例">
+      <img class="media reveal delay-2" src="images/slide5_2.png" alt="スタート地点が違うだけで">
+         <img class="media reveal delay-3" src="images/slide06.png" alt="音と音の距離（階段の幅）でメロディーが決まる画像">
+      <div class="info-card reveal delay-4">
+        <p>
+          キーは<span class="hi">階段のスタート地点</span>を決めるだけ。<br>
+          メロディーの輪郭は、
+          <span class="hi-blue">音と音の距離（階段の幅）</span>が同じなら保たれます。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter sec-4" data-index="4">
+  <div class="chapter-inner">
+    <div class="chapter-head">
+      <div class="badge reveal">4</div>
+      <h2 class="reveal">キー変更（移調）の考え方</h2>
+      <p class="chapter-sub reveal">メロディーの形はそのまま、始点だけを自分に合わせる</p>
+    </div>
+
+    <div class="deck">
+      <img class="media reveal delay-1" src="images/slide07.png" alt="キー（Key）の定義スライド">
+      <img class="media reveal delay-2" src="images/slide08.png" alt="キー変更のビフォーアフター画像">
+      <div class="info-card reveal delay-3">
+        <p>
+          <span class="hi">キーを変える</span>とは、
+          メロディーの形を崩さずに、
+          最初の段を自分の声域に合わせることです。<br>
+          作曲でもアレンジでも、ここを意識すると失敗しにくくなります。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="closing" data-index="5">
+  <div class="closing-box reveal visible">
+    <h2>まとめ</h2>
+    <p>
+      キーは「どこから始めるか」。<br>
+      メロディーは「どう進むか」。<br><br>
+      ドレミファソ でも ソラシドレ でも、
+      階段の形が同じなら同じメロディーです。
+    </p>
+  </div>
+</section>
+
+<script>
+const revealTargets = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.16, rootMargin: '0px 0px -34px 0px' });
+
+revealTargets.forEach((target) => revealObserver.observe(target));
+
+const sections = document.querySelectorAll('section[data-index]');
+const dots = document.querySelectorAll('.nav-dot');
+
+const dotObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (!entry.isIntersecting) {
+      return;
+    }
+
+    const index = entry.target.dataset.index;
+    dots.forEach((dot) => dot.classList.remove('active'));
+    if (dots[index]) {
+      dots[index].classList.add('active');
+    }
+  });
+}, { threshold: 0.42 });
+
+sections.forEach((section) => dotObserver.observe(section));
+
+dots.forEach((dot) => {
+  dot.addEventListener('click', () => {
+    const index = dot.dataset.section;
+    if (sections[index]) {
+      sections[index].scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+});
+</script>
+
+</body>
+</html>
