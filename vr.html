@@ -47,20 +47,26 @@ canvas#main{display:block}
 
 /* ── constants ── */
 const WH=2.4, WT=0.08, PH=1.55, PR=0.2, SPD=2.6, SPRT=1.7, SENS=0.002, STEP_H=0.12;
+const isQuest=/OculusBrowser|Quest|Meta Quest/i.test(navigator.userAgent);
 
 /* ── Three.js setup ── */
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x88ccee);
-scene.fog=new THREE.FogExp2(0x88ccee,0.02);
+scene.fog=new THREE.FogExp2(0x88ccee,isQuest?0.01:0.02);
 const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,0.05,80);
 camera.rotation.order='YXZ';
-const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('main'),antialias:true});
+const renderer=new THREE.WebGLRenderer({
+  canvas:document.getElementById('main'),
+  antialias:!isQuest,
+  powerPreference:'high-performance'
+});
 renderer.setSize(innerWidth,innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.setPixelRatio(Math.min(devicePixelRatio,isQuest?1.15:2));
+renderer.shadowMap.enabled=!isQuest;
+if(renderer.shadowMap.enabled)renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.1;
+renderer.toneMappingExposure=isQuest?1.35:1.1;
+if('outputColorSpace' in renderer)renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.xr.enabled=true;
 renderer.xr.setReferenceSpaceType('local-floor');
 
@@ -73,6 +79,16 @@ function setXRStatus(msg,isError=false){
   xrStatus.style.opacity=msg?"1":"0";
   xrStatus.style.background=isError?'rgba(122,28,28,.85)':'rgba(0,0,0,.62)';
 }
+renderer.domElement.addEventListener('webglcontextlost',(e)=>{
+  e.preventDefault();
+  setXRStatus('描画コンテキストが失われました。軽量モードで再起動してください。',true);
+});
+renderer.domElement.addEventListener('webglcontextrestored',()=>{
+  setXRStatus('描画コンテキストが復旧しました。');
+});
+window.addEventListener('error',(e)=>{
+  if(e&&e.message)setXRStatus('JSエラー: '+e.message,true);
+});
 async function initXR(){
   if(!window.isSecureContext){
     setXRStatus('WebXRはHTTPSまたはlocalhostでのみ有効です。',true);
@@ -86,7 +102,7 @@ async function initXR(){
     const ok=await navigator.xr.isSessionSupported('immersive-vr');
     if(ok){
       vrBtn.style.display='block';
-      setXRStatus('VR対応: QuestでENTER VRを押してください。');
+      setXRStatus('VR対応: ENTER VRを押してください。');
     }else{
       setXRStatus('immersive-vr非対応のためVR起動できません。',true);
     }
@@ -377,12 +393,16 @@ box(XHE+.01,0,2.6, 1.25,1.85,.04, M.door);
 box(5.55,0,3.16, 1.4,1.85,.04, M.door);
 
 // ────── LIGHTS ──────
-function cLight(x,z,int=.6,col=0xfff5e0){
+function cLight(x,z,int=.6,col=0xfff5e0,shadow=false){
   const g=new THREE.Mesh(new THREE.BoxGeometry(.35,.025,.35),
     new THREE.MeshStandardMaterial({color:0xfffeee,emissive:0xfffeee,emissiveIntensity:.4}));
   g.position.set(x,WH-.015,z);scene.add(g);
   const p=new THREE.PointLight(col,int,5.5);
-  p.position.set(x,WH-.08,z);p.castShadow=true;p.shadow.mapSize.set(512,512);
+  p.position.set(x,WH-.08,z);
+  if(shadow&&!isQuest){
+    p.castShadow=true;
+    p.shadow.mapSize.set(256,256);
+  }
   scene.add(p);
 }
 cLight(1.8,5.5,.7);   cLight(1.8,7.2,.35);  // LDK
@@ -394,11 +414,11 @@ cLight(.9,2.4,.35);                            // washroom
 cLight(XWE+.4,2.4,.25);                       // WC
 cLight(3.4,2.8,.3);                            // hallway
 
-scene.add(new THREE.AmbientLight(0x8899aa,.35));
-scene.add(new THREE.HemisphereLight(0x88ccee,0x887766,.25));
+scene.add(new THREE.AmbientLight(0x8899aa,isQuest?.62:.35));
+scene.add(new THREE.HemisphereLight(0x88ccee,0x887766,isQuest?.4:.25));
 const sun=new THREE.DirectionalLight(0xfff8e8,.7);
-sun.position.set(3,10,14);sun.castShadow=true;
-sun.shadow.mapSize.set(1024,1024);
+sun.position.set(3,10,14);sun.castShadow=!isQuest;
+sun.shadow.mapSize.set(isQuest?256:768,isQuest?256:768);
 Object.assign(sun.shadow.camera,{near:1,far:30,left:-10,right:10,top:12,bottom:-4});
 scene.add(sun);
 
@@ -512,11 +532,17 @@ renderer.setAnimationLoop(function loop(){
   const z=getZone(dolly.position.x,dolly.position.z);
   const lb=document.getElementById('room-label');
   if(z!==pZone){lb.textContent=z;lb.style.opacity=z?'1':'0';pZone=z;}
-  drawMap(dolly.position.x,dolly.position.z);
+  if(!renderer.xr.isPresenting)drawMap(dolly.position.x,dolly.position.z);
+  else mC.style.display='none';
   renderer.render(scene,camera);
 });
 
-window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,isQuest?1.15:2));
+});
 </script>
 </body>
 </html>
