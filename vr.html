@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3LDK in カルベローナ (VR Ready Edition)</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#eef4ff;font-family:'Helvetica Neue',serif}
+canvas#main{display:block}
+#overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(230,240,255,.88);display:flex;align-items:center;justify-content:center;z-index:100;cursor:pointer;backdrop-filter:blur(8px)}
+#overlay-content{text-align:center;color:#4a3b69;max-width:480px;padding:40px}
+#overlay-content h1{font-size:32px;margin-bottom:8px;font-weight:300;letter-spacing:6px;text-shadow:0 0 15px rgba(255,255,255,.8)}
+#overlay-content h2{font-size:14px;margin-bottom:28px;font-weight:300;color:#7a6b99;letter-spacing:2px}
+.cr{display:flex;align-items:center;margin:6px 0;font-size:13px;color:#5a4b79}
+.ck{background:rgba(255,255,255,.5);border:1px solid rgba(180,150,255,.5);padding:3px 12px;border-radius:4px;font-size:11px;color:#4a3b69;min-width:70px;text-align:center;margin-right:12px;font-weight:500;box-shadow:0 2px 4px rgba(180,150,255,.2)}
+.sb{margin-top:28px;font-size:16px;color:#8855dd;letter-spacing:3px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+#crosshair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:4px;height:4px;background:rgba(255,255,255,.9);border-radius:50%;z-index:50;pointer-events:none;box-shadow:0 0 6px #b464ff}
+#room-label{position:fixed;top:16px;left:50%;transform:translateX(-50%);color:rgba(70,50,100,.9);font-size:15px;z-index:50;pointer-events:none;letter-spacing:4px;font-weight:500;transition:opacity .6s;background:rgba(255,255,255,.7);padding:6px 24px;border-radius:20px;backdrop-filter:blur(6px);border:1px solid rgba(180,100,255,.3);box-shadow:0 2px 10px rgba(180,100,255,.1)}
+#minimap{position:fixed;top:16px;right:16px;z-index:50;pointer-events:none;opacity:.9;border-radius:8px;overflow:hidden;box-shadow:0 4px 15px rgba(100,50,150,.15);border:1px solid rgba(180,100,255,.4)}
+</style>
+</head>
+<body>
+<div id="overlay" onclick="startGame()">
+<div id="overlay-content">
+<h1>光の魔法都市の3LDK</h1>
+<h2>VR WALKING SIMULATOR</h2>
+<div class="cr"><span class="ck">W A S D</span>移動 (PC)</div>
+<div class="cr"><span class="ck">マウス</span>視点操作 (PC)</div>
+<div class="cr"><span class="ck">T</span>時間経過（魔法の刻）</div>
+<div class="sb">▶ クリックして転移陣を起動</div>
+</div>
+</div>
+<div id="crosshair"></div>
+<div id="room-label"></div>
+<canvas id="minimap" width="150" height="190"></canvas>
+<canvas id="main"></canvas>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/webxr/VRButton.js"></script>
+<script>
+"use strict";
+
+/* ── constants ── */
+const WH=2.4, WT=0.08, PH=1.55, PR=0.2, SPD=2.6, SPRT=1.7, SENS=0.002, STEP_H=0.12;
+
+/* ── Three.js & VR setup ── */
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0xeef4ff); 
+scene.fog=new THREE.FogExp2(0xeef4ff,0.015);
+const camera=new THREE.PerspectiveCamera(88,innerWidth/innerHeight,0.05,80);
+camera.rotation.order='YXZ';
+
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('main'),antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.1;
+
+// 🌟 WebXR（VRモード）を有効化し、画面にボタンを追加
+renderer.xr.enabled = true;
+document.body.appendChild( VRButton.createButton( renderer ) );
+
+/* ── textures (Bright Magic Edition) ── */
+function mkTex(w,h,fn){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t;}
+const texWall=mkTex(256,256,(g,w,h)=>{g.fillStyle='#fdfbff';g.fillRect(0,0,w,h);for(let y=0;y<h;y+=32)for(let x=0;x<w;x+=64){const o=(y/32)%2*32;g.strokeStyle='rgba(200,180,240,.3)';g.lineWidth=1;g.strokeRect(x+o,y,64,32);g.fillStyle=`rgba(${245+Math.random()*10},${240+Math.random()*10},${250+Math.random()*5},1)`;g.fillRect(x+o+1,y+1,62,30);}});
+const texCeil=mkTex(256,256,(g,w,h)=>{g.fillStyle='#ffffff';g.fillRect(0,0,w,h);for(let i=0;i<50;i++){g.fillStyle=`rgba(220,200,255,${Math.random()*.4})`;g.beginPath();g.arc(Math.random()*w,Math.random()*h,Math.random()*1.5,0,7);g.fill();}});
+const texWood=mkTex(512,512,(g,w,h)=>{g.fillStyle='#e8e2f0';g.fillRect(0,0,w,h);const bw=60,bh=240;for(let x=0;x<w;x+=bw)for(let y=0;y<h;y+=bh){const o=(x/bw|0)%2*(bh/2),b=.9+Math.random()*.1;g.fillStyle=`rgb(${220*b|0},${210*b|0},${235*b|0})`;g.fillRect(x+1,y+o+1,bw-2,bh-2);}});texWood.repeat.set(3,3);
+const texTatami=mkTex(256,512,(g,w,h)=>{g.fillStyle='#dcd2ec';g.fillRect(0,0,w,h);g.strokeStyle='#c2b2df';g.lineWidth=3;g.strokeRect(8,8,w-16,h-16);g.beginPath();g.moveTo(w/2,16);g.lineTo(w-16,h/2);g.lineTo(w/2,h-16);g.lineTo(16,h/2);g.closePath();g.stroke();});
+const texTile=mkTex(256,256,(g,w,h)=>{g.fillStyle='#f4f0f8';g.fillRect(0,0,w,h);const s=32;for(let x=0;x<w;x+=s)for(let y=0;y<h;y+=s){const b=.9+Math.random()*.1;g.fillStyle=`rgb(${240*b|0},${235*b|0},${245*b|0})`;g.fillRect(x+1,y+1,s-2,s-2);}});texTile.repeat.set(3,3);
+
+/* ── materials ── */
+const M={
+  wall:new THREE.MeshStandardMaterial({map:texWall,roughness:.9}), ceil:new THREE.MeshStandardMaterial({map:texCeil,roughness:.95}),
+  wood:new THREE.MeshStandardMaterial({map:texWood,roughness:.6}), tatami:new THREE.MeshStandardMaterial({map:texTatami,roughness:.8}),
+  tile:new THREE.MeshStandardMaterial({map:texTile,roughness:.5,metalness:.1}), genkan:new THREE.MeshStandardMaterial({map:texTile,roughness:.6}),
+  conc:new THREE.MeshStandardMaterial({map:texTile,roughness:.8}), glass:new THREE.MeshStandardMaterial({color:0xddeeff,transparent:true,opacity:.25,roughness:.05,metalness:.7}),
+  door:new THREE.MeshStandardMaterial({color:0xddccf0,roughness:.6}), dkwd:new THREE.MeshStandardMaterial({color:0xaa99cc,roughness:.5}),
+  kit:new THREE.MeshStandardMaterial({color:0xf0eef4,roughness:.3,metalness:.2}), met:new THREE.MeshStandardMaterial({color:0xddeeff,roughness:.2,metalness:.8}),
+  wht:new THREE.MeshStandardMaterial({color:0xfcfbff,roughness:.4}), fusuma:new THREE.MeshStandardMaterial({color:0xece8f4,roughness:.85}),
+  mirror:new THREE.MeshStandardMaterial({color:0xffffff,metalness:.95,roughness:.02}), hood:new THREE.MeshStandardMaterial({color:0xbbaadd,metalness:.5,roughness:.4}),
+  bath:new THREE.MeshStandardMaterial({color:0xf4f0f8,roughness:.3}), frame:new THREE.MeshStandardMaterial({color:0xbbccdd,metalness:.4,roughness:.3}),
+};
+
+/* ── collision segments ── */
+const segs=[];
+function seg(ax,az,bx,bz){segs.push({ax,az,bx,bz});}
+function ptSeg(px,pz,ax,az,bx,bz){
+  const dx=bx-ax,dz=bz-az,l2=dx*dx+dz*dz; if(l2<1e-8)return Math.hypot(px-ax,pz-az);
+  const t=Math.max(0,Math.min(1,((px-ax)*dx+(pz-az)*dz)/l2)); return Math.hypot(px-(ax+t*dx),pz-(az+t*dz));
+}
+function blocked(px,pz){for(const s of segs)if(ptSeg(px,pz,s.ax,s.az,s.bx,s.bz)<PR+WT/2)return true; return false;}
+
+/* ── build helpers ── */
+function box(x,y,z,w,h,d,mat,cs=false){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x+w/2,y+h/2,z+d/2);m.castShadow=cs;m.receiveShadow=true;scene.add(m);return m;}
+function mkFloor(x,z,w,d,mat,y=.001){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),mat);m.rotation.x=-Math.PI/2;m.position.set(x+w/2,y,z+d/2);m.receiveShadow=true;scene.add(m);}
+function mkCeil(x,z,w,d){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),M.ceil);m.rotation.x=Math.PI/2;m.position.set(x+w/2,WH,z+d/2);scene.add(m);}
+function vw(ax,az,bx,bz,h=WH,mat=M.wall,col=true){
+  const dx=bx-ax,dz=bz-az,len=Math.hypot(dx,dz); if(len<.01)return;
+  const m=new THREE.Mesh(new THREE.BoxGeometry(WT,h,len),mat); m.position.set((ax+bx)/2,h/2,(az+bz)/2);
+  m.rotation.y=Math.atan2(dx,dz); m.castShadow=true;m.receiveShadow=true;scene.add(m); if(col)seg(ax,az,bx,bz);
+}
+
+/* ============================================================
+   APARTMENT LAYOUT
+   ============================================================ */
+const X0=0, XBE=1.9, XWE=1.9, XWCE=2.7, XHW=2.7, XHE=4.2, XE=7.0;
+const Z0=0, ZGS=1.1, ZBS=1.7, ZWS=3.1, ZHS=4.5, ZW1S=6.8, ZSS=9.5, ZBaS=10.6;
+
+// ────── OUTER WALLS ──────
+vw(X0,Z0, XBE,Z0); vw(XBE,Z0, XHW,Z0); vw(XHW,Z0, 3.05,Z0); vw(3.95,Z0, XHE,Z0); vw(XHE,Z0, XE,Z0);
+vw(XE,Z0, XE,ZSS); vw(X0,Z0, X0,ZSS);
+vw(X0,ZSS, 0.5,ZSS); vw(2.8,ZSS, 4.2,ZSS); vw(4.2,ZSS, 4.5,ZSS); vw(6.5,ZSS, XE,ZSS);
+vw(X0,ZBaS, XE,ZBaS, 1.05, M.conc); vw(X0,ZSS, X0,ZBaS, 1.05, M.conc); vw(XE,ZSS, XE,ZBaS, 1.05, M.conc);
+
+// ────── INTERNAL WALLS ──────
+vw(X0,ZBS, XBE,ZBS); vw(XBE,Z0, XBE,0.5); vw(XBE,1.2, XBE,ZBS);
+vw(XWE,ZBS, XWE,ZWS); vw(X0,ZWS, 0.6,ZWS); vw(1.3,ZWS, XHW,ZWS);
+vw(XHW,ZGS, XHW,2.3); vw(XHW,2.9, XHW,ZWS); vw(XHW,ZWS, XHW,3.8);
+vw(XWE,ZBS, XWCE,ZBS);
+vw(XHE,Z0, XHE,0.3); vw(XHE,1.0, XHE,2.6); vw(XHE,2.6, XHE,3.2);
+vw(XHE,3.2, XHE,3.5); vw(XHE,4.2, XHE,ZHS); vw(XHE,ZHS, XHE,6.2); vw(XHE,7.5, XHE,ZSS);
+vw(XHE,2.6, XE,2.6); vw(XHE,3.2, 5.5,3.2); vw(5.5,3.2, XE,3.2); vw(5.5,2.6, 5.5,3.2);
+vw(XHE,ZW1S, 5.0,ZW1S); vw(6.3,ZW1S, XE,ZW1S);
+
+// ────── GLASS DOORS ──────
+function glassPanel(cx,cz,w,rotY=0){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,2,WT),M.glass);
+  m.position.set(cx,1,cz);m.rotation.y=rotY;scene.add(m);
+  [-w/2,0,w/2].forEach(o=>{
+    const f=new THREE.Mesh(new THREE.BoxGeometry(.025,2,.025),M.frame);
+    const fx=cx+o*Math.cos(rotY), fz=cz+o*Math.sin(rotY); f.position.set(fx,1,fz);scene.add(f);
+  });
+  const uw=new THREE.Mesh(new THREE.BoxGeometry(w,WH-2,WT),M.wall);
+  uw.position.set(cx,2+(WH-2)/2,cz);uw.rotation.y=rotY;scene.add(uw);
+}
+glassPanel(1.65,ZSS, 2.3); glassPanel(5.5,ZSS, 2.0);
+
+const fuG=new THREE.Mesh(new THREE.BoxGeometry(WT,1.95,1.3),M.fusuma); fuG.position.set(XHE,.975,(6.2+7.5)/2);scene.add(fuG);
+const fuG2=new THREE.Mesh(new THREE.BoxGeometry(1.3,1.95,WT),M.fusuma); fuG2.position.set((5+6.3)/2,.975,ZW1S);scene.add(fuG2);
+
+// ────── FLOORS & CEILING ──────
+mkFloor(X0,Z0, XBE,ZBS, M.tile); mkFloor(X0,ZBS, XWE,ZWS-ZBS, M.tile); mkFloor(XWE,ZBS, XWCE-XWE,ZWS-ZBS, M.tile);       
+mkFloor(XHW,ZGS, XHE-XHW,ZHS-ZGS, M.wood); mkFloor(XHW,Z0, XHE-XHW,ZGS, M.genkan, -STEP_H);  
+mkFloor(X0,ZWS, XHE,ZSS-ZWS, M.wood); mkFloor(XHE,Z0, XE-XHE,2.6, M.wood); mkFloor(XHE,2.6, XE-XHE,3.2-2.6, M.wood);          
+
+for(let i=0;i<3;i++)for(let j=0;j<2;j++){
+  const tw=(XE-XHE)/3,td=(ZW1S-3.2)/2, m=new THREE.Mesh(new THREE.PlaneGeometry(tw-.02,td-.02),M.tatami);
+  m.rotation.x=-Math.PI/2;if((i+j)%2===0)m.rotation.z=Math.PI/2;
+  m.position.set(XHE+tw*i+tw/2,.003,3.2+td*j+td/2);m.receiveShadow=true;scene.add(m);
+}
+for(let i=0;i<3;i++)for(let j=0;j<2;j++){
+  const tw=(XE-XHE)/3,td=(ZSS-ZW1S)/2, m=new THREE.Mesh(new THREE.PlaneGeometry(tw-.02,td-.02),M.tatami);
+  m.rotation.x=-Math.PI/2;if((i+j)%2===1)m.rotation.z=Math.PI/2;
+  m.position.set(XHE+tw*i+tw/2,.003,ZW1S+td*j+td/2);m.receiveShadow=true;scene.add(m);
+}
+mkFloor(X0,ZSS, XE,ZBaS-ZSS, M.conc);  
+box(XHW,-STEP_H,ZGS-.02, XHE-XHW,STEP_H+.002,.04, M.wood); mkCeil(X0,Z0,XE,ZSS);
+
+// ────── FURNITURE ──────
+box(.05,0,5, .55,.85,2.2, M.kit,true); box(.1,.85,5.5, .45,.02,.55, M.met); box(.1,.82,6.5, .4,.05,.45, M.met);       
+box(.05,1.55,5.3, .48,.28,.7, M.hood); box(.05,0,7.5, .58,1.72,.58, M.wht,true); 
+box(.1,0,.15, .75,.5,1.3, M.bath,true); const sp=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.7,8),M.met); sp.position.set(.15,1.5,1.45);scene.add(sp);
+box(.1,0,ZBS+.15, .55,.88,.55, M.wht,true); box(.8,0,ZBS+.1, .65,.72,.42, M.wht,true);
+box(.83,.72,ZBS+.13, .58,.03,.35, M.met); box(.83,.88,ZBS+.02, .58,.65,.02, M.mirror);
+box(XWE+.15,0,ZBS+.6, .42,.38,.6, M.wht,true); box(XWE+.2,.38,ZBS+.4, .32,.28,.18, M.wht);
+box(XHE-.35,0,.08, .3,1.8,.85, M.dkwd,true); box(XHE+.01,0,2.6, 1.25,1.85,.04, M.door); box(5.55,0,3.16, 1.4,1.85,.04, M.door);
+
+// 🎹 ピアノ
+const matPiano = new THREE.MeshStandardMaterial({color: 0x111111, roughness: 0.15, metalness: 0.6});
+const matKeyW = new THREE.MeshStandardMaterial({color: 0xffffff, roughness: 0.3});
+const matKeyB = new THREE.MeshStandardMaterial({color: 0x111111, roughness: 0.3});
+const pX = 3.6, pZ = 4.6;
+box(pX, 0, pZ, 0.45, 0.7, 1.35, matPiano, true); box(pX - 0.1, 0.7, pZ, 0.55, 0.15, 1.35, matPiano, true); 
+box(pX + 0.2, 0.85, pZ, 0.25, 0.3, 1.35, matPiano, true); box(pX - 0.08, 0.85, pZ + 0.05, 0.25, 0.015, 1.25, matKeyW, true); 
+box(pX + 0.02, 0.865, pZ + 0.05, 0.15, 0.01, 1.25, matKeyB, true); box(pX - 0.5, 0, pZ + 0.4, 0.35, 0.45, 0.5, matPiano, true);
+
+/* ── LIGHTS & TIME CONTROL ── */
+let timeState = 0; const roomLights = []; 
+function cLight(x,z,int=.7,col=0xfff5e0){
+  const g=new THREE.Mesh(new THREE.BoxGeometry(.35,.025,.35), new THREE.MeshStandardMaterial({color:0xfffeee,emissive:0xfffeee,emissiveIntensity:.6}));
+  g.position.set(x,WH-.015,z);scene.add(g);
+  const p=new THREE.PointLight(col,int,6.5); p.position.set(x,WH-.08,z);p.castShadow=true;p.shadow.mapSize.set(512,512);
+  scene.add(p); roomLights.push({mesh: g, light: p, baseInt: int});
+}
+cLight(1.8, 5.5, .8); cLight(1.8, 8.2, .5); cLight(5.6, 1.3, .6); cLight(5.6, 4.5, .6);                           
+cLight(5.6, 8.2, .6); cLight(.9, .85, .4); cLight(.9, 2.4, .4); cLight(XWE+.4, 2.4, .35); cLight(3.4, 2.8, .4);                           
+
+const ambientLight = new THREE.AmbientLight(0xffffff,.65); scene.add(ambientLight);
+const hemiLight = new THREE.HemisphereLight(0xffffff,0xddccff,.45); scene.add(hemiLight);
+const sun = new THREE.DirectionalLight(0xfff5ee,.9);
+sun.position.set(3,10,14);sun.castShadow=true; sun.shadow.mapSize.set(1024,1024);
+Object.assign(sun.shadow.camera,{near:1,far:30,left:-10,right:10,top:12,bottom:-4}); scene.add(sun);
+
+function changeTime() {
+  timeState = (timeState + 1) % 3;
+  if (timeState === 0) {
+    scene.background = new THREE.Color(0xeef4ff); scene.fog.color.setHex(0xeef4ff); sun.color.setHex(0xfff5ee); sun.intensity = 0.9;
+    ambientLight.color.setHex(0xffffff); ambientLight.intensity = 0.65; hemiLight.intensity = 0.45; roomLights.forEach(l => l.light.intensity = l.baseInt);
+  } else if (timeState === 1) {
+    scene.background = new THREE.Color(0xffaadd); scene.fog.color.setHex(0xffaadd); sun.color.setHex(0xffbb88); sun.intensity = 1.0; sun.position.set(15, 1.5, 2); 
+    ambientLight.color.setHex(0xddbbee); ambientLight.intensity = 0.5; hemiLight.intensity = 0.3; roomLights.forEach(l => l.light.intensity = l.baseInt * 0.7);
+  } else if (timeState === 2) {
+    scene.background = new THREE.Color(0x1a153a); scene.fog.color.setHex(0x1a153a); sun.color.setHex(0xaaccff); sun.intensity = 0.3; sun.position.set(-5, 12, -5);
+    ambientLight.color.setHex(0x2a254a); ambientLight.intensity = 0.4; hemiLight.intensity = 0.2; roomLights.forEach(l => l.light.intensity = l.baseInt * 1.5);
+  }
+}
+document.addEventListener('keydown', e => { if (e.code === 'KeyT' && !e.repeat) changeTime(); });
+
+/* ── OUTSIDE (Floating Crystals & Magic Particles) ── */
+const crystalGeo = new THREE.OctahedronGeometry(1, 0);
+for(let i=0;i<15;i++){
+  const mat = new THREE.MeshStandardMaterial({color: new THREE.Color().setHSL(Math.random(), 0.6, 0.8), metalness: 0.1, roughness: 0.1, transparent: true, opacity: 0.85});
+  const c = new THREE.Mesh(crystalGeo, mat); c.position.set(-10 + Math.random()*25, -2 + Math.random()*8, 12 + Math.random()*15);
+  c.scale.setScalar(0.5 + Math.random()*2); scene.add(c); c.userData = { ry: Math.random()*0.02, rz: Math.random()*0.02, floatSpeed: Math.random()*0.02, baseY: c.position.y };
+}
+const ptGeo = new THREE.BufferGeometry(); const ptPos = [];
+for(let i=0;i<200;i++){ ptPos.push(Math.random()*7, Math.random()*WH, Math.random()*10); }
+ptGeo.setAttribute('position', new THREE.Float32BufferAttribute(ptPos, 3));
+const ptMat = new THREE.PointsMaterial({color:0xffffff, size:0.04, transparent:true, opacity:0.8});
+const particles = new THREE.Points(ptGeo, ptMat); scene.add(particles);
+
+/* ── room zones ── */
+const ZONES=[
+  {l:'転移陣(玄関)', x0:XHW,x1:XHE,z0:Z0,z1:ZGS}, {l:'光の回廊',     x0:XHW,x1:XHE,z0:ZGS,z1:ZHS},
+  {l:'沐浴の泉',     x0:X0, x1:XBE,z0:Z0,z1:ZBS}, {l:'清めの間',     x0:X0, x1:XWE,z0:ZBS,z1:ZWS},
+  {l:'瞑想室',       x0:XWE,x1:XWCE,z0:ZBS,z1:ZWS}, {l:'魔導書庫',     x0:XHE,x1:XE,z0:Z0,z1:2.6},
+  {l:'星見の間 壱',  x0:XHE,x1:XE,z0:3.2,z1:ZW1S}, {l:'星見の間 弐',  x0:XHE,x1:XE,z0:ZW1S,z1:ZSS},
+  {l:'大魔女の居間', x0:X0, x1:XHE,z0:ZWS,z1:ZSS}, {l:'天空のバルコニー', x0:X0, x1:XE,z0:ZSS,z1:ZBaS},
+];
+function getZone(x,z){for(const r of ZONES)if(x>=r.x0&&x<=r.x1&&z>=r.z0&&z<=r.z1)return r.l;return '';}
+
+/* ── player state (🌟 Dolly system for VR) ── */
+const dolly = new THREE.Group();
+dolly.position.set(3.5, 0, 0.55); // あなたの転移座標（玄関）
+scene.add(dolly);
+dolly.add(camera);
+camera.position.set(0, PH-STEP_H, 0); // デスクトップ用の目の高さ（VR時はゴーグルの高さで上書きされます）
+
+let yaw=Math.PI,pitch=0,locked=false,mapOn=true; const keys={};
+const MAP_BOUNDS={x0:X0+PR,x1:XE-PR,z0:Z0+PR,z1:ZBaS-PR}; const fw=new THREE.Vector3(),rt=new THREE.Vector3();
+function inBounds(x,z){return x>=MAP_BOUNDS.x0&&x<=MAP_BOUNDS.x1&&z>=MAP_BOUNDS.z0&&z<=MAP_BOUNDS.z1;}
+function canMoveTo(x,z){return inBounds(x,z)&&!blocked(x,z);}
+function resetKeys(){for(const k in keys)keys[k]=false;}
+document.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyM'&&!e.repeat)mapOn=!mapOn;});
+document.addEventListener('keyup',e=>keys[e.code]=false);
+document.addEventListener('pointerlockchange',()=>locked=!!document.pointerLockElement);
+document.addEventListener('mousemove',e=>{if(!locked)return;yaw-=e.movementX*SENS;pitch-=e.movementY*SENS;pitch=Math.max(-1.35,Math.min(1.35,pitch));});
+function startGame(){document.getElementById('overlay').style.display='none';renderer.domElement.requestPointerLock();}
+renderer.domElement.addEventListener('click',()=>{if(!locked)renderer.domElement.requestPointerLock();});
+window.addEventListener('blur',resetKeys); document.addEventListener('visibilitychange',()=>{if(document.hidden)resetKeys();});
+
+/* ── minimap ── */
+const mC=document.getElementById('minimap'),mX=mC.getContext('2d');
+const ZC={'転移陣(玄関)':'#e6ccff','光の回廊':'#dcd2ec','沐浴の泉':'#cceeff','清めの間':'#ddeeff','瞑想室':'#ddeeff','魔導書庫':'#e8e2f0','星見の間 壱':'#dcd2ec','星見の間 弐':'#dcd2ec','大魔女の居間':'#e8e2f0','天空のバルコニー':'#ffffff'};
+function drawMap(px, pz){
+  if(!mapOn){mC.style.display='none';return;} mC.style.display='block';
+  const S=15,OX=6,OZ=5; mX.clearRect(0,0,150,190);
+  mX.fillStyle='rgba(255,255,255,.6)';mX.fillRect(0,0,150,190);
+  for(const r of ZONES){mX.fillStyle=ZC[r.l]||'#fff';mX.globalAlpha=.8;mX.fillRect(OX+r.x0*S,OZ+r.z0*S,(r.x1-r.x0)*S,(r.z1-r.z0)*S);}
+  mX.globalAlpha=1;mX.strokeStyle='rgba(150,100,200,.5)';mX.lineWidth=1.5;
+  for(const s of segs){mX.beginPath();mX.moveTo(OX+s.ax*S,OZ+s.az*S);mX.lineTo(OX+s.bx*S,OZ+s.bz*S);mX.stroke();}
+  const cx=OX+px*S,cz=OZ+pz*S;
+  mX.fillStyle='#aa66ff';mX.beginPath();mX.arc(cx,cz,3,0,7);mX.fill();
+  mX.strokeStyle='#aa66ff';mX.lineWidth=2;mX.beginPath();mX.moveTo(cx,cz);mX.lineTo(cx+Math.sin(yaw)*10,cz+Math.cos(yaw)*10);mX.stroke();
+}
+
+/* ── footstep audio ── */
+let actx=null,stT=0;
+function step(){if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.type='triangle';o.frequency.value=80+Math.random()*30;g.gain.setValueAtTime(.02,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.15);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+.15);}
+
+/* ── game loop (🌟 WebXR対応のループに変更) ── */
+const clock=new THREE.Clock(); let pZone='';
+
+// 従来の requestAnimationFrame ではなく、VRに対応した setAnimationLoop を使います
+renderer.setAnimationLoop( function loop() {
+  const dt=Math.min(clock.getDelta(),.05); const time = clock.getElapsedTime();
+  
+  // 魔法の粉やクリスタルのアニメーション
+  const posAttr = particles.geometry.attributes.position;
+  for(let i=0; i<posAttr.count; i++){ posAttr.array[i*3+1] += dt * 0.1; if(posAttr.array[i*3+1] > WH) posAttr.array[i*3+1] = 0; }
+  posAttr.needsUpdate = true;
+  scene.children.forEach(c => { if(c.geometry && c.geometry.type === 'OctahedronGeometry') { c.rotation.y += c.userData.ry; c.rotation.z += c.userData.rz; c.position.y = c.userData.baseY + Math.sin(time * c.userData.floatSpeed * 50) * 0.5; } });
+
+  // 🌟 デスクトップで開いている時だけ、マウスで視点を動かせるようにする
+  if (!renderer.xr.isPresenting) {
+    camera.rotation.y = yaw;
+    camera.rotation.x = pitch;
+  }
+
+  // 🌟 移動処理（カメラ単体ではなく、Dollyごと移動させます）
+  if(locked && !renderer.xr.isPresenting){
+    const sprint=keys.ShiftLeft||keys.ShiftRight; const spd=SPD*(sprint?SPRT:1);
+    
+    // 現在のカメラの向いている方向を計算
+    camera.getWorldDirection(fw); fw.y = 0; fw.normalize();
+    rt.copy(fw).cross(new THREE.Vector3(0,1,0)).normalize();
+
+    let mx=0,mz=0;
+    if(keys.KeyW){mx+=fw.x;mz+=fw.z;} if(keys.KeyS){mx-=fw.x;mz-=fw.z;}
+    if(keys.KeyA){mx-=rt.x;mz-=rt.z;} if(keys.KeyD){mx+=rt.x;mz+=rt.z;}
+    if(mx||mz){
+      const l=Math.hypot(mx,mz);mx=mx/l*spd*dt;mz=mz/l*spd*dt;
+      const nx=dolly.position.x+mx,nz=dolly.position.z+mz;
+      if(canMoveTo(nx,nz)){dolly.position.x=nx;dolly.position.z=nz;}
+      else if(canMoveTo(nx,dolly.position.z))dolly.position.x=nx;
+      else if(canMoveTo(dolly.position.x,nz))dolly.position.z=nz;
+      stT+=spd*dt;if(stT>.55){stT=0;step();}
+    }
+    const inG=dolly.position.x>XHW&&dolly.position.x<XHE&&dolly.position.z<ZGS;
+    const tY=inG?-STEP_H:0; dolly.position.y+=(tY-dolly.position.y)*.15;
+    if(mx||mz)camera.position.y = (PH-STEP_H) + Math.sin(stT*12)*.012;
+  }
+  
+  const z=getZone(dolly.position.x,dolly.position.z);
+  const lb=document.getElementById('room-label');
+  if(z!==pZone){lb.textContent=z;lb.style.opacity=z?'1':'0';pZone=z;}
+  
+  // ミニマップにはDollyの座標を渡す
+  drawMap(dolly.position.x, dolly.position.z); 
+  
+  renderer.render(scene,camera);
+});
+
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+</script>
+</body>
+</html>
