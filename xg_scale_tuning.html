@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>ICEFACE XG Scale Tuning</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root {
+  --bg:#fafafa; --sf:#fff; --sa:#f0f0f0; --bd:#d6d6d6;
+  --t1:#1f1f1f; --t2:#737373; --t3:#a6a6a6;
+  --ac:#e66699; --ok:#33b873; --up:#388feb; --dn:#e65966;
+  --r:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Menlo,"SF Mono",Consolas,monospace;background:var(--bg);color:var(--t1);font-size:12px}
+
+/* ── Header ── */
+header{background:var(--sf);border-bottom:1px solid var(--bd);padding:14px 24px}
+header h1{font-size:16px;color:var(--ac);margin-bottom:2px}
+header small{font-size:9px;color:var(--t3)}
+
+/* ── Layout ── */
+main{max-width:960px;margin:0 auto;padding:14px 20px}
+section{margin-bottom:12px}
+.label{font-size:9px;font-weight:bold;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+
+/* ── Buttons ── */
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.spacer{flex:1}
+btn,button{font-family:inherit}
+.dia{flex:1;min-width:88px;height:36px;border:1px solid var(--bd);border-radius:var(--r);
+  background:var(--sa);font-family:inherit;font-size:11px;font-weight:bold;cursor:pointer;color:var(--t1);transition:.12s}
+.dia:hover{border-color:var(--ac)}
+.dia.p{background:#e6f8eb;border-color:var(--ok);color:var(--ok)}
+.dia.m{background:#fae6e8;border-color:var(--dn);color:var(--dn)}
+
+.pre{padding:5px 14px;border:1px solid var(--bd);border-radius:5px;background:var(--sa);
+  font-family:inherit;font-size:10px;font-weight:bold;cursor:pointer;color:var(--t2);transition:.12s}
+.pre:hover{border-color:var(--ac);color:var(--t1)}
+.pre.on{background:#fae6ee;border-color:var(--ac);color:var(--ac)}
+
+.btn{padding:6px 14px;border:1px solid var(--bd);border-radius:var(--r);background:var(--sf);
+  font-family:inherit;font-size:10px;font-weight:bold;cursor:pointer;color:var(--t1);transition:.12s}
+.btn:hover{border-color:var(--ac);color:var(--ac)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.pink{background:var(--ac);color:#fff;border-color:var(--ac)}.btn.pink:hover{background:#d9558c}
+.btn.pink:disabled{background:var(--t3);border-color:var(--t3)}
+.btn.blue{background:var(--up);color:#fff;border-color:var(--up)}.btn.blue:hover{background:#2d7dd2}
+.btn.green{background:var(--ok);color:#fff;border-color:var(--ok)}.btn.green:hover{background:#2a9e62}
+
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--t2);
+  border:1px solid var(--bd);border-radius:999px;padding:3px 10px}
+.pill input{width:3.5em;font-family:inherit;font-size:10px;border:1px solid var(--bd);border-radius:4px;padding:2px 4px;background:var(--sf)}
+select{font-family:inherit;font-size:10px;padding:4px 6px;border:1px solid var(--bd);border-radius:4px;background:var(--sf)}
+
+/* ── Keyboard ── */
+.kb{position:relative;height:195px;margin:4px 0 8px;user-select:none}
+.wk{position:absolute;bottom:0;height:195px;background:var(--sf);border:1px solid var(--bd);
+  border-radius:0 0 6px 6px;display:flex;flex-direction:column;justify-content:flex-end;
+  align-items:center;padding-bottom:6px;cursor:pointer;transition:background .08s}
+.wk:hover{background:#f6f0fa}
+.wk:active{background:#ece0f4}
+.bk{position:absolute;top:0;height:120px;background:var(--t1);border-radius:0 0 4px 4px;
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+  padding-bottom:5px;cursor:pointer;z-index:2;transition:background .08s}
+.bk:hover{background:#333}
+.bk:active{background:#555}
+.wk .n{font-size:10px;font-weight:bold;color:var(--t2)}
+.bk .n{font-size:8px;color:#aaa}
+.wk .c,.bk .c{font-size:9px;margin-bottom:2px}
+.wk .h,.bk .h{font-size:8px;color:var(--t3)}
+.bk .h{color:#777}
+/* cent colors */
+.cP{color:var(--ok)}.cM{color:var(--dn)}.c0{color:var(--t3)}.cI{color:var(--up)}.cH{color:var(--ac)}.cW{color:var(--dn);font-weight:bold}
+/* XG adjusted display */
+.xg-adj{font-size:7px;color:var(--t3);margin-bottom:1px}
+.wk .xg-adj{color:var(--t3)}
+.bk .xg-adj{color:#888}
+
+/* ── Info ── */
+.info{font-size:9px;color:var(--t2);padding:3px 0}
+.info.d{color:var(--t3)}
+.info.mt{color:var(--ok);font-weight:bold}
+
+/* ── Banner ── */
+.banner{display:none;padding:6px 10px;border-radius:5px;font-size:10px;margin-bottom:8px}
+.banner.on{display:block}
+.banner.ok{background:#e8f5e9;border:1px solid #66bb6a;color:#2e7d32}
+.banner.ng{background:#fff3e0;border:1px solid #ffb74d;color:#e65100}
+
+/* ── Log ── */
+#log{width:100%;height:130px;font-family:inherit;font-size:9px;background:var(--sf);
+  border:1px solid var(--bd);border-radius:var(--r);padding:6px;color:var(--t2);resize:vertical}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ICEFACE XG Scale Tuning</h1>
+  <small>black_key = right_diatonic + 50 &nbsp;|&nbsp; XG Parameter Change + Master Tune auto-offset</small>
+</header>
+
+<main>
+  <!-- Diatonic -->
+  <section>
+    <div class="label">Diatonic Offsets &mdash; click to cycle ±0 → +50 → −50</div>
+    <div class="row" id="dR"></div>
+  </section>
+
+  <!-- Presets -->
+  <section>
+    <div class="row" id="pR"></div>
+  </section>
+
+  <!-- Keyboard -->
+  <section>
+    <div class="label">Keyboard <span style="font-weight:normal;color:var(--t3)">(click to preview / upper: Iceface ¢, lower: XG adjusted ¢)</span></div>
+    <div class="kb" id="kb"></div>
+  </section>
+
+  <!-- Info -->
+  <section>
+    <div class="info" id="iSwift"></div>
+    <div class="info d" id="iCheck"></div>
+    <div class="info d" id="iXG"></div>
+    <div class="info mt" id="iMT" style="display:none"></div>
+  </section>
+
+  <!-- Banner -->
+  <div class="banner" id="banner"></div>
+
+  <!-- MIDI -->
+  <section>
+    <div class="label">MIDI Output (Web MIDI API + SysEx)</div>
+    <div class="row">
+      <button class="btn" id="mCon">MIDI に接続</button>
+      <select id="mOut"></select>
+      <span class="pill">Dev <input id="mDev" type="number" min="0" max="15" value="0"></span>
+      <span class="pill">Part <input id="mPart" type="number" min="0" max="15" value="0"></span>
+      <div class="spacer"></div>
+      <button class="btn pink" id="mSend" disabled>Send All</button>
+    </div>
+  </section>
+
+  <!-- Export -->
+  <section>
+    <div class="row">
+      <button class="btn blue" id="xScl">Export .scl</button>
+      <button class="btn green" id="xSyx">Export .syx</button>
+      <button class="btn" id="xHex">Copy SysEx Hex</button>
+      <div class="spacer"></div>
+      <button class="btn" id="xClr">Clear Log</button>
+    </div>
+  </section>
+
+  <textarea id="log" readonly></textarea>
+</main>
+
+<script>
+(function(){
+// ═══════════════════════════════════════════════════════════════
+//  Constants
+// ═══════════════════════════════════════════════════════════════
+const N=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const DIA=new Set([0,2,4,5,7,9,11]), DIA_O=[0,2,4,5,7,9,11], DIA_N=['C','D','E','F','G','A','B'];
+const ND2R={1:2,3:4,6:7,8:9,10:11};
+const SCALES={
+  'Standard':{},
+  'Maqam 12':{4:-50,11:-50},
+  'Kotori':{5:50,11:-50},
+  'Balloon':{4:50,11:50},
+  'SowaSowa':{2:50,4:50,5:50,9:50,11:50}
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  State
+// ═══════════════════════════════════════════════════════════════
+let dOff={}, tun=[], mOff=0, preset='Standard';
+let midi=null, out=null, actx=null;
+
+// ═══════════════════════════════════════════════════════════════
+//  Core: Iceface
+// ═══════════════════════════════════════════════════════════════
+function iceface(d){
+  const r=Array(12).fill(0);
+  for(const p of DIA) r[p]=d[p]||0;
+  for(const[n,rd]of Object.entries(ND2R)) r[+n]=(d[rd]||0)+50;
+  return r;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Core: Master Tune offset
+// ═══════════════════════════════════════════════════════════════
+function cl(v,lo,hi){return Math.max(lo,Math.min(hi,v))}
+
+function calcOff(t){
+  const mn=Math.min(...t), mx=Math.max(...t);
+  if(mn>=-64&&mx<=63) return 0;
+  // mx を +63 に合わせる最小オフセット
+  const o=mx-63;
+  if(mn-o>=-64) return o;
+  // 中央寄せ
+  const c=Math.round((mx+mn)/2);
+  if(mn-c>=-64&&mx-c<=63) return c;
+  return null; // range>127
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SysEx builders
+// ═══════════════════════════════════════════════════════════════
+// Scale Tuning: F0 43 1n 4C 08 pp AL dd F7
+function sysScale(dev,part,ni,cents){
+  const c=cl(Math.round(cents),-64,63);
+  return new Uint8Array([0xF0,0x43,0x10+(dev&0xF),0x4C,0x08,part&0xF,0x41+ni,(0x40+c)&0x7F,0xF7]);
+}
+// Master Tune: F0 43 1n 4C 00 00 00 d1 d2 d3 d4 F7
+// value=1024+cents*10 (0.1¢ res), d1-d4 = 4-bit nibbles
+function sysMaster(dev,cents){
+  const v=cl(Math.round(1024+cents*10),0,2047);
+  return new Uint8Array([0xF0,0x43,0x10+(dev&0xF),0x4C,0x00,0x00,0x00,
+    (v>>12)&0xF,(v>>8)&0xF,(v>>4)&0xF,v&0xF,0xF7]);
+}
+function buildAll(){
+  const d=cl(+$('mDev').value||0,0,15), p=cl(+$('mPart').value||0,0,15);
+  return tun.map((c,i)=>sysScale(d,p,i,c-mOff));
+}
+function hx(b){return Array.from(b).map(x=>x.toString(16).toUpperCase().padStart(2,'0')).join(' ')}
+
+// ═══════════════════════════════════════════════════════════════
+//  Scala
+// ═══════════════════════════════════════════════════════════════
+function toScl(t,name){
+  const r0=t[0];
+  let s=`! ${name}.scl\n!\n  ${name}\n 12\n!\n`;
+  for(let i=1;i<12;i++) s+=`  ${(i*100+t[i]-r0).toFixed(3)}\n`;
+  return s+'  1200.000\n';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Audio preview (Web Audio)
+// ═══════════════════════════════════════════════════════════════
+function playTone(ni){
+  if(!actx) actx=new(window.AudioContext||window.webkitAudioContext)();
+  const f=440*Math.pow(2,(60+ni-69+tun[ni]/100)/12);
+  const now=actx.currentTime;
+  const o1=actx.createOscillator(), g1=actx.createGain();
+  const o2=actx.createOscillator(), g2=actx.createGain();
+  o1.type='sine'; o1.frequency.value=f;
+  o2.type='sine'; o2.frequency.value=f*2;
+  g1.gain.setValueAtTime(.25,now); g1.gain.exponentialRampToValueAtTime(.001,now+.8);
+  g2.gain.setValueAtTime(.04,now); g2.gain.exponentialRampToValueAtTime(.001,now+.6);
+  o1.connect(g1).connect(actx.destination); o2.connect(g2).connect(actx.destination);
+  o1.start(now); o1.stop(now+.8); o2.start(now); o2.stop(now+.6);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DOM
+// ═══════════════════════════════════════════════════════════════
+function $(id){return document.getElementById(id)}
+function lg(m){const e=$('log');e.value+=`[${new Date().toLocaleTimeString()}] ${m}\n`;e.scrollTop=e.scrollHeight}
+
+// ═══════════════════════════════════════════════════════════════
+//  Build UI
+// ═══════════════════════════════════════════════════════════════
+function initDia(){
+  const r=$('dR');
+  DIA_O.forEach(pc=>{
+    const b=document.createElement('button');
+    b.className='dia'; b.dataset.pc=pc;
+    b.onclick=()=>cycle(pc);
+    r.appendChild(b);
+  });
+}
+function initPre(){
+  const r=$('pR');
+  for(const n of Object.keys(SCALES)){
+    const b=document.createElement('button');
+    b.className='pre'; b.textContent=n;
+    b.onclick=()=>setPre(n);
+    r.appendChild(b);
+  }
+}
+function initKb(){
+  const kb=$('kb');
+  // white
+  [0,2,4,5,7,9,11].forEach(ni=>{
+    const d=document.createElement('div');
+    d.className='wk'; d.dataset.n=ni;
+    const hints={0:'A',2:'S',4:'D',5:'F',7:'G',9:'H',11:'J'};
+    d.innerHTML=`<div class="c c0"></div><div class="xg-adj"></div><div class="n">${N[ni]}</div><div class="h">${hints[ni]}</div>`;
+    d.onclick=()=>playTone(ni);
+    kb.appendChild(d);
+  });
+  // black
+  [1,3,6,8,10].forEach(ni=>{
+    const d=document.createElement('div');
+    d.className='bk'; d.dataset.n=ni;
+    const hints={1:'W',3:'E',6:'T',8:'Y',10:'U'};
+    d.innerHTML=`<div class="c c0"></div><div class="xg-adj"></div><div class="n">${N[ni]}</div><div class="h">${hints[ni]}</div>`;
+    d.onclick=e=>{e.stopPropagation();playTone(ni)};
+    kb.appendChild(d);
+  });
+  layKb();
+  window.addEventListener('resize',layKb);
+}
+function layKb(){
+  const kb=$('kb'), W=kb.clientWidth, gap=4, wW=(W-6*gap)/7;
+  kb.querySelectorAll('.wk').forEach((el,i)=>{el.style.left=(i*(wW+gap))+'px';el.style.width=wW+'px'});
+  const bW=wW*.58, bMap={1:0,3:1,6:3,8:4,10:5};
+  kb.querySelectorAll('.bk').forEach(el=>{
+    const wi=bMap[+el.dataset.n], cx=(wi+1)*(wW+gap)-gap/2;
+    el.style.left=(cx-bW/2)+'px'; el.style.width=bW+'px';
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  State
+// ═══════════════════════════════════════════════════════════════
+function compute(){
+  tun=iceface(dOff);
+  const o=calcOff(tun);
+  mOff=o!==null?o:0;
+}
+function cycle(pc){
+  const c=dOff[pc]||0;
+  let nv=c<=-50?0:c===0?50:-50;
+  if(nv===0) delete dOff[pc]; else dOff[pc]=nv;
+  preset=''; compute(); draw();
+}
+function setPre(name){
+  dOff=Object.assign({},SCALES[name]); preset=name;
+  compute(); draw(); lg(`プリセット: ${name} Iceface`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Draw
+// ═══════════════════════════════════════════════════════════════
+function draw(){
+  // dia buttons
+  $('dR').querySelectorAll('.dia').forEach(b=>{
+    const pc=+b.dataset.pc, v=dOff[pc]||0;
+    const nm=DIA_N[DIA_O.indexOf(pc)];
+    b.textContent=`${nm}: ${v>0?'+'+v:v<0?''+v:'±0'}`;
+    b.className='dia'+(v>0?' p':v<0?' m':'');
+  });
+  // preset buttons
+  $('pR').querySelectorAll('.pre').forEach(b=>{
+    b.className='pre'+(b.textContent===preset?' on':'');
+  });
+  // keyboard
+  $('kb').querySelectorAll('.wk,.bk').forEach(el=>{
+    const ni=+el.dataset.n, v=tun[ni], adj=v-mOff;
+    const cv=el.querySelector('.c'), xa=el.querySelector('.xg-adj');
+    // Iceface cent value
+    cv.textContent=v!==0?`${v>0?'+':''}${v}¢`:'±0¢';
+    let cc;
+    if(el.classList.contains('bk')) cc=v>=100?'cH':v>0?'cI':'c0';
+    else cc=v>0?'cP':v<0?'cM':'c0';
+    if(adj>63||adj<-64) cc='cW';
+    cv.className='c '+cc;
+    // XG adjusted value (Master Tune 適用後)
+    if(mOff!==0){
+      const clamped=cl(Math.round(adj),-64,63);
+      xa.textContent=`XG:${clamped>=0?'+':''}${clamped}`;
+      xa.style.display='';
+    } else {
+      xa.style.display='none';
+    }
+  });
+  // info
+  $('iSwift').textContent='Swift: cents: ['+tun.map(v=>v.toFixed(0)).join(', ')+']';
+  // check
+  const cks=[];
+  for(const[nd,rd]of Object.entries(ND2R).sort((a,b)=>a[0]-b[0])){
+    const g=(+rd*100+tun[+rd])-(+nd*100+tun[+nd]);
+    cks.push(`${N[+nd]}→${N[+rd]}=${g.toFixed(0)}¢${Math.abs(g-50)<.01?'✓':'✗'}`);
+  }
+  $('iCheck').textContent='Check: '+cks.join('  ');
+  // XG SysEx
+  const dev=cl(+$('mDev').value||0,0,15);
+  const msgs=buildAll();
+  $('iXG').textContent=`XG Scale (${msgs.length}): `+msgs.map(m=>hx(m)).join(' / ');
+  // Master Tune
+  const imt=$('iMT');
+  if(mOff!==0){
+    const mt=sysMaster(dev,mOff);
+    imt.textContent=`Master Tune: +${mOff}¢ → ${hx(mt)}`;
+    imt.style.display='';
+  } else { imt.style.display='none'; }
+  // banner
+  const bn=$('banner'), off=calcOff(tun);
+  if(off===null){
+    bn.textContent='⚠ レンジ>127¢: Master Tune でも完全に収まりません（一部クランプ）';
+    bn.className='banner on ng';
+  } else if(mOff!==0){
+    bn.textContent=`✓ Master Tune +${mOff}¢ で XG 範囲内に自動調整（Scale Tuning 各値から${mOff}を減算）`;
+    bn.className='banner on ok';
+  } else {
+    bn.className='banner';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Keyboard shortcuts
+// ═══════════════════════════════════════════════════════════════
+const KM={a:0,w:1,s:2,e:3,d:4,f:5,t:6,g:7,y:8,h:9,u:10,j:11};
+const held=new Set();
+document.addEventListener('keydown',e=>{
+  if(e.repeat||e.target.tagName==='INPUT') return;
+  const ni=KM[e.key.toLowerCase()];
+  if(ni!==undefined&&!held.has(ni)){held.add(ni);playTone(ni)}
+});
+document.addEventListener('keyup',e=>{
+  const ni=KM[e.key.toLowerCase()];
+  if(ni!==undefined) held.delete(ni);
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  MIDI
+// ═══════════════════════════════════════════════════════════════
+$('mCon').onclick=async()=>{
+  try{
+    if(!navigator.requestMIDIAccess){lg('Web MIDI 未対応');return}
+    midi=await navigator.requestMIDIAccess({sysex:true});
+    lg('Web MIDI: 接続');
+    const s=$('mOut'); s.innerHTML='';
+    for(const o of midi.outputs.values()){
+      const op=document.createElement('option');op.value=o.id;op.textContent=o.name;s.appendChild(op);
+    }
+    if(s.options.length){out=midi.outputs.get(s.value);$('mSend').disabled=false;lg('出力: '+out.name)}
+    else lg('MIDI 出力なし');
+  }catch(e){lg('MIDI エラー: '+e.message)}
+};
+$('mOut').onchange=function(){if(midi){out=midi.outputs.get(this.value);lg('出力: '+(out?out.name:'none'))}};
+$('mSend').onclick=async()=>{
+  if(!out){lg('MIDI 出力なし');return}
+  const dev=cl(+$('mDev').value||0,0,15);
+  if(mOff!==0){
+    const mt=sysMaster(dev,mOff);
+    out.send(mt); lg(`SEND Master Tune +${mOff}¢: ${hx(mt)}`);
+    await new Promise(r=>setTimeout(r,20));
+  }
+  const msgs=buildAll();
+  for(const m of msgs){out.send(m);lg('SEND: '+hx(m));await new Promise(r=>setTimeout(r,10))}
+  lg(`✓ 完了${mOff?` (Master Tune +${mOff}¢ + ${msgs.length}音)`:`(${msgs.length}音)`}`);
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  Export
+// ═══════════════════════════════════════════════════════════════
+function dl(blob,fn){
+  const u=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=u;a.download=fn;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);
+}
+$('xScl').onclick=()=>{
+  const nm=preset?preset+' Iceface':'Custom Iceface';
+  dl(new Blob([toScl(tun,nm)],{type:'text/plain'}),nm.replace(/\s+/g,'_')+'.scl');
+  lg('✓ .scl: '+nm);
+};
+$('xSyx').onclick=()=>{
+  const dev=cl(+$('mDev').value||0,0,15), all=[];
+  if(mOff!==0) all.push(sysMaster(dev,mOff));
+  all.push(...buildAll());
+  const tot=all.reduce((s,m)=>s+m.length,0), buf=new Uint8Array(tot);
+  let o=0; for(const m of all){buf.set(m,o);o+=m.length}
+  const fn=(preset||'Custom')+'_Iceface';
+  dl(new Blob([buf],{type:'application/octet-stream'}),fn+'.syx');
+  lg(`✓ .syx (${all.length} msgs, ${tot} bytes${mOff?', MT+'+mOff+'¢':''})`);
+};
+$('xHex').onclick=()=>{
+  const dev=cl(+$('mDev').value||0,0,15), lines=[];
+  if(mOff!==0) lines.push('// Master Tune +'+mOff+'¢\n'+hx(sysMaster(dev,mOff)));
+  lines.push('// Scale Tuning (offset applied: -'+mOff+'¢)');
+  buildAll().forEach((m,i)=>lines.push(`${N[i].padEnd(3)} ${hx(m)}`));
+  navigator.clipboard.writeText(lines.join('\n')).then(()=>{
+    lg('✓ Hex copied');
+    $('xHex').textContent='✓ Copied!';
+    setTimeout(()=>{$('xHex').textContent='Copy SysEx Hex'},1200);
+  });
+};
+$('xClr').onclick=()=>{$('log').value=''};
+
+// Dev/Part 変更時に再描画
+$('mDev').oninput=$('mPart').oninput=()=>draw();
+
+// ═══════════════════════════════════════════════════════════════
+//  Init
+// ═══════════════════════════════════════════════════════════════
+initDia(); initPre(); initKb(); setPre('Standard');
+})();
+</script>
+</body>
+</html>
