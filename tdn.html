@@ -130,6 +130,8 @@ select {
 <div class="header">
   <h1>ICEFACETDN BEAT MACHINE</h1>
   <div class="info">
+    <a href="index_walk.html" style="font-family:inherit;font-size:8px;font-weight:700;color:var(--warning);text-decoration:none;padding:3px 7px;border:1px solid var(--warning);border-radius:3px;">WALK MODE</a>
+    <a href="manual_ja.html" target="_blank" style="font-family:inherit;font-size:8px;font-weight:700;color:var(--text-dim);text-decoration:none;padding:3px 7px;border:1px solid var(--border);border-radius:3px;">MANUAL</a>
     <span id="noteInfo">--</span>
     <span id="modeInfo">T(D,N)</span>
   </div>
@@ -226,8 +228,8 @@ select {
       <div class="section-label">DRUMS</div>
       <div class="row">
         <label>Volume</label>
-        <input type="range" id="drumVol" min="0" max="100" value="60">
-        <span class="val" id="drumVolVal">60%</span>
+        <input type="range" id="drumVol" min="0" max="100" value="73">
+        <span class="val" id="drumVolVal">73%</span>
       </div>
       <div class="row">
         <label>Filter</label>
@@ -250,13 +252,13 @@ select {
       <div class="section-label">KINETIC</div>
       <div class="row">
         <label>Step</label>
-        <input type="range" id="stepSize" min="5" max="200" value="60">
-        <span class="val" id="stepVal">0.060</span>
+        <input type="range" id="stepSize" min="5" max="200" value="100">
+        <span class="val" id="stepVal">0.100</span>
       </div>
       <div class="row">
         <label>Speed</label>
-        <input type="range" id="autoSpeed" min="5" max="200" value="60">
-        <span class="val" id="autoSpeedVal">60</span>
+        <input type="range" id="autoSpeed" min="5" max="200" value="52">
+        <span class="val" id="autoSpeedVal">52</span>
       </div>
     </div>
   </div>
@@ -408,7 +410,7 @@ function populateSelects() {
   ['sine','triangle','square','sawtooth'].forEach((w, i) => {
     const opt = document.createElement('option');
     opt.value = w; opt.textContent = w.charAt(0).toUpperCase() + w.slice(1);
-    if (w === 'sawtooth') opt.selected = true;
+    if (w === 'sine') opt.selected = true;
     wfSel.appendChild(opt);
   });
 
@@ -1013,13 +1015,71 @@ const GEO_PATTERNS = {
       return { x: rx, y: ry };
     };
   })(),
+  'Trefoil': (t) => {
+    // 3D trefoil knot projected to 2D
+    const x = Math.sin(t) + 2 * Math.sin(2 * t);
+    const y = Math.cos(t) - 2 * Math.cos(2 * t);
+    const r = 3.2;
+    return { x: 0.5 + x / r * 0.42, y: 0.5 + y / r * 0.42 };
+  },
+  'Hypotrochoid': (t) => {
+    // R=5, r=3, d=5
+    const R = 5, r = 3, d = 4.5;
+    const x = (R - r) * Math.cos(t) + d * Math.cos((R - r) / r * t);
+    const y = (R - r) * Math.sin(t) - d * Math.sin((R - r) / r * t);
+    return { x: 0.5 + x / 10 * 0.42, y: 0.5 + y / 10 * 0.42 };
+  },
+  'Epitrochoid': (t) => {
+    // R=3, r=1, d=2.5
+    const R = 3, r = 1, d = 2.5;
+    const x = (R + r) * Math.cos(t) - d * Math.cos((R + r) / r * t);
+    const y = (R + r) * Math.sin(t) - d * Math.sin((R + r) / r * t);
+    return { x: 0.5 + x / 8 * 0.38, y: 0.5 + y / 8 * 0.38 };
+  },
+  'Star': (t) => {
+    const n = 5;
+    const progress = ((t % (2 * Math.PI)) / (2 * Math.PI)) * (n * 2);
+    const idx = Math.floor(progress);
+    const frac = progress - idx;
+    const isOuter = idx % 2 === 0;
+    const r1 = isOuter ? 0.40 : 0.18;
+    const r2 = isOuter ? 0.18 : 0.40;
+    const a1 = (idx / (n * 2)) * 2 * Math.PI - Math.PI / 2;
+    const a2 = ((idx + 1) / (n * 2)) * 2 * Math.PI - Math.PI / 2;
+    return {
+      x: 0.5 + (r1 * Math.cos(a1) * (1 - frac) + r2 * Math.cos(a2) * frac),
+      y: 0.5 + (r1 * Math.sin(a1) * (1 - frac) + r2 * Math.sin(a2) * frac),
+    };
+  },
+  'Double Pendulum': (() => {
+    let a1 = Math.PI * 0.6, a2 = Math.PI * 0.4;
+    let v1 = 0, v2 = 0;
+    let lastT = 0;
+    return (t) => {
+      const dt = Math.min(t - lastT, 0.05);
+      lastT = t;
+      const g = 9.8, L = 1;
+      const mu = 1 + 1;
+      const num1 = -g * mu * Math.sin(a1) - Math.sin(a1 - a2) * (v2*v2 + v1*v1*Math.cos(a1-a2));
+      const num2 = mu * g * Math.sin(a2) * Math.cos(a1-a2);
+      const den = mu - Math.cos(a1-a2) * Math.cos(a1-a2);
+      v1 += dt * (num1 - num2) / den;
+      const num3 = mu * (v1*v1*L*Math.sin(a1-a2) - g*Math.sin(a2) + g*Math.sin(a1)*Math.cos(a1-a2));
+      v2 += dt * num3 / den;
+      v1 *= 0.9999; v2 *= 0.9999;
+      a1 += dt * v1; a2 += dt * v2;
+      const x2 = Math.sin(a1) + Math.sin(a2);
+      const y2 = -Math.cos(a1) - Math.cos(a2);
+      return { x: 0.5 + x2 * 0.22, y: 0.5 + y2 * 0.22 };
+    };
+  })(),
 };
 
 let autoPlaying = false;
 let autoPhase = 0;
 let autoLastTime = 0;
 let autoAnimId = null;
-let currentPatternName = 'Lissajous 3:2';
+let currentPatternName = 'Pentagon';
 
 function startAutoPlay() {
   initAudio();
@@ -1079,6 +1139,7 @@ const patSel = $('patternSelect');
 Object.keys(GEO_PATTERNS).forEach(name => {
   const opt = document.createElement('option');
   opt.value = name; opt.textContent = name;
+  if (name === 'Pentagon') opt.selected = true;
   patSel.appendChild(opt);
 });
 patSel.addEventListener('change', () => {
